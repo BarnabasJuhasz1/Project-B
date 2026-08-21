@@ -1,0 +1,58 @@
+# ====================================================================
+# ROS 2 (colcon workspace outputs)
+# ====================================================================
+build/
+install/
+log/
+.colcon/
+
+# ====================================================================
+# NVIDIA Isaac Sim / Omniverse / Isaac Lab
+# ====================================================================
+# Local application dependencies, links, and framework builds
+_isaac_sim/
+_repo/
+_build/
+_venv/
+venv/
+.venv/
+
+# Omniverse/Kit cache and auto-generated data
+data/cache/
+.nvidia-omniverse/
+PACKAGE-DEPS.yaml
+.thumbs/
+symbols.txt
+
+# Generated simulation artifacts / Reinforcement Learning logs
+**/runs/
+**/logs/
+**/output/
+**/outputs/
+**/videos/
+**/wandb/
+**/recordings/
+*.tmp
+
+# Large binary checkpoints (if training RL policies)
+/.pretrained_checkpoints/
+
+# ====================================================================
+# Python (Standard clean up)
+# ====================================================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+
+# ====================================================================
+# IDE and Local Environments
+# ====================================================================
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+.DS_Store
