@@ -1,0 +1,59 @@
+id: reorient_geometry
+node_name: ReorientToGeometry
+
+source:
+  citation: >-
+    Cheng, K. (1986). "A purely geometric module in the rat's spatial
+    representation." Cognition 23(2), 149-178.
+  span: >-
+    p. 158: "One interpretation then is that 78% of the time, the rats used a
+    shape record and found a geometrically correct location, but only 20% of
+    the time did they use some record of featural arrangement to disambiguate
+    the two geometrically correct locations." The same page gives the 3:2 ratio
+    of correct digs to rotational errors, and p. 157 records that between
+    correct digs and rotational errors "a chance expectation of a 1:1 ratio
+    cannot be rejected in any of the animals (p > .10 in each)" - which is the
+    preference-for-geometry result stated quantitatively.
+  verified: verified
+  verified_by: juhasz.barna12@gmail.com
+
+mechanism: >-
+  Disoriented rats reorient using the metric shape of the enclosure - the
+  arrangement and relative lengths of the surrounding surfaces - in preference
+  to featural cues, to the point of making systematic rotational errors that
+  featural information present in the arena would have resolved.
+
+trigger: >-
+  The robot is stuck: commanded to move and not moving, for longer than the
+  stuck window.
+
+derivation: >-
+  When stuck, stop steering by goal bearing and reorient by the shape of the
+  local free space instead - take the principal axis of the clear region from
+  the range scan and align to it before resuming. The geometric cue is used
+  FIRST and the goal direction second, which is the ordering the finding is
+  about; a controller that merely backs up and retries has not applied it.
+
+prediction:
+  statement: >-
+    Reorienting to the principal axis of the local free space when stuck
+    produces a higher goal-reach rate than goal_seeker, which wedges against the
+    divider for 111 s of a 120 s episode and never recovers.
+  metric: goal_reached
+  baseline: goal_seeker
+  min_effect: 0.5
+  cost_metric: spl
+
+confidence: high
+tags: [recovery, stuck, geometry, reorientation, tier1]
+supplies: [coverage, provenance]
+
+notes: >-
+  Strong on the B-vs-D screen. Asked cold for a recovery principle a model
+  produces back-up-and-retry or wall-following; using the metric shape of the
+  free space as the PRIMARY reorientation cue, ahead of any feature or the goal
+  bearing, is a specific empirical finding rather than an obvious engineering
+  move. Confidence is LOW because the translation from a rat in a rectangular
+  arena to a principal axis of a range scan is entirely ours.
+  Cheng & Newcombe (2005) review the counter-evidence and should become a second
+  card if this one is admitted - a calibrated Confidence field needs it.

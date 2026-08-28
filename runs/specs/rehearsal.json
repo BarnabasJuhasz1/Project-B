@@ -1,0 +1,11 @@
+{
+  "name": "rehearsal",
+  "reportable": false,
+  "note": "NOT AN EVALUATION. Two reference controllers on the dev set, to exercise the sweep machinery end to end. goal_seeker and reactive_avoid are harness validation with no literature input and no generation step -- results/README.md forbids reporting them as a condition, and `reportable: false` keeps this spec's output out of results/. Bound to labels A and B only because the machinery needs two conditions to compare; the labels mean nothing here.",
+  "conditions": [
+    {"label": "A", "controller": "goal_seeker",
+     "note": "expected to fail. Harness validation only."},
+    {"label": "B", "controller": "reactive_avoid",
+     "note": "expected to succeed. Harness validation only."}
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "backend": "claude-cli",
+  "composition_id": "r_search_for_goal__goal_hidden_no_drift__6004b2deaf87a659",
+  "created_primitives": [],
+  "detail": "",
+  "include_toys": true,
+  "kind": "repair",
+  "library_snapshot": "lib-006-23c57a77269e",
+  "model_id": "claude-opus-5",
+  "ok": true,
+  "plan": {
+    "rationale": "The previous run's composition already handed every tick to toy_sweep_for_goal, so the stall was coverage, not wiring: this node set contains exactly one search behaviour and nothing that biases it toward unvisited frontier, so the honest repair is to keep the disclosure check as the single writer of goal_known at the head of tick order, give sweep the entire tick budget uninterrupted as the fallback's last resort (never sequenced behind the condition, which would starve it), and put the post-disclosure branch first so the instant the goal latches the tree switches over on the same tick. Inside that branch toy_avoid_obstacles leads because the route bends around occluding walls and it closes range while keeping clear, with toy_drive_to_goal as its recovery; gen_b_d6ae93648c7b4f25 is deliberately omitted because no node here reads speed_limit, so sequencing it ahead of a driving action would only starve that action rather than limit its speed.",
+    "tree": {
+      "children": [
+        {
+          "children": [
+            {
+              "node": "toy_is_goal_known",
+              "type": "leaf"
+            },
+            {
+              "children": [
+                {
+                  "node": "toy_avoid_obstacles",
+                  "type": "leaf"
+                },
+                {
+                  "node": "toy_drive_to_goal",
+                  "type": "leaf"
+                }
+              ],
+              "type": "fallback"
+            }
+          ],
+          "type": "sequence"
+        },
+        {
+          "node": "toy_sweep_for_goal",
+          "type": "leaf"
+        }
+      ],
+      "type": "fallback"
+    }
+  },
+  "prompt_hash": "6004b2deaf87a659",
+  "reason": "composed",
+  "repair_of": "search_for_goal__goal_hidden_no_drift__2b74bf7b40d6ed9a",
+  "retrieval": {
+    "considered": [],
+    "dropped": [],
+    "library_size": 6,
+    "orphan_ports": [
+      "speed_limit:Speed"
+    ],
+    "query_tags": [
+      "avoid",
+      "clearance",
+      "coverage",
+      "disclosure",
+      "drive",
+      "explore",
+      "goal",
+      "navigate",
+      "obstacle",
+      "search",
+      "speed",
+      "unknown"
+    ],
+    "reasons": {},
+    "retrieved": [
+      "gen_b_d6ae93648c7b4f25",
+      "toy_is_goal_known",
+      "toy_avoid_obstacles",
+      "toy_sweep_for_goal",
+      "toy_drive_to_goal"
+    ],
+    "unsatisfiable_ports": []
+  },
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "spec": {
+    "detect_radius": 2.0,
+    "failure_signature": "Timed out at 120 s with the goal never disclosed. toy_sweep_for_goal drove on all 6000 ticks and toy_is_goal_known returned failure on all 6000, so the goal_known Flag never flipped and the goal branch never ticked once. Zero collisions and zero stuck events: nothing was blocked. The robot finished at (4.90, 2.65), still in the room it started in, having never crossed the divider at x=6 into unexplored floor.",
+    "family": "search_for_goal",
+    "fov": 6.283185307179586,
+    "goal_known": false,
+    "max_ang": 1.0,
+    "max_lin": 0.8,
+    "n_beams": 181,
+    "pose_drifts": false,
+    "range_max": 6.0
+  },
+  "temperature": null,
+  "tree_nodes": [
+    "composed_fallback_0",
+    "composed_sequence_0",
+    "toy_is_goal_known",
+    "composed_fallback_1",
+    "toy_avoid_obstacles",
+    "toy_drive_to_goal",
+    "toy_sweep_for_goal"
+  ]
+}

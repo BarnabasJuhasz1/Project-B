@@ -1,0 +1,28 @@
+{
+  "admitted": true,
+  "detail": "admitted",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "vague_adaptive_motion",
+    "condition": "b",
+    "emitted_code": true,
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_45a8af4b86a63990",
+    "prediction_restated_faithfully": true,
+    "prompt_hash": "45a8af4b86a63990",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "superseded_by": "7d2d6fc4a9d64ddd",
+    "superseded_reason": "Orphaned by the same prompt change as b__limit_speed_dwa__1f2fe8016b1441dc: generator._render_card stopped rendering the card's `span` and `confidence` on 2026-08-27. This fixture card's span is empty and its confidence is low, so the rendered prompt lost two lines and nothing of substance - but the prompt hash is over the rendered text, so the transcript no longer replays. The record is KEPT as evidence of a real generation. It never entered G1's numbers in either version: the card is a test fixture and admit.pass_rate already excludes it by card id.",
+    "task": "navigate_to_goal",
+    "temperature": null
+  },
+  "node_id": "gen_b_45a8af4b86a63990",
+  "reason": "admitted",
+  "unit": {
+    "baseline": 0.0,
+    "candidate": 1.0,
+    "effect": 1.0,
+    "metric": "goal_reached",
+    "required": 0.5
+  }
+}

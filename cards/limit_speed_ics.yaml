@@ -1,0 +1,52 @@
+id: limit_speed_ics
+node_name: LimitSpeedToVisibleRange
+
+source:
+  citation: >-
+    Fraichard, T. & Asama, H. (2004). "Inevitable Collision States: a step
+    towards safer robots." Advanced Robotics 18(10), 1001-1024.
+  span: ""
+  verified: unverified
+
+mechanism: >-
+  An inevitable collision state is one from which a collision occurs for ANY
+  future sequence of controls. Safety is therefore a property of the state the
+  robot is entering, not of the obstacles it can currently see - and a bound
+  computed only against visible obstacles is unsound wherever the world is
+  occluded.
+
+trigger: >-
+  An occlusion boundary - a depth discontinuity in the scan - lies within the
+  distance the robot would need to stop from its current speed.
+
+derivation: >-
+  Treat the far side of every occlusion boundary as potentially occupied, so the
+  effective free distance is the distance to the boundary rather than to the
+  nearest return. The speed cap then binds BEFORE anything is visible, which is
+  the whole difference from the dynamic-window form: rounding the blind corner
+  at (6, 5) the robot slows on approach to the corner rather than on first sight
+  of what is behind it.
+
+prediction:
+  statement: >-
+    Bounding speed by the distance to the nearest occlusion boundary, rather
+    than to the nearest return, improves min_clearance on blind_corner relative
+    to reactive_avoid, whose own docstring records that it "has no notion of an
+    occlusion boundary at all".
+  metric: min_clearance
+  baseline: reactive_avoid
+  min_effect: 0.1
+  cost_metric: time_to_goal
+
+confidence: low
+tags: [speed, safety, occlusion, visibility, tier1]
+supplies: [coverage, provenance]
+
+notes: >-
+  Paired with limit_speed_dwa deliberately: same mechanism family, same node
+  name, different derivation. If the two produce nodes that score differently,
+  the DERIVATION field is carrying information and not just the citation - which
+  is a claim about the card schema itself, testable within the pilot.
+  Confidence is LOW rather than MEDIUM because ICS is a state-space safety
+  property and the occlusion-boundary reading is our engineering of it; the
+  paper is not the source of that step.

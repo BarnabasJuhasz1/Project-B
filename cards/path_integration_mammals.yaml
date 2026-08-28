@@ -1,0 +1,56 @@
+id: path_integration_mammals
+node_name: MaintainHomingVector
+
+source:
+  citation: >-
+    Etienne, A. S. & Jeffery, K. J. (2004). "Path integration in mammals."
+    Hippocampus 14(2), 180-192.
+  span: >-
+    p. 186, section "Binding of Landmark Information and Self-Motion Cues":
+    "In circular test arenas, mice (Alyan and Jander, 1994) and hamsters
+    (Etienne et al., 1990) return to their nest along compromise directions,
+    distal landmarks predominating over the directional component of PI as long
+    as both types of information do not diverge by more than 90 deg." A review
+    that yields an explicit threshold, not merely a section.
+  verified: verified
+  verified_by: juhasz.barna12@gmail.com
+
+mechanism: >-
+  Mammalian path integration accumulates error without bound and is therefore
+  not used alone: it is continuously arbitrated against other spatial cues, and
+  is relied on most heavily exactly when those cues are unavailable or
+  untrustworthy.
+
+trigger: >-
+  Both a pose estimate and an integrated home vector are available, and their
+  relative trustworthiness has changed.
+
+derivation: >-
+  Do not replace pose_estimate with the integrated vector; ARBITRATE between
+  them, weighting by pose_error_estimate against the integrated vector's own
+  accumulated path length. The integrated vector degrades with distance
+  travelled while the pose estimate degrades with time, so neither dominates and
+  the crossover is what has to be computed.
+
+prediction:
+  statement: >-
+    Arbitrating between pose_estimate and an integrated home vector by their
+    respective error growth produces a higher goal-reach rate under drift than
+    reactive_avoid, and a higher one than switching to the integrated vector
+    outright.
+  metric: goal_reached
+  baseline: reactive_avoid
+  min_effect: 0.5
+  cost_metric: spl
+
+confidence: high
+tags: [localisation, homing, path-integration, arbitration, drift, tier2]
+supplies: [coverage, provenance]
+
+notes: >-
+  Paired with path_integration_ants the way limit_speed_ics is paired with
+  limit_speed_dwa: one mechanism, two derivations - replace versus arbitrate.
+  The ant framing gives a fallback; the mammal framing gives a weighting, and
+  they produce different nodes from the same node_name. Confidence is LOW: the
+  error-growth crossover is ours, and the paper is a review rather than the
+  source of a specific rule.

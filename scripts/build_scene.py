@@ -27,6 +27,17 @@ parser.add_argument("--asset", default=None,
                     help="override the Go2 USD path if auto-discovery fails")
 args = parser.parse_args()
 
+# The floorplan is data and lives in core/scene_spec.py, so that geometry,
+# scenario and metric code can read it without booting a simulator. scripts/ is
+# one level under the repo root, same derivation as recorder.py. Sim-free, so
+# it is safe above the SimulationApp line.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from core.scene_spec import (
+    WALL_HEIGHT, WALL_THICKNESS, WALLS, GO2_START, GOAL,
+    DOME_INTENSITY, KEY_INTENSITY, KEY_ROTATION,
+    CEILING_HEIGHT, CEILING_RADIUS, CEILING_INTENSITY, CEILING_LIGHTS,
+)
+
 # SimulationApp must be constructed before any other isaacsim or omni import.
 from isaacsim import SimulationApp
 sim_app = SimulationApp({"headless": not args.gui})
@@ -46,42 +57,6 @@ except ImportError:
         from isaacsim.core.utils.nucleus import get_assets_root_path  # 4.5.x
     except ImportError:
         from omni.isaac.core.utils.nucleus import get_assets_root_path  # <= 4.2
-
-
-# ---------------------------------------------------------------------------
-# Scene definition. Everything below this line is data, not code.
-# ---------------------------------------------------------------------------
-
-WALL_HEIGHT = 1.5       # metres
-WALL_THICKNESS = 0.15
-
-# (centre_x, centre_y, length, yaw_degrees)
-# Room spans x in [0, 12], y in [0, 8].
-WALLS = [
-    (6.0, 0.0, 12.0, 0.0),    # south perimeter
-    (6.0, 8.0, 12.0, 0.0),    # north perimeter
-    (0.0, 4.0, 8.0, 90.0),    # west perimeter
-    (12.0, 4.0, 8.0, 90.0),   # east perimeter
-    (6.0, 2.5, 5.0, 90.0),    # divider, leaves a doorway at y in [5, 8]
-    (9.0, 5.0, 6.0, 0.0),     # creates a blind corner at (6, 5)
-]
-
-GO2_START = (1.5, 1.5, 0.55)  # spawned slightly high so it drops and settles
-GOAL = (10.5, 6.5)            # reachable only via the doorway and blind corner
-
-# Lighting. Part of the scene spec, not decoration: RTX camera and lidar
-# conditions depend on it, so it must be identical across scene variants.
-DOME_INTENSITY = 700.0        # ambient fill, lifts the shadows
-KEY_INTENSITY = 1500.0        # single directional light, gives shape
-KEY_ROTATION = (-50.0, 0.0, 25.0)
-
-CEILING_HEIGHT = 2.8
-CEILING_RADIUS = 0.25
-CEILING_INTENSITY = 40000.0
-CEILING_LIGHTS = [           # (x, y), roughly one per quadrant
-    (3.0, 2.0), (3.0, 6.0),
-    (9.0, 2.0), (9.0, 6.5),
-]
 
 
 # ---------------------------------------------------------------------------

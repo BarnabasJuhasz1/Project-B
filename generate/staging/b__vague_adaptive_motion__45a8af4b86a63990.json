@@ -1,0 +1,12 @@
+{
+  "backend": "claude-cli",
+  "card_id": "vague_adaptive_motion",
+  "condition": "b",
+  "emitted_code": true,
+  "model_id": "claude-opus-5",
+  "node_id": "gen_b_45a8af4b86a63990",
+  "prompt_hash": "45a8af4b86a63990",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "navigate_to_goal",
+  "temperature": null
+}

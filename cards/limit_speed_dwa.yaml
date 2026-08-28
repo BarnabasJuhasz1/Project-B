@@ -1,0 +1,59 @@
+id: limit_speed_dwa
+node_name: LimitSpeedToVisibleRange
+
+source:
+  citation: >-
+    Fox, D., Burgard, W. & Thrun, S. (1997). "The Dynamic Window Approach to
+    Collision Avoidance." IEEE Robotics & Automation Magazine 4(1), 23-33.
+  span: >-
+    Section "Admissible Velocities", eq. (14). The paper states the closed form
+    explicitly rather than qualitatively: "A velocity is considered admissible,
+    if the robot is able to stop before it reaches this obstacle. Let v_b and
+    w_b be the accelerations for breakage." Eq. (14) then gives
+    Va = {(v,w) | v <= sqrt(2 * dist(v,w) * v_b) and w <= sqrt(2 * dist(v,w) * w_b)}.
+    NOTE the one real deviation: the paper's dist(v,w) is measured along the
+    CORRESPONDING CURVATURE, whereas this card measures d along the intended
+    heading. That difference is the card's own adaptation and is why this stays
+    MEDIUM rather than HIGH.
+  verified: verified
+  verified_by: juhasz.barna12@gmail.com
+
+mechanism: >-
+  A velocity is admissible only if the robot can still stop before the nearest
+  obstacle along the corresponding trajectory. With a braking deceleration
+  a_brake and a free distance d, that bounds forward speed at
+  v <= sqrt(2 * d * a_brake).
+
+trigger: >-
+  The free distance along the intended heading falls below the distance needed
+  to stop at the current commanded speed.
+
+derivation: >-
+  d is measured as the free distance along the intended heading, not the nearest
+  return anywhere in the forward cone: a wall passing to one side is not
+  something the robot is about to hit, and using the cone minimum brakes for it
+  anyway. a_brake is not a published figure for this robot - the locomotion
+  policy is frozen and inherited, so the achievable deceleration has to be
+  measured on the Go2 under that policy and treated as a scenario constant.
+
+prediction:
+  statement: >-
+    A controller bounding forward speed by sqrt(2 * d * a_brake), with d the
+    free distance along the intended heading, produces fewer collisions on
+    doorway_traverse than reactive_avoid, which brakes on the cone minimum.
+  metric: collisions
+  baseline: reactive_avoid
+  min_effect: 0.5
+  cost_metric: time_to_goal
+
+confidence: medium
+tags: [speed, safety, braking, tier1]
+supplies: [coverage, provenance]
+
+notes: >-
+  THE INTERNAL CONTROL of the pilot set. Asked cold for a speed rule, a model
+  produces roughly this - brake in proportion to how close the nearest thing is.
+  So this card is expected to move B against D by very little, and that is the
+  point: it is the yardstick that says what a card is worth when the model
+  already knew the answer. Compare against limit_speed_ics, which is the same
+  mechanism with a derivation the model does not default to.

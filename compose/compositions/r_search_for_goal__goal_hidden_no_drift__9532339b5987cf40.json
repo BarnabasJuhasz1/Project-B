@@ -1,0 +1,107 @@
+{
+  "backend": "claude-cli",
+  "composition_id": "r_search_for_goal__goal_hidden_no_drift__9532339b5987cf40",
+  "created_primitives": [],
+  "detail": "",
+  "include_toys": true,
+  "kind": "repair",
+  "library_snapshot": "lib-006-a05b0b267dd4",
+  "model_id": "claude-opus-5",
+  "ok": true,
+  "plan": {
+    "rationale": "The failure was not blockage but confinement: toy_sweep_for_goal never got through the doorways out of the start room, so goal_known never flipped. Keeping goal_known published first by toy_is_goal_known satisfies every reader, the goal branch (clearance-aware toy_avoid_obstacles, falling back to toy_drive_to_goal) takes priority once disclosure latches, and below it gen_b_1f2fe8016b1441dc is tried before the sweep: whenever the intended heading has a return inside 6 m \u2014 exactly the doorway/near-furniture case that stalled the previous run \u2014 it commands the braking-admissible sqrt(2*d*a_brake) speed so the robot commits through the gap instead of stalling, and on open floor its precondition is false, it FAILs, and toy_sweep_for_goal resumes covering unexplored floor in the newly reached room.",
+    "tree": {
+      "children": [
+        {
+          "children": [
+            {
+              "node": "toy_is_goal_known",
+              "type": "leaf"
+            },
+            {
+              "children": [
+                {
+                  "node": "toy_avoid_obstacles",
+                  "type": "leaf"
+                },
+                {
+                  "node": "toy_drive_to_goal",
+                  "type": "leaf"
+                }
+              ],
+              "type": "fallback"
+            }
+          ],
+          "type": "sequence"
+        },
+        {
+          "node": "gen_b_1f2fe8016b1441dc",
+          "type": "leaf"
+        },
+        {
+          "node": "toy_sweep_for_goal",
+          "type": "leaf"
+        }
+      ],
+      "type": "fallback"
+    }
+  },
+  "prompt_hash": "9532339b5987cf40",
+  "reason": "composed",
+  "repair_of": "search_for_goal__goal_hidden_no_drift__11022fcc9c42c02a",
+  "retrieval": {
+    "considered": [],
+    "dropped": [],
+    "library_size": 6,
+    "orphan_ports": [
+      "admissible_speed:Speed"
+    ],
+    "query_tags": [
+      "avoid",
+      "clearance",
+      "coverage",
+      "disclosure",
+      "drive",
+      "explore",
+      "goal",
+      "navigate",
+      "obstacle",
+      "search",
+      "speed",
+      "unknown"
+    ],
+    "reasons": {},
+    "retrieved": [
+      "gen_b_1f2fe8016b1441dc",
+      "toy_is_goal_known",
+      "toy_avoid_obstacles",
+      "toy_sweep_for_goal",
+      "toy_drive_to_goal"
+    ],
+    "unsatisfiable_ports": []
+  },
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "spec": {
+    "detect_radius": 2.0,
+    "failure_signature": "Timed out with the goal never disclosed. toy_sweep_for_goal drove for the whole episode but covered only the room the robot started in, so the goal_known Flag never flipped and the goal branch never ticked. Zero collisions: nothing was blocked, the robot simply never reached ground it had not already covered.",
+    "family": "search_for_goal",
+    "fov": 6.283185307179586,
+    "goal_known": false,
+    "max_ang": 1.0,
+    "max_lin": 0.8,
+    "n_beams": 181,
+    "pose_drifts": false,
+    "range_max": 6.0
+  },
+  "temperature": null,
+  "tree_nodes": [
+    "composed_fallback_0",
+    "composed_sequence_0",
+    "toy_is_goal_known",
+    "composed_fallback_1",
+    "toy_avoid_obstacles",
+    "toy_drive_to_goal",
+    "gen_b_1f2fe8016b1441dc",
+    "toy_sweep_for_goal"
+  ]
+}

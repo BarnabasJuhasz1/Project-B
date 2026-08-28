@@ -1,0 +1,26 @@
+{
+  "admitted": true,
+  "detail": "admitted",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "limit_speed_dwa",
+    "condition": "b",
+    "emitted_code": true,
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_d6ae93648c7b4f25",
+    "prediction_restated_faithfully": true,
+    "prompt_hash": "d6ae93648c7b4f25",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "task": "navigate_to_goal",
+    "temperature": null
+  },
+  "node_id": "gen_b_d6ae93648c7b4f25",
+  "reason": "admitted",
+  "unit": {
+    "baseline": 1.0,
+    "candidate": 0.0,
+    "effect": 1.0,
+    "metric": "collisions",
+    "required": 0.5
+  }
+}

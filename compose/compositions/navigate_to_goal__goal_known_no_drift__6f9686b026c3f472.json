@@ -1,0 +1,187 @@
+{
+  "backend": "claude-cli",
+  "composition_id": "navigate_to_goal__goal_known_no_drift__6f9686b026c3f472",
+  "created_primitives": [],
+  "detail": "",
+  "include_toys": true,
+  "kind": "initial",
+  "library_snapshot": "lib-006-a05b0b267dd4",
+  "model_id": "claude-opus-5",
+  "ok": true,
+  "plan": {
+    "rationale": "Since the goal is disclosed from step one, the tree publishes goal_known once at the top and then prefers clearance-aware motion: the braking limiter caps forward speed whenever the intended heading has a return in range (the close-in doorway/furniture case), and toy_avoid_obstacles steers around the occluding geometry; when nothing is in range that sequence fails and toy_drive_to_goal runs the direct bearing-and-range reduction at cruise, with toy_sweep_for_goal held as a last resort that only becomes eligible if the goal is ever not disclosed.",
+    "tree": {
+      "children": [
+        {
+          "children": [
+            {
+              "node": "toy_is_goal_known",
+              "type": "leaf"
+            },
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "node": "gen_b_1f2fe8016b1441dc",
+                      "type": "leaf"
+                    },
+                    {
+                      "node": "toy_avoid_obstacles",
+                      "type": "leaf"
+                    }
+                  ],
+                  "type": "sequence"
+                },
+                {
+                  "node": "toy_drive_to_goal",
+                  "type": "leaf"
+                }
+              ],
+              "type": "fallback"
+            }
+          ],
+          "type": "sequence"
+        },
+        {
+          "node": "toy_sweep_for_goal",
+          "type": "leaf"
+        }
+      ],
+      "type": "fallback"
+    }
+  },
+  "prompt_hash": "6f9686b026c3f472",
+  "reason": "composed",
+  "repair_of": null,
+  "retrieval": {
+    "considered": [
+      {
+        "kind": "action",
+        "matched_tags": [
+          "avoid",
+          "clearance",
+          "drive",
+          "goal",
+          "obstacle"
+        ],
+        "matched_words": [
+          "avoid",
+          "clearance",
+          "drive",
+          "goal",
+          "obstacle"
+        ],
+        "node_id": "toy_avoid_obstacles",
+        "score": 15.0
+      },
+      {
+        "kind": "action",
+        "matched_tags": [
+          "drive",
+          "goal"
+        ],
+        "matched_words": [
+          "drive",
+          "goal"
+        ],
+        "node_id": "toy_drive_to_goal",
+        "score": 6.0
+      },
+      {
+        "kind": "condition",
+        "matched_tags": [
+          "goal"
+        ],
+        "matched_words": [
+          "goal"
+        ],
+        "node_id": "toy_is_goal_known",
+        "score": 3.0
+      },
+      {
+        "kind": "action",
+        "matched_tags": [],
+        "matched_words": [
+          "speed"
+        ],
+        "node_id": "gen_b_1f2fe8016b1441dc",
+        "score": 1.0
+      },
+      {
+        "kind": "condition",
+        "matched_tags": [],
+        "matched_words": [
+          "goal"
+        ],
+        "node_id": "observation_ports",
+        "score": 1.0
+      },
+      {
+        "kind": "action",
+        "matched_tags": [],
+        "matched_words": [
+          "goal"
+        ],
+        "node_id": "toy_sweep_for_goal",
+        "score": 1.0
+      }
+    ],
+    "dropped": [
+      "observation_ports"
+    ],
+    "library_size": 6,
+    "orphan_ports": [
+      "admissible_speed:Speed"
+    ],
+    "query_tags": [
+      "avoid",
+      "clearance",
+      "drive",
+      "goal",
+      "navigate",
+      "obstacle",
+      "speed"
+    ],
+    "reasons": {
+      "gen_b_1f2fe8016b1441dc": "action, rank by tag/text overlap (score 1)",
+      "toy_avoid_obstacles": "action, rank by tag/text overlap (score 15, tags ['avoid', 'clearance', 'drive', 'goal', 'obstacle'])",
+      "toy_drive_to_goal": "action, rank by tag/text overlap (score 6, tags ['drive', 'goal'])",
+      "toy_is_goal_known": "port closure: produces 'goal_known' (Flag), which a retrieved node reads",
+      "toy_sweep_for_goal": "action, rank by tag/text overlap (score 1)"
+    },
+    "retrieved": [
+      "gen_b_1f2fe8016b1441dc",
+      "toy_is_goal_known",
+      "toy_avoid_obstacles",
+      "toy_drive_to_goal",
+      "toy_sweep_for_goal"
+    ],
+    "unsatisfiable_ports": []
+  },
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "spec": {
+    "detect_radius": 2.0,
+    "failure_signature": null,
+    "family": "navigate_to_goal",
+    "fov": 6.283185307179586,
+    "goal_known": true,
+    "max_ang": 1.0,
+    "max_lin": 0.8,
+    "n_beams": 181,
+    "pose_drifts": false,
+    "range_max": 6.0
+  },
+  "temperature": null,
+  "tree_nodes": [
+    "composed_fallback_0",
+    "composed_sequence_0",
+    "toy_is_goal_known",
+    "composed_fallback_1",
+    "composed_sequence_1",
+    "gen_b_1f2fe8016b1441dc",
+    "toy_avoid_obstacles",
+    "toy_drive_to_goal",
+    "toy_sweep_for_goal"
+  ]
+}

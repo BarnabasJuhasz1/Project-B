@@ -1,0 +1,56 @@
+id: path_integration_ants
+node_name: MaintainHomingVector
+
+source:
+  citation: >-
+    Mueller, M. & Wehner, R. (1988). "Path integration in desert ants,
+    Cataglyphis fortis." PNAS 85(14), 5287-5290.
+  span: >-
+    p. 5287, abstract: "This approximation is characterized by small, but
+    systematic, navigational errors that helped us elucidate the ant's way of
+    computing its mean home vector." Same page: "the homeward courses of the
+    ants deviate significantly and systematically from the true homeward
+    direction, with the error angle depending on the turning angle and the
+    ratio a/b of the lengths of the two legs of the path", quantified in
+    Fig. 2B. (The Greek symbols for the two angles do not survive text
+    extraction and are described rather than quoted here.)
+  verified: verified
+  verified_by: juhasz.barna12@gmail.com
+
+mechanism: >-
+  Cataglyphis maintains a continuously updated vector to its nest by integrating
+  its own outbound path, and on release runs that vector directly rather than
+  retracing the route. The integration is independent of landmarks entirely, and
+  it carries characteristic systematic errors rather than random ones.
+
+trigger: >-
+  The localisation confidence proxy, pose_error_estimate, exceeds the level at
+  which the pose estimate can still be steered by.
+
+derivation: >-
+  Integrate the commanded twist over the episode to hold a vector back to the
+  start, and steer by THAT vector rather than by pose_estimate once the estimate
+  is untrustworthy. Because it accumulates commanded motion rather than believed
+  position, its error is independent of the drift injected into pose_estimate -
+  which is what makes it a fallback rather than a second copy of the same fault.
+
+prediction:
+  statement: >-
+    Under drift, steering the return leg by an integrated home vector instead of
+    pose_estimate produces a higher goal-reach rate on a degraded return than
+    reactive_avoid, which steers by pose_estimate throughout.
+  metric: goal_reached
+  baseline: reactive_avoid
+  min_effect: 0.5
+  cost_metric: spl
+
+confidence: high
+tags: [localisation, homing, path-integration, drift, tier2]
+supplies: [coverage, provenance]
+
+notes: >-
+  Now testable: chunk 13's drift model makes pose_error_estimate a real signal
+  and makes the degraded families runnable. The systematic-error result is the
+  falsifiable part and the reason this card is MEDIUM rather than LOW - but the
+  span has to be checked, because "systematic rather than random" is exactly the
+  kind of claim a model will assert with equal confidence either way.

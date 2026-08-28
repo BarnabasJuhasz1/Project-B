@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "axes": [
+      "goal_known",
+      "no_drift"
+    ],
+    "backend": "claude-cli",
+    "family": "navigate_to_goal",
+    "kind": "initial",
+    "library_snapshot": "lib-006-23c57a77269e",
+    "model_id": "claude-opus-5",
+    "repair_of": null,
+    "step": "compose"
+  },
+  "prompt": "# Compose a behaviour tree\n\nYou are assembling a behaviour tree for a quadruped robot from a **fixed set of\nexisting nodes**. You are not writing code, and you are not designing new\nbehaviours. Everything the tree can do is already in the list below; your job is\nto decide which of those nodes to use and how to arrange them.\n\n## The task\n\nReach a goal in an indoor space with no map. Walls and furniture occlude; the route is not a straight line and an obstruction is often not visible until the robot is close.\n\nThe goal position IS disclosed at the start: `obs.goal` is populated from the first step.\n\n`obs.pose_estimate` is exact.\n\nThe scan is 181 beams over 6.28 rad, to 6.0 m. The Twist is saturated at 0.80 m/s and 1.00 rad/s. The episode has a fixed time limit, enforced by the runner.\n\n## The nodes available to you\n\nEach entry is a node's complete public contract: its kind, its typed ports, the\none thing it does, and when it applies. There is nothing else to know about a\nnode \u2014 no implementation, no rationale, no source. Two nodes with the same\nports are interchangeable as far as wiring is concerned and are told apart only\nby their effect.\n\n### `gen_b_d6ae93648c7b4f25`\n- kind: **action**\n- ports: speed_limit (Speed, out)\n- effect: Commanded forward speed never exceeds the speed from which the robot could still brake to a stop within the free distance measured along the intended heading.\n- precondition: A goal position is disclosed and not yet reached, so there is an intended heading along which free distance can bound forward speed.\n- tags: admissible-velocity, braking-distance, collision-avoidance, doorway, dynamic-window, speed-limit\n\n### `toy_is_goal_known`\n- kind: **condition**\n- ports: goal_known (Flag, out)\n- effect: publishes whether the goal has been disclosed, as a Flag\n- precondition: always\n- tags: disclosure, goal\n\n### `toy_avoid_obstacles`\n- kind: **action**\n- ports: goal_known (Flag, in)\n- effect: emits a Twist that reduces range to the goal while keeping clear of obstacles\n- precondition: the goal has been disclosed\n- tags: avoid, clearance, drive, goal, obstacle\n\n### `toy_drive_to_goal`\n- kind: **action**\n- ports: goal_known (Flag, in)\n- effect: emits a Twist that reduces the bearing and range to the goal\n- precondition: the goal has been disclosed\n- tags: drive, goal\n\n### `toy_sweep_for_goal`\n- kind: **action**\n- ports: goal_known (Flag, in)\n- effect: emits a Twist that covers unexplored floor\n- precondition: the goal has NOT been disclosed\n- tags: coverage, search\n\n## How a tree is built\n\nThree composites and one leaf form:\n\n- **`sequence`** \u2014 tick children in order until one does not SUCCEED. FAILURE or\n  RUNNING from any child stops the sequence and is returned. This is \"and then\".\n- **`fallback`** \u2014 tick children in order until one does not FAIL. SUCCESS or\n  RUNNING from any child stops it and is returned. This is \"or else\", and it is\n  the recovery idiom: a branch that fails hands over to the next one.\n- **`decorator`** \u2014 wraps exactly one child and governs whether or how often the\n  child's behaviour happens. Only a node whose kind is `decorator` may be used\n  this way.\n- **`leaf`** \u2014 one node from the list, ticked directly.\n\nTwo rules the tree must satisfy, both checked mechanically before it runs:\n\n1. **Every `in` port must be written by a node that appears EARLIER in tick\n   order.** Tick order is depth-first, left to right. A node that reads\n   `goal_known` must be preceded somewhere earlier in the tree by a node that\n   writes `goal_known`, with the same port type.\n2. **A node whose kind is `condition` or `decorator` never moves the robot.**\n   Only an `action` emits motion. A tree containing no action cannot drive.\n\nA node's own precondition gates it: when the precondition is false the node\nreturns FAILURE without doing anything. That is what makes a `fallback` of two\nactions with opposite preconditions take turns rather than fight.\n\n**Two actions in one `sequence` almost never both run.** An action that is\ndriving returns RUNNING, and RUNNING stops the sequence \u2014 so the second action\nticks only on the steps where the first returned SUCCESS, which for a driving\naction usually means only when it has finished. If you want one action to modify\nanother's motion, that has to happen through a port the second one READS; if the\nsecond one declares no such input port, putting them in a sequence does not\ncombine them, it starves the second one. The contracts above tell you what each\nnode reads and writes, and that is the only channel through which two nodes\naffect each other.\n\n## What to return\n\n**Exactly one fenced `json` block, containing exactly one JSON object with both\nkeys \u2014 `rationale` and `tree` \u2014 inside it.** Not one block per key. Not a block\nfor the plan and another for anything else. If your response contains a second\nfenced block of any kind, the composition is rejected without being read, and\nthe same is true if the single block is missing either key. Write whatever prose\nyou like outside the block; just do not fence it as `json`. No Python anywhere.\n\n```json\n{\n  \"rationale\": \"One or two sentences on why this arrangement, in terms of the task and the nodes' effects.\",\n  \"tree\": {\n    \"type\": \"fallback\",\n    \"children\": [\n      {\"type\": \"sequence\", \"children\": [\n        {\"type\": \"leaf\", \"node\": \"some_condition_id\"},\n        {\"type\": \"leaf\", \"node\": \"some_action_id\"}\n      ]},\n      {\"type\": \"leaf\", \"node\": \"another_action_id\"}\n    ]\n  }\n}\n```\n\nObject forms:\n\n- `{\"type\": \"sequence\", \"children\": [...]}` \u2014 one or more children.\n- `{\"type\": \"fallback\", \"children\": [...]}` \u2014 one or more children.\n- `{\"type\": \"decorator\", \"node\": \"<id>\", \"child\": {...}}` \u2014 exactly one child.\n- `{\"type\": \"leaf\", \"node\": \"<id>\"}`\n\n**`node` must be an id from the list above, spelled exactly.** Any other value is\nrejected and the composition fails. If the available nodes cannot do the task,\nreturn the best tree they can form and say so in `rationale` \u2014 do not invent a\nnode, and do not describe one you wish existed as if it were there.\n",
+  "prompt_hash": "56b3466284b7d9e8",
+  "response": {
+    "backend": "claude-cli",
+    "model_id": "claude-opus-5",
+    "raw": {
+      "session_id": "21990934-3ef0-4bf4-abbd-9da58037a4c3",
+      "total_cost_usd": 0.17191299999999998,
+      "usage": {
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 14137,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "cache_creation_input_tokens": 14137,
+        "cache_read_input_tokens": 0,
+        "inference_geo": "not_available",
+        "input_tokens": 2,
+        "iterations": [
+          {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 14137,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "cache_creation_input_tokens": 14137,
+            "cache_read_input_tokens": 0,
+            "input_tokens": 2,
+            "output_tokens": 1117,
+            "type": "message"
+          }
+        ],
+        "output_tokens": 1117,
+        "output_tokens_details": {
+          "thinking_tokens": 633
+        },
+        "server_tool_use": {
+          "web_fetch_requests": 0,
+          "web_search_requests": 0
+        },
+        "service_tier": "standard",
+        "speed": "standard"
+      }
+    },
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "temperature": null,
+    "text": "```json\n{\n  \"rationale\": \"The goal is disclosed from step one, so the only branch that ever needs to drive is the goal-seeking one; `toy_avoid_obstacles` is chosen over `toy_drive_to_goal` because in an unmapped indoor space with occluding walls the route is not a straight line and a pure bearing/range reducer would drive into furniture, whereas this node reduces range while keeping clear. `toy_is_goal_known` is ticked first to write the `goal_known` Flag that both actions read, and `toy_sweep_for_goal` sits last in the fallback purely as a recovery leg for the (here impossible) case of an undisclosed goal, since its precondition is the exact complement of the avoider's. `gen_b_d6ae93648c7b4f25` is omitted deliberately: it only publishes a `Speed` on an out port, and no node in the available set declares a `Speed` in port, so there is no channel through which its braking-distance limit could reach the driving action \u2014 sequencing it would starve one of the two rather than combine them.\",\n  \"tree\": {\n    \"type\": \"sequence\",\n    \"children\": [\n      {\"type\": \"leaf\", \"node\": \"toy_is_goal_known\"},\n      {\"type\": \"fallback\", \"children\": [\n        {\"type\": \"leaf\", \"node\": \"toy_avoid_obstacles\"},\n        {\"type\": \"leaf\", \"node\": \"toy_sweep_for_goal\"}\n      ]}\n    ]\n  }\n}\n```"
+  }
+}

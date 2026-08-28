@@ -34,6 +34,9 @@ symbols.txt
 **/recordings/
 *.tmp
 
+*.mp4
+
+
 # Large binary checkpoints (if training RL policies)
 /.pretrained_checkpoints/
 
@@ -56,3 +59,20 @@ __pycache__/
 !.vscode/launch.json
 .idea/
 .DS_Store
+
+# Run outputs. CLAUDE.md says "recordings and run outputs belong in out/
+# (gitignored)" — but until this line, only out/runs/ was ignored, and only
+# incidentally, by the **/runs/ pattern above which is not about out/ at all.
+# So out/demo/ or any other new subdirectory would have been committed
+# silently, videos included. Ignore the directory itself, not a pattern that
+# happens to match one child of it.
+out/
+
+# Re-include the evaluation package. `**/runs/` above is about Isaac Lab RL
+# run outputs; it ALSO matches this repo's own runs/ Python package — the
+# sweep driver, the condition bindings, the aggregation and their tests —
+# which was therefore invisible to `git status` and would have been omitted
+# from every commit silently. Un-exclude the directory ITSELF: a `!runs/**`
+# cannot work, because git never descends into an excluded directory.
+# Anchored with a leading slash so out/runs/ stays ignored (out/ covers it).
+!/runs/

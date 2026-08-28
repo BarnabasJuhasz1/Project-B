@@ -1,0 +1,64 @@
+id: vague_adaptive_motion
+node_name: MoveAdaptively
+
+# A DELIBERATELY BAD CARD. It is a test fixture and it is NOT part of the card
+# store: `cards/` is what G1's provenance fraction is computed over, and a
+# fixture sitting in it would be counted. It is loaded by path, explicitly, by
+# generate/tests/test_admit.py and by the chunk-15 demonstration run.
+#
+# What is wrong with it, deliberately:
+#
+#   Mechanism   is a slogan. It names no quantity, no relationship and no
+#               condition under which it would be false.
+#   Trigger     is unconditional, so it is not a precondition at all.
+#   Derivation  restates the mechanism instead of turning it into a rule for a
+#               robot with a 181-beam scan and a frozen locomotion policy.
+#   Prediction  names a real metric, because cards/store.py rejects one that
+#               does not AT LOAD, and a card that cannot be loaded never
+#               reaches the generator and so tests nothing here. The claim is
+#               unfalsifiable in the way that survives that filter: an
+#               unmotivated demand for a large improvement over the STRONG
+#               baseline, with no mechanism that would produce it.
+#
+# The point of the fixture is that the harness reaches a REJECTION rather than
+# an error, and records why. §4 requires that decision to be automatic, and a
+# generator that only ever sees good cards has never been shown to be able to
+# say no.
+
+source:
+  citation: >-
+    Not a real source. This card is a test fixture; see the comment above.
+  span: ""
+  verified: unverified
+
+mechanism: >-
+  The robot should move intelligently, adapting its behaviour to the
+  environment as conditions require.
+
+trigger: >-
+  Whenever the robot is moving.
+
+derivation: >-
+  Adaptive motion is applied continuously, so that the robot behaves
+  appropriately for whatever situation it is in.
+
+prediction:
+  statement: >-
+    A controller that moves adaptively reaches the goal more often than
+    reactive_avoid.
+  metric: goal_reached
+  baseline: reactive_avoid
+  min_effect: 0.5
+  cost_metric: ""
+
+confidence: low
+tags: [fixture, deliberately-bad]
+supplies: []
+
+notes: >-
+  Expected outcome: REJECTED. The likely reason is MALFORMED - reactive_avoid
+  is the strong reference controller and reaches the goal on any micro-world
+  simple enough for a vague node to also solve, so the unit scenario cannot
+  distinguish the node from doing nothing. A vague card's second failure mode,
+  an effect below the floor, is equally acceptable. What must NOT happen is an
+  admission, or a crash.
