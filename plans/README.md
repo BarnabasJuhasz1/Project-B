@@ -83,13 +83,13 @@ generator and composition. Rationale and the three gaps that block whole card fa
 | # | Chunk | Depends on | Needs Isaac Sim | Status |
 |---|---|---|---|---|
 | 11a | [The task contract](done/11a-task-contract.md) | — | no | done |
-| 11 | [Seal the held-out split](done/11-held-out-split.md) | 11a | no | **done — split-v1** |
+| 11 | [Seal the held-out split](done/11-held-out-split.md) | 11a | no | **done — tagged `split-v1`** |
 | 12 | [The node contract and the library](done/12-node-contract.md) | 11a | no | done |
 | 13 | [Unit-scenario harness and promotion gate](done/13-unit-harness.md) | 11a, 12 | no | done |
 | 14 | [The first hand-curated cards](done/14-first-cards.md) | 12 | no | done — spans unverified |
 | 15 | [The generator](done/15-generator.md) | 12, 13, 14 | no | **done — see FINDINGS.md** |
 | 16 | [Composition](done/16-composition.md) | 12, 15 | no | **done** |
-| 17 | [Pre-registration](done/17-pre-registration.md) | 10, 11a, 11 | no | **done — needs `git tag prereg-v1`** |
+| 17 | [Pre-registration](done/17-pre-registration.md) | 10, 11a, 11 | no | **done — tagged `prereg-v1`** |
 | 18 | [Node tracing](done/18-node-tracing.md) | 12 | no | done |
 
 **Chunk 11a is done**, and it was the single change to the frozen `Observation` and `Scenario`
@@ -138,7 +138,8 @@ seed* — measured on three controllers. The bootstrap therefore resamples **sce
 effective N is 12, and `scripts/power_analysis.py` puts the rule at ~0.16 power against a true
 30-point gap. That consequence is **pre-registered**: a rule that does not fire may not be
 reported as "the corpus does not help". One Done-when clause is still open and it is the one that
-blocks Week 5 — **`git tag prereg-v1`**, which needs the files tracked first.
+blocks Week 5 — **`git tag prereg-v1`**, which needs the files tracked first. **Both are now
+done**: the tree was committed at `a84cd46` and `split-v1` and `prereg-v1` both point at it.
 
 The three findings recorded in the epic — **localisation is not simulated**, **there is no search
 task**, **legibility has no metric** — are now all decided: a seeded random-walk drift model
@@ -159,13 +160,21 @@ the epic rather than to one chunk live in [`04-epic-evaluation.md`](04-epic-eval
 | # | Chunk | Depends on | Needs Isaac Sim | Status |
 |---|---|---|---|---|
 | 28 | [The batch runner and aggregation](done/28-batch-runner.md) | 17 | no | **done** |
-| 29 | Grow the libraries to a reportable size | 15, 28 | no | not written |
+| 29 | [Grow the libraries to a reportable size](todo/29-grow-libraries.md) | 15, 28 | no | **todo — carries an undecided project-level question** |
 | 30 | Condition C — the Nav2 baseline | 28 | **yes** | not written |
 | 31 | The container run | 28, 29 | **yes** | not written |
 | 32 | G3 — composition over the held-out split | 16, 29, 31 | **yes** | not written |
 
-**28 is done; the rest are blocked.** They are named so the shape is visible, and each gets a plan
-file when its blockers clear, because a plan written against a blocked dependency is a guess.
+**28 is done and 29 is now written; 30–32 are still blocked.** They are named so the shape is
+visible, and each gets a plan file when its blockers clear, because a plan written against a
+blocked dependency is a guess.
+
+**Chunk 29 turned up a ceiling nobody had costed.** `generate/generator.py:render()` is a pure
+function of `(condition, task, card)` with no nonce, and the node id *is* the prompt hash — so
+the reachable library is 3 nodes for A, 3 for D and 15 for B, and **A and D cannot reach G1's 20
+by spending more calls**. The binding constraint is the prompt-identity design, not the corpus.
+The plan states the three levers that lift it and the decision that has to be taken before any
+generation runs.
 
 **Chunk 28's rehearsal found a defect in the sweep itself, which is what a rehearsal is for.**
 Five of eighteen episodes exited **0**, wrote no result, and were recorded as `ok` — the driver
