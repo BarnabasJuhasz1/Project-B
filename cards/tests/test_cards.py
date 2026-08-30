@@ -110,8 +110,8 @@ def _card_dict(**overrides):
 
 
 def _load(data, where="probe.yaml"):
-    from cards.store import _card_from_dict
-    return _card_from_dict(data, where)
+    from cards.store import card_from_dict
+    return card_from_dict(data, where)
 
 
 def test_a_prediction_naming_no_real_metric_is_rejected_at_load():

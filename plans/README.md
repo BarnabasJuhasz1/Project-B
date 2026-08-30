@@ -164,7 +164,7 @@ the epic rather than to one chunk live in [`04-epic-evaluation.md`](04-epic-eval
 | 30 | Condition C — the Nav2 baseline | 28 | **yes** | not written |
 | 31 | The container run | 28, 29 | **yes** | not written |
 | 32 | G3 — composition over the held-out split | 16, 29, 31 | **yes** | not written |
-| 33 | [The citations probe](todo/33-citation-probe.md) | 14, 15 | no | **todo — a probe, not a G2 condition** |
+| 33 | [The citations probe](doing/33-citation-probe.md) | 14, 15 | no | **doing — machinery built; five model calls outstanding** |
 
 **28 is done; 29 and 33 are written; 30–32 are still blocked.** They are named so the shape is
 visible, and each gets a plan file when its blockers clear, because a plan written against a

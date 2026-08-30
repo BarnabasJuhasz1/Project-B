@@ -77,31 +77,51 @@ answer key, for the price of five model calls.
 
 ## Build
 
-- `cards/probe/` — a directory for E-cards, committed. Never loaded by `cards/store.py`, so a
-  reconstructed card can never reach condition B's retrieval. ⚠️ A test asserts this: an E-card
-  in the B store would silently corrupt the headline comparison.
-- `generate/prompts/condition_e.md` — the citation-only prompt. Built from `condition_d.md`
-  (E articulates a principle, as D does) with the citation substituted into the literature
-  block, so the same strip-and-diff test that governs A/B/D governs E. **This adds a fourth
-  prompt file; it does not modify the three existing ones**, so no committed transcript is
-  orphaned.
-- `generate/generator.py` — accept condition `e`, which takes a card but renders only its
-  `citation`. The existing guard ("a card reaching A or D would void the ablation silently")
-  must be extended, not bypassed: E gets the citation and provably nothing else, asserted by a
-  test that greps the rendered prompt for the mechanism and derivation text and fails if found.
-- `scripts/probe_citations.py` — runs the diff over `cards/`, writes
-  `cards/probe/FINDINGS.md`: per card, which fields were reconstructed, which were wrong, and
-  whether the Prediction's numbers match the verified span.
+⚠️ **Deviation from this plan as first written, 2026-08-30.** The draft said "accept condition
+`e`" and "add `generate/prompts/condition_e.md`" while also saying generating E *nodes* is not
+in scope. Those conflict: adding `e` to `CONDITIONS` makes `scripts/generate_batch.py` enumerate
+it and generate nodes, makes `test_prompts.py`'s three-way strip-and-diff apply to a prompt whose
+deliverable is a card rather than a node, and makes E look like a condition — which is precisely
+what this chunk says it must not become. **`CONDITIONS` stays `("a", "b", "d")`.** E is a
+card-reconstruction probe with its own prompt, and a test asserts `condition_e.md` does not
+exist. The B−E / E−D decomposition remains the motivation, to be answered in a later cycle if
+the card diff justifies the episodes.
+
+- ✅ `cards/probe/` — reconstructions and `FINDINGS.md`, committed, with a README saying in the
+  first line that nothing in it is a principle card. `cards.store` cannot read it two ways over:
+  its glob is non-recursive, and `CardStore.load()` pointed straight at the directory **raises**.
+  Both asserted.
+- ✅ `generate/prompts/probe_card.md` — the citation-only prompt. Carries the citation, the
+  system description and the six-field schema, and explicitly invites *"I do not know this
+  document"* as a correct answer, because an honest refusal is a result and a plausible
+  reconstruction is the failure being measured.
+- ✅ `generate/probe.py` — render, leak-check, parse, diff. `leaked()` runs on **every call**
+  and refuses before the model is reached: if the card's mechanism, trigger, derivation, span or
+  prediction statement got into the prompt, E measures transcription rather than recall and the
+  output would look identical. A reconstruction is parsed by `cards.store.card_from_dict` — the
+  real loader, now public — so a reconstruction that would not load as a card is a failed
+  reconstruction rather than something the probe softens.
+- ✅ `scripts/probe_citations.py` — `--dry-run`, `--card`, `--verified-only`, `--report`.
+  Writes `cards/probe/FINDINGS.md` **generated from the diffs**, never hand-maintained.
+
+The span result is deliberately left **UNRESOLVED** in the generated tables rather than scored.
+Whether a reconstructed span is real is a question about a PDF, and the generator has no PDF —
+writing a verdict nobody checked would be the same confabulation the probe exists to detect, one
+level up. `FINDINGS.md` has a *Written verdicts* section a human owns.
 
 ## Done when
 
-- `cards/probe/FINDINGS.md` reports, per citation, a field-level reconstruction result and an
-  explicit verdict on the Prediction's numbers against the verified span.
-- A test proves `cards/store.py` cannot load an E-card.
-- A test proves `condition_e.md` renders no mechanism, trigger or derivation text.
-- The strip-the-literature-block diff test covers four prompts, not three.
-- The sim-free suite stays green, and `PRE-REGISTRATION.md` is **unchanged** — this chunk
-  reports outside G2 and pre-registers nothing.
+- ⬜ `cards/probe/FINDINGS.md` reports, per citation, a field-level reconstruction result and an
+  explicit verdict on the Prediction's numbers against the verified span. **Needs the five model
+  calls and then a human with the papers open.**
+- ✅ A test proves `cards/store.py` cannot load a probe card — both by glob and by direct load.
+- ✅ A test proves the probe prompt renders no mechanism, trigger, derivation, span or
+  prediction statement, on every card in the store, and that the guard fires when poisoned.
+- ✅ A test proves no fifth condition was smuggled in: `CONDITIONS == ("a", "b", "d")` and
+  `condition_e.md` does not exist. (The strip-the-literature-block test still covers three
+  prompts, not four — see the deviation above.)
+- ✅ The sim-free suite stays green (565 tests), and `PRE-REGISTRATION.md` is **unchanged** —
+  this chunk reports outside G2 and pre-registers nothing.
 
 ## Not in scope
 
@@ -113,6 +133,10 @@ hand rather than without it.
 Generating E *nodes* and admitting them into a library. The probe stops at the card. Node
 generation from an E-card would need a fifth library, a fifth snapshot tag and #8 compliance,
 and none of that is bought by the question this chunk asks.
+
+**Status 2026-08-30: machinery built and tested; no model call made.**
+`scripts/probe_citations.py --dry-run` lists all five citations and which have an answer key
+(four do; `limit_speed_ics` deliberately does not). Running it for real is five calls.
 
 ## Open questions
 

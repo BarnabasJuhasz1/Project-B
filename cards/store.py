@@ -71,7 +71,14 @@ def metric_keys():
     return _METRIC_KEYS
 
 
-def _card_from_dict(data, where):
+def card_from_dict(data, where):
+    """One parsed mapping -> a validated Card.
+
+    Public because the citations probe (chunk 33) parses a MODEL-RECONSTRUCTED
+    card with exactly this function: a reconstruction that would not load as a
+    real card is a failure of the reconstruction, not something the probe should
+    paper over with a laxer parser.
+    """
     try:
         src = data["source"]
         pred = data["prediction"]
@@ -133,7 +140,7 @@ def load_card(path):
         data = yaml.safe_load(fh)
     if not isinstance(data, dict):
         raise CardError(f"{path.name}: expected one card per file, got {type(data)}")
-    card = _card_from_dict(data, path.name)
+    card = card_from_dict(data, path.name)
     if card.id != path.stem:
         raise CardError(
             f"{path.name}: id {card.id!r} does not match the filename. One card "
@@ -168,6 +175,19 @@ class CardStore:
     @classmethod
     def load(cls, directory=None):
         directory = Path(directory or CARDS_DIR)
+        # ⚠️ `cards/probe/` holds MODEL-RECONSTRUCTED cards from chunk 33's
+        # citations probe. They are not extracted from anything — they are what
+        # a model recalls from a citation, and one of them reaching condition
+        # B's retrieval would corrupt the headline comparison silently and
+        # invisibly. The glob is non-recursive, so the subdirectory is already
+        # invisible; this refuses the other way in, which is someone pointing
+        # the store AT it.
+        if directory.name == "probe" and directory.parent.name == "cards":
+            raise CardError(
+                f"{directory}: this is the citations-probe store, and its cards "
+                f"are MODEL RECONSTRUCTIONS rather than extractions. Loading "
+                f"them as real cards would put a confabulated mechanism into "
+                f"condition B. Read them with generate.probe instead.")
         paths = sorted(p for p in directory.glob("*.yaml"))
         return cls(load_card(p) for p in paths)
 
