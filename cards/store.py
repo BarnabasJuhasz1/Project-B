@@ -99,6 +99,7 @@ def _card_from_dict(data, where):
             tags=tuple(data.get("tags", ())),
             supplies=tuple(data.get("supplies", ())),
             notes=data.get("notes", ""),
+            mechanism_family=data.get("mechanism_family", ""),
         )
     except KeyError as exc:
         raise CardError(f"{where}: missing field {exc}") from exc
@@ -149,6 +150,20 @@ class CardStore:
         self._by_id = {c.id: c for c in self._cards}
         if len(self._by_id) != len(self._cards):
             raise CardError("duplicate card ids in the store")
+        # One source, one node. Two cards sharing a node_name would produce two
+        # nodes under one name, so the library could not say which source a node
+        # came from - and provenance is the whole point of a card. Cards that
+        # derive the SAME mechanism say so with `mechanism_family`, which is what
+        # G1's coverage count is taken over.
+        by_name = {}
+        for c in self._cards:
+            if c.node_name in by_name:
+                raise CardError(
+                    f"cards {by_name[c.node_name]!r} and {c.id!r} share "
+                    f"node_name {c.node_name!r}. node_name is 1-1 with the card. "
+                    f"If they are two derivations of one mechanism, give them "
+                    f"distinct names and the same `mechanism_family`.")
+            by_name[c.node_name] = c.id
 
     @classmethod
     def load(cls, directory=None):
@@ -185,7 +200,16 @@ class CardStore:
         return [c for c in self._cards if c.prediction.metric == metric]
 
     def by_node(self, node_name):
+        """The one card that produces this node. A list, not a card, because
+        an unknown name is an empty answer rather than an error - but it can
+        never hold more than one, and CardStore.__init__ is why."""
         return [c for c in self._cards if c.node_name == node_name]
+
+    def by_family(self, family):
+        """Every card deriving this mechanism, however many sources argue it.
+        This is the retrieval axis that survives the corpus growing: asking for
+        MaintainHomingVector should find the ant paper and the mammal paper."""
+        return [c for c in self._cards if c.family == family]
 
     def tags(self):
         return sorted({t for c in self._cards for t in c.tags})
@@ -204,5 +228,8 @@ class CardStore:
                 level.value: sum(c.confidence is level for c in self._cards)
                 for level in Confidence
             },
-            "mechanisms": len({c.node_name for c in self._cards}),
+            # DISTINCT MECHANISMS, not distinct nodes - G1's coverage measure.
+            # Taken over families, so N cards on one principle count once.
+            "mechanisms": len({c.family for c in self._cards}),
+            "nodes": len({c.node_name for c in self._cards}),
         }

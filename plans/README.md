@@ -160,12 +160,13 @@ the epic rather than to one chunk live in [`04-epic-evaluation.md`](04-epic-eval
 | # | Chunk | Depends on | Needs Isaac Sim | Status |
 |---|---|---|---|---|
 | 28 | [The batch runner and aggregation](done/28-batch-runner.md) | 17 | no | **done** |
-| 29 | [Grow the libraries to a reportable size](todo/29-grow-libraries.md) | 15, 28 | no | **todo — carries an undecided project-level question** |
+| 29 | [Grow the libraries to a reportable size](doing/29-grow-libraries.md) | 15, 28 | no | **doing — machinery built; blocked on the scale decision and the corpus run** |
 | 30 | Condition C — the Nav2 baseline | 28 | **yes** | not written |
 | 31 | The container run | 28, 29 | **yes** | not written |
 | 32 | G3 — composition over the held-out split | 16, 29, 31 | **yes** | not written |
+| 33 | [The citations probe](todo/33-citation-probe.md) | 14, 15 | no | **todo — a probe, not a G2 condition** |
 
-**28 is done and 29 is now written; 30–32 are still blocked.** They are named so the shape is
+**28 is done; 29 and 33 are written; 30–32 are still blocked.** They are named so the shape is
 visible, and each gets a plan file when its blockers clear, because a plan written against a
 blocked dependency is a guess.
 
@@ -173,8 +174,15 @@ blocked dependency is a guess.
 function of `(condition, task, card)` with no nonce, and the node id *is* the prompt hash — so
 the reachable library is 3 nodes for A, 3 for D and 15 for B, and **A and D cannot reach G1's 20
 by spending more calls**. The binding constraint is the prompt-identity design, not the corpus.
-The plan states the three levers that lift it and the decision that has to be taken before any
-generation runs.
+A second, softer finding: B's 15 is a count of *prompts*, and the five cards name only three
+distinct mechanisms — **deliberately**, since chunk 14 spent two cards pairing derivations to
+test the schema. Unlike A's and D's, B's 3 is not structural. But `node_name` is a hand-typed
+field nothing validates, so G1's "distinct admissible primitives" headline is set by a naming
+convention rather than measured; the node count and the mechanism count are different numbers
+and the plan now requires both. The plan
+states the levers that lift it, the **condition-neutrality rule** any of them has to obey (an
+enumeration axis available to A, B and D alike — which is exactly why cards cannot be one), and
+the decision that has to be taken before any generation runs.
 
 **Chunk 28's rehearsal found a defect in the sweep itself, which is what a rehearsal is for.**
 Five of eighteen episodes exited **0**, wrote no result, and were recorded as `ok` — the driver

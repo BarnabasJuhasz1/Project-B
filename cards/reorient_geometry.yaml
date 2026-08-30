@@ -1,5 +1,6 @@
 id: reorient_geometry
 node_name: ReorientToGeometry
+mechanism_family: ReorientToGeometry
 
 source:
   citation: >-

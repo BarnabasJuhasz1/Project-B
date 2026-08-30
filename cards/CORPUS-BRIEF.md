@@ -124,6 +124,30 @@ robotics literature are both in scope, and mixing them is desirable.
 | 7 | **Escaping stuck states** | 2–3 | local-minimum escape, oscillation detection and damping, recovery behaviours |
 | 8 | **Recent work (2024–2026)** | 3–5 | anything in buckets 1–7 published recently; see §6 |
 
+## 5b. Naming: one source, one node, and what counts as coverage
+
+Two fields decide G1's headline number, and both are typed by hand.
+
+- **`node_name` is 1-1 with the card.** One source, one node. `CardStore` rejects a
+  store where two cards share a name, because two nodes under one name means the
+  library cannot say which paper a node came from — and that is the entire point of a
+  card. Two papers arguing the same principle get **different node names**.
+- **`mechanism_family` records what the card is a derivation OF.** Cards arguing one
+  principle share a family. G1's coverage measure — *"distinct admissible primitives"* —
+  is counted over **families**, never over cards or node names.
+
+The consequence for this brief: **a paper that shares a family with a card already in the
+store adds zero coverage.** It may still be worth extracting (a second derivation of one
+principle is how we test whether the `Derivation` field carries information — that is what
+`limit_speed_dwa`/`limit_speed_ics` and `path_integration_ants`/`path_integration_mammals`
+are for), but it does not move the number G1 reports. Prefer papers that open a **new
+family**.
+
+**Every new `mechanism_family` requires a one-line justification, on the card, of what it
+does that no existing family does.** Without that rule the coverage count is set by
+whoever is typing rather than measured, and it can be inflated for free by splitting one
+principle across two names. State it in `notes:`.
+
 ## 6. Recency matters, specifically
 
 One of the three things a corpus is supposed to supply that a model cannot is **novelty:

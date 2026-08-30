@@ -1,5 +1,6 @@
 id: limit_speed_ics
-node_name: LimitSpeedToVisibleRange
+node_name: LimitSpeedToOcclusionBoundary
+mechanism_family: LimitSpeedToVisibleRange
 
 source:
   citation: >-

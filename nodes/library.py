@@ -69,6 +69,15 @@ class LibraryEntry:
             "model_id": m.model_id,
             "prompt_hash": m.prompt_hash,
             "temperature": m.temperature,
+            # `mechanism_family` is DELIBERATELY ABSENT. identity() feeds
+            # snapshot(), and #8 says every reported result names the library
+            # tag it came from — committed results already name
+            # lib-006-23c57a77269e. The family is a grouping label over the
+            # corpus, not a property of the node: two entries differing only in
+            # family are the same node, tick for tick, and re-filing a card
+            # under a new family must not silently invalidate a result that has
+            # already been reported. It is reported by provenance(), which is
+            # read at report time and is not hashed.
         }
 
     def __repr__(self):
@@ -153,14 +162,25 @@ class Library:
     # -- provenance ---------------------------------------------------------
 
     def provenance(self):
-        """G1's numbers, computed rather than asserted: how many nodes, and what
-        fraction carry a source span with extraction confidence."""
+        """G1's numbers, computed rather than asserted: how many nodes, what
+        fraction carry a source span with extraction confidence, and how many
+        DISTINCT MECHANISMS they cover.
+
+        `node_count` and `mechanism_count` are different numbers and G1 asks for
+        the second one — its coverage measure is "distinct admissible
+        primitives". They differ exactly when two sources argue one principle,
+        which the corpus does on purpose (chunk 14's paired derivations), so
+        reporting `node_count` alone overstates coverage by the pairing factor.
+        """
         total = len(self._entries)
         traceable = sum(e.metadata.is_traceable for e in self._entries)
+        families = [e.metadata.family for e in self._entries]
         return {
             "node_count": total,
             "traceable_count": traceable,
             "traceable_fraction": (traceable / total) if total else 0.0,
+            "mechanism_count": len(set(families)),
+            "by_mechanism": {f: families.count(f) for f in sorted(set(families))},
             "by_origin": {
                 origin: sum(e.metadata.origin.value == origin
                             for e in self._entries)

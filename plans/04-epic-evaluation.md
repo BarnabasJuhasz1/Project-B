@@ -58,10 +58,11 @@ it is flagged here rather than buried.
 | # | Chunk | Depends on | Needs Isaac Sim |
 |---|---|---|---|
 | 28 | [The batch runner and aggregation](done/28-batch-runner.md) | 17 | no (exercised on the dev set) |
-| 29 | Grow the libraries to a reportable size | 15, 28 | no |
+| 29 | [Grow the libraries to a reportable size](doing/29-grow-libraries.md) | 15, 28 | no |
 | 30 | Condition C — the Nav2 baseline | 28 | **yes** |
 | 31 | The container run | 28, 29 | **yes** |
 | 32 | G3 — composition over the held-out split | 16, 29, 31 | **yes** |
+| 33 | [The citations probe](todo/33-citation-probe.md) — does extraction earn its place? | 14, 15 | no |
 
 **28 is done.** The rest are named so the shape is visible; each gets written when its blockers
 clear, because a plan written against a blocked dependency is a guess.

@@ -143,7 +143,8 @@ class Card:
     """One principle, extracted from one source."""
 
     id: str
-    node_name: str          # the leaf this card is meant to produce
+    node_name: str          # the leaf this card is meant to produce. UNIQUE per
+                            # card, enforced by CardStore: one source, one node.
     source: Source
     mechanism: str          # what the finding says happens
     trigger: str            # when it applies -> the precondition port
@@ -153,6 +154,16 @@ class Card:
     tags: Tuple[str, ...] = ()
     supplies: Tuple[str, ...] = ()   # novelty / coverage / provenance
     notes: str = ""
+    # Which mechanism this card is a derivation OF. `node_name` is 1-1 with the
+    # card, so it counts SOURCES; this counts MECHANISMS, and G1's "distinct
+    # admissible primitives" is the second number. Two papers arguing one
+    # principle share a family and produce two differently-named nodes - which
+    # is chunk 14's pairing experiment, kept runnable now that the names differ.
+    # Deliberately NOT rendered into the prompt by generator.card_yaml(): it is
+    # bookkeeping about the corpus, not a fact about the source, and adding it
+    # there would rehash every card and orphan its transcript.
+    mechanism_family: str = ""
+
 
     ADVANTAGES = ("novelty", "coverage", "provenance")
 
@@ -174,6 +185,12 @@ class Card:
                 f"its own training distribution. The novelty axis needs the "
                 f"ingestion daemon polling recent venues (§5); saying so is a "
                 f"finding, claiming it here would be a lie.")
+
+    @property
+    def family(self):
+        """The mechanism this card derives. Defaults to `node_name`, so a card
+        that is the only one of its kind needs no extra field."""
+        return self.mechanism_family or self.node_name
 
     @property
     def is_traceable(self):

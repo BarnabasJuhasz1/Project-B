@@ -51,7 +51,7 @@ def test_an_admitted_card_node_names_the_card_it_came_from(admitted, cards):
     entry, = library.all()
     assert entry.metadata.origin is Origin.CARD
     assert entry.metadata.card_id == "limit_speed_dwa"
-    assert cards.get(entry.metadata.card_id).node_name == "LimitSpeedToVisibleRange"
+    assert cards.get(entry.metadata.card_id).node_name == "LimitSpeedToVisibleRange"  # limit_speed_dwa; ics is now LimitSpeedToOcclusionBoundary
 
 
 def test_the_confidence_travels_from_the_card_to_the_node(admitted, cards):

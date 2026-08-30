@@ -1,5 +1,6 @@
 id: path_integration_mammals
-node_name: MaintainHomingVector
+node_name: ArbitrateHomingVector
+mechanism_family: MaintainHomingVector
 
 source:
   citation: >-
@@ -51,6 +52,8 @@ notes: >-
   Paired with path_integration_ants the way limit_speed_ics is paired with
   limit_speed_dwa: one mechanism, two derivations - replace versus arbitrate.
   The ant framing gives a fallback; the mammal framing gives a weighting, and
-  they produce different nodes from the same node_name. Confidence is LOW: the
+  they produce different nodes, now under different node_names sharing one
+  mechanism_family - the pairing is recorded as data rather than as a name
+  collision, so G1 counts this pair as ONE mechanism and TWO sources. Confidence is LOW: the
   error-growth crossover is ours, and the paper is a review rather than the
   source of a specific rule.

@@ -1,5 +1,6 @@
 id: limit_speed_dwa
 node_name: LimitSpeedToVisibleRange
+mechanism_family: LimitSpeedToVisibleRange
 
 source:
   citation: >-

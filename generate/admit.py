@@ -286,6 +286,11 @@ def _node_metadata(candidate_meta, node_id, card=None):
         # provenance fraction into a measure of fluency, invisibly.
         source_span=(card.source.span or None) if card else None,
         confidence=Confidence(card.confidence.value) if card else None,
+        # `card.family` is the card's own mechanism_family, defaulting to its
+        # node_name. None for A and D: an invented principle pairs with nothing,
+        # and NodeMetadata.family then falls back to the node_id, so every
+        # invented node counts as its own mechanism.
+        mechanism_family=card.family if card else None,
         model_id=candidate_meta["model_id"],
         prompt_hash=candidate_meta["prompt_hash"],
         temperature=candidate_meta["temperature"],

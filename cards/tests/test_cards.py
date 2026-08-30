@@ -76,14 +76,24 @@ def test_the_pilot_covers_more_than_one_mechanism():
 
 def test_one_mechanism_is_deliberately_carried_by_two_derivations():
     """limit_speed_dwa / limit_speed_ics, and path_integration_ants / _mammals.
-    Same node_name, different Derivation. If the two produce nodes that score
+    Same MECHANISM FAMILY, different Derivation, and — since node_name is 1-1
+    with the card — different node names. If the two produce nodes that score
     differently, the Derivation field carries information rather than just
     decorating the citation — which is a claim about the schema, testable inside
-    the pilot."""
+    the pilot.
+
+    This used to be asserted by the two cards SHARING a node_name. That made the
+    pairing indistinguishable from a naming accident and made the library unable
+    to say which paper a node came from, so the pairing is now recorded as data.
+    Each pair must still differ in Derivation, or there is nothing to compare."""
     from collections import Counter
-    counts = Counter(c.node_name for c in STORE)
+    counts = Counter(c.family for c in STORE)
     paired = [n for n, k in counts.items() if k >= 2]
     assert len(paired) >= 2, counts
+    for family in paired:
+        cards = STORE.by_family(family)
+        assert len({c.node_name for c in cards}) == len(cards), family
+        assert len({c.derivation for c in cards}) == len(cards), family
 
 
 # --- falsifiability --------------------------------------------------------
@@ -272,10 +282,48 @@ def test_a_card_declares_what_its_mechanism_costs():
 
 def test_retrieval_by_tag_metric_and_node():
     assert {c.id for c in STORE.by_node("MaintainHomingVector")} == {
+        "path_integration_ants"}
+    assert {c.id for c in STORE.by_family("MaintainHomingVector")} == {
         "path_integration_ants", "path_integration_mammals"}
     assert STORE.by_metric("collisions")[0].id == "limit_speed_dwa"
     assert "drift" in STORE.tags()
     assert STORE.by_tag("tier1")
+
+
+def test_node_names_are_one_to_one_with_cards():
+    """One source, one node. Two cards under one node_name would put two nodes
+    in the library under one name, and the library could then not say which
+    paper a node came from - which is the entire point of a card."""
+    names = [c.node_name for c in STORE]
+    assert len(names) == len(set(names)), sorted(names)
+
+
+def test_a_shared_node_name_is_rejected_at_load(tmp_path):
+    """The rule is enforced, not conventional. Two cards deriving ONE mechanism
+    say so with mechanism_family; they may not say it by colliding."""
+    import shutil
+    from pathlib import Path
+    from cards.store import CARDS_DIR
+    for src in Path(CARDS_DIR).glob("*.yaml"):
+        shutil.copy(src, tmp_path / src.name)
+    clash = tmp_path / "limit_speed_ics.yaml"
+    clash.write_text(clash.read_text().replace(
+        "node_name: LimitSpeedToOcclusionBoundary",
+        "node_name: LimitSpeedToVisibleRange"), encoding="utf-8")
+    with pytest.raises(CardError, match="share node_name"):
+        CardStore.load(tmp_path)
+
+
+def test_coverage_counts_mechanisms_not_sources():
+    """G1's coverage measure is DISTINCT ADMISSIBLE PRIMITIVES. Five cards on
+    three principles is coverage three, not five - the pairing of dwa/ics and
+    ants/mammals is two sources per mechanism, deliberately (chunk 14), and a
+    count that reported five would inflate the corpus's advantage for free."""
+    prov = STORE.provenance()
+    assert prov["card_count"] == 5
+    assert prov["nodes"] == 5          # 1-1 with the cards, by construction
+    assert prov["mechanisms"] == 3     # dwa+ics, ants+mammals, reorient
+    assert prov["mechanisms"] <= prov["nodes"]
 
 
 def test_an_unknown_card_names_the_known_ones():

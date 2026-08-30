@@ -1,5 +1,6 @@
 id: path_integration_ants
 node_name: MaintainHomingVector
+mechanism_family: MaintainHomingVector
 
 source:
   citation: >-

@@ -317,3 +317,43 @@ A rejected card is rejected **at load**, so the generator never sees one that ca
 `localisation_failures` must be declared a manipulation check or dropped — not left in the
 secondary list unqualified. And the provenance fraction reported for G1 must come from
 `CardStore.provenance()`, which will read 0.0 until `cards/VERIFICATION.md` is worked through.
+
+---
+
+## Later amendment — 2026-08-30: node names are now 1-1 with cards
+
+The pilot set as shipped carried **three `node_name`s across five cards**, two mechanisms
+deliberately paired so the `Derivation` field could be tested. That pairing was expressed as a
+**name collision**, and two consequences of that only became visible while costing chunk 29:
+
+1. **The library could not attribute a node to a paper.** Two cards under one `node_name`
+   produce two nodes with one name; provenance is the point of a card, so this was backwards.
+2. **G1's coverage number was ambiguous.** `provenance()["mechanisms"]` counted distinct
+   `node_name`s, so the same field was being asked to count sources and mechanisms at once.
+
+Changed, at the user's instruction, so that **`node_name` is unique per card and enforced**:
+
+| card | node_name | mechanism_family |
+|---|---|---|
+| `limit_speed_dwa` | `LimitSpeedToVisibleRange` | `LimitSpeedToVisibleRange` |
+| `limit_speed_ics` | **`LimitSpeedToOcclusionBoundary`** | `LimitSpeedToVisibleRange` |
+| `path_integration_ants` | `MaintainHomingVector` | `MaintainHomingVector` |
+| `path_integration_mammals` | **`ArbitrateHomingVector`** | `MaintainHomingVector` |
+| `reorient_geometry` | `ReorientToGeometry` | `ReorientToGeometry` |
+
+`mechanism_family` is a new optional card field defaulting to `node_name`, so a card that is
+the only one of its kind needs nothing extra. **The pairing experiment is unchanged** — it never
+needed a shared string, only a recorded pair, and `test_one_mechanism_is_deliberately_carried_by_two_derivations`
+now asserts it over families *and* additionally requires the derivations to differ, which the
+old form did not check.
+
+**Cost: zero orphaned transcripts.** `node_name` enters the prompt (`generator.py:155`), so a
+rename rehashes that card's prompts — which is what chunk 15 refused to pay for a prompt change.
+Only the *second* card of each pair was renamed, and neither has ever been generated against:
+6 of 15 (card × task) prompt hashes moved, all six belonging to `limit_speed_ics` and
+`path_integration_mammals`, and `limit_speed_dwa`'s committed transcript `d6ae93648c7b4f25` is
+still reachable. (`1f2fe8016b1441dc` was already orphaned at HEAD by the span verification, as
+`generator.py`'s own docstring records — not by this change.)
+
+`mechanism_family` is deliberately **not** rendered into the prompt: it is bookkeeping about the
+corpus rather than a fact about the source, and putting it there would rehash every card.

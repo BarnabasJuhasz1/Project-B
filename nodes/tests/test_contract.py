@@ -290,6 +290,56 @@ def test_provenance_is_computed_not_asserted():
     assert p["traceable_fraction"] == pytest.approx(1 / 3)
 
 
+def test_coverage_counts_mechanisms_not_nodes():
+    """G1's coverage measure is DISTINCT ADMISSIBLE PRIMITIVES, and node_id is
+    1-1 with the source. Two papers arguing one principle are two nodes and one
+    mechanism; a library that reported only node_count would show the corpus's
+    advantage as twice what it is."""
+    lib = _library()
+    for node_id in ("dwa", "ics"):
+        lib.add(_NoProducer, NodeMetadata(
+            node_id=node_id, origin=Origin.CARD, card_id=f"card_{node_id}",
+            source_span="a span", confidence=Confidence.MEDIUM,
+            mechanism_family="LimitSpeedToVisibleRange"))
+    p = lib.provenance()
+    assert p["node_count"] == 4
+    assert p["mechanism_count"] == 3          # two toys + ONE limit-speed
+    assert p["by_mechanism"]["LimitSpeedToVisibleRange"] == 2
+    assert p["mechanism_count"] <= p["node_count"]
+
+
+def test_a_node_that_pairs_with_nothing_is_its_own_mechanism():
+    """The field is optional and the count is still right when nobody fills it
+    in — which is the normal case for A and D, where an invented principle has
+    nothing to pair with."""
+    meta = NodeMetadata(node_id="invented_thing", origin=Origin.INVENTED)
+    assert meta.mechanism_family is None
+    assert meta.family == "invented_thing"
+    lib = _library()
+    lib.add(_NoProducer, meta)
+    p = lib.provenance()
+    assert p["node_count"] == p["mechanism_count"] == 3
+
+
+def test_the_mechanism_family_is_not_part_of_the_snapshot_tag():
+    """#8: committed results already name lib-006-23c57a77269e. The family is a
+    grouping label over the corpus, not a property of the node — two entries
+    differing only in family tick identically — so re-filing a card under a new
+    family must not invalidate a result that has already been reported."""
+    def built(family):
+        lib = _library()
+        lib.add(_NoProducer, NodeMetadata(
+            node_id="sourced", origin=Origin.CARD, card_id="card-1",
+            source_span="a span", confidence=Confidence.MEDIUM,
+            mechanism_family=family))
+        return lib
+    assert built("FamilyOne").snapshot() == built("FamilyTwo").snapshot()
+    assert built(None).snapshot() == built("FamilyOne").snapshot()
+    # ...but it IS reported, so the regrouping is visible where it matters.
+    assert built("FamilyOne").provenance()["by_mechanism"] != \
+        built("FamilyTwo").provenance()["by_mechanism"]
+
+
 def test_an_entry_builds_a_working_node():
     entry = _library().get("toy_is_goal_known")
     assert isinstance(entry.build(), IsGoalKnown)

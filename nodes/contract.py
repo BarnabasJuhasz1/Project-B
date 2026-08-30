@@ -130,6 +130,14 @@ class NodeMetadata:
     model_id: Optional[str] = None
     prompt_hash: Optional[str] = None
     temperature: Optional[float] = None
+    # Which mechanism this node is a derivation OF, carried through from the
+    # card (`Card.family`). G1's coverage measure is DISTINCT ADMISSIBLE
+    # PRIMITIVES, and node_id is 1-1 with the source, so len(library) counts
+    # SOURCES. Two papers arguing one principle produce two nodes and one
+    # mechanism; without this field the library reports the corpus's advantage
+    # as twice what it is. None means "its own mechanism", which is right for
+    # an INVENTED node: nothing pairs with it.
+    mechanism_family: Optional[str] = None
 
     def __post_init__(self):
         if not self.node_id:
@@ -167,6 +175,13 @@ class NodeMetadata:
             raise ValueError(
                 f"{self.node_id}: confidence must be a Confidence, not "
                 f"{self.confidence!r} — a free float is a number nobody calibrated.")
+
+    @property
+    def family(self):
+        """The mechanism this node derives. Defaults to `node_id`, so a node
+        that pairs with nothing is its own mechanism and the count is right
+        without anyone filling the field in."""
+        return self.mechanism_family or self.node_id
 
     @property
     def is_traceable(self):
