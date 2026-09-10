@@ -49,7 +49,9 @@ def _repair(args, parser):
 
     record = json.loads(
         (RECORDS / f"{args.repair_of}.json").read_text(encoding="utf-8"))
-    library = load_library(include_toys=record.get("include_toys", False))
+    record_conditions = record.get("conditions")
+    library = load_library(include_toys=record.get("include_toys", False),
+                           conditions=record_conditions)
     if library.snapshot() != record["library_snapshot"]:
         parser.error(
             f"the record names {record['library_snapshot']} and the library "
@@ -64,7 +66,8 @@ def _repair(args, parser):
         composition_id=args.repair_of,
         spec=TaskSpec(**record["spec"]), retrieval=retrieval,
         snapshot=record["library_snapshot"], prompt="", response=None,
-        include_toys=record.get("include_toys", False))
+        include_toys=record.get("include_toys", False),
+        conditions=tuple(record_conditions) if record_conditions else None)
 
     backend = backends.make(args.backend, model_id=args.model)
     result = repair(previous, args.failure, backend, library=library)
@@ -98,6 +101,15 @@ def main(argv=None):
         help="replay reproduces a committed transcript with no model call")
     parser.add_argument("--model", default=backends.DEFAULT_MODEL)
     parser.add_argument(
+        "--condition", action="append", dest="conditions", default=None,
+        metavar="LETTER",
+        help="compose over ONE ARM's nodes only, repeatable. This is the "
+             "partition G2's ablation is made of: A and B share a task family "
+             "and a card set, so an unpartitioned library lets condition A "
+             "retrieve a node condition B wrote and B-A stops measuring "
+             "anything. Omit for the whole library, which is right for "
+             "exercising the path and wrong for a condition.")
+    parser.add_argument(
         "--include-toys", action="store_true",
         help="add the handwritten fixture leaves to the library. NOT "
              "navigation and never a benchmark condition (#3) — this exists so "
@@ -129,8 +141,21 @@ def main(argv=None):
                          "log has to be able to tell them apart")
         return _repair(args, parser)
 
-    library = load_library(include_toys=args.include_toys)
-    print(f"[compose] library {library.snapshot()} — {len(library)} nodes")
+    conditions = tuple(args.conditions) if args.conditions else None
+    library = load_library(include_toys=args.include_toys,
+                           conditions=conditions)
+    arms = "+".join(conditions) if conditions else "all arms"
+    print(f"[compose] library {library.snapshot()} — {len(library)} nodes "
+          f"({arms})")
+    if conditions and len(library) <= 1:
+        # Only ContractPorts survived: the arm has no admitted node. Composition
+        # would still "succeed" and return a tree that drives nothing, which is
+        # compose/FINDINGS.md's first finding arriving by a new route.
+        parser.error(
+            f"condition {arms} has no admitted nodes — the library is "
+            f"{len(library)} entries and the only one is the harness's port "
+            f"publisher. Composing would produce a tree that cannot drive. "
+            f"Generate for this arm first.")
 
     if args.scenario and args.family:
         parser.error("--scenario and --family are two ways to build the same "
@@ -174,7 +199,7 @@ def main(argv=None):
 
     backend = backends.make(args.backend, model_id=args.model)
     result = compose(spec, library, backend, retrieval=found,
-                     include_toys=args.include_toys)
+                     include_toys=args.include_toys, conditions=conditions)
     print(f"[compose] {result.composition_id}: {result.reason}"
           + (f" — {result.detail}" if result.detail else ""))
     if result.ok:

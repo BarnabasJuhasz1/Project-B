@@ -183,7 +183,8 @@ class LibraryReconstructionError(RuntimeError):
     """
 
 
-def load_library(staging=None, include_toys=False, cards=None, only=None):
+def load_library(staging=None, include_toys=False, cards=None, only=None,
+                 conditions=None):
     """Rebuild the append-only library from the committed admission records.
 
     Returns the Library. `library.snapshot()` is the tag that goes into
@@ -202,6 +203,31 @@ def load_library(staging=None, include_toys=False, cards=None, only=None):
     never admitted cannot be conjured by naming it. Every requested id must
     materialise, and a missing one raises rather than yielding a smaller library
     that would hash to a tag naming a set it is not.
+
+    `conditions` RESTRICTS the build to the arms that generated the nodes — the
+    partition G2's ablation is made of. Composition for condition A must not be
+    able to retrieve a node condition B wrote: the two arms share one task
+    family and one card set, so an unpartitioned library hands every arm every
+    other arm's mechanisms and B−A stops measuring anything. It filters on the
+    `condition` recorded in the admission record, which is the same field the
+    row key and the node id are built from, so "condition A's library" has one
+    definition and not two.
+
+    Like `only` it never adds and never re-decides; unlike `only` a requested
+    condition with no admitted nodes is NOT an error, because an arm that has
+    generated nothing yet is a real state of the experiment and the empty
+    library it yields is the honest answer.
+
+    `ContractPorts` is exempt and always present: it is the harness's own port
+    publisher, retrieval's port closure needs a producer to find, and it belongs
+    to no arm. Toys stay governed by `include_toys` alone for the same reason —
+    they are handwritten fixtures, not any condition's output, and #3 keeps them
+    out of a benchmark condition regardless of what is passed here.
+
+    ⚠️ A filtered library hashes to a DIFFERENT snapshot tag than the full one,
+    and that is the point: #8 says every reported result names the snapshot it
+    came from, and what condition A was actually composed over is A's partition,
+    never the union.
     """
     from generate import admit as admit_mod
 
@@ -210,6 +236,7 @@ def load_library(staging=None, include_toys=False, cards=None, only=None):
     # TypeError from inside pathlib that said nothing about staging at all.
     library = Library()
     keep = None if only is None else set(only)
+    arms = None if conditions is None else set(conditions)
 
     def wanted(node_id):
         return keep is None or node_id in keep
@@ -243,6 +270,12 @@ def load_library(staging=None, include_toys=False, cards=None, only=None):
         # reconstruction must not run — or be broken by — a candidate admitted
         # after the composition it is rebuilding.
         if not wanted(meta["node_id"]):
+            continue
+        # Before the source is read and long before it is EXECUTED. A node from
+        # another arm is not this library's to run, and `admit.load_candidate`
+        # runs model-written Python — so the arm partition is applied at the
+        # record, not after the import.
+        if arms is not None and meta.get("condition") not in arms:
             continue
         source = _find(stem, ".py").read_text(encoding="utf-8")
 

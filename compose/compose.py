@@ -257,6 +257,12 @@ class Composition:
     kind: str = "initial"                 # "initial" or "repair"
     repair_of: Optional[str] = None
     include_toys: bool = False
+    # Which arms' nodes the library was partitioned to, or None for the whole
+    # library. Recorded because "which library was this composed over" is the
+    # question #8 exists to answer, and after chunk 42 the answer is a subset:
+    # one arm's partition, never the union. `retrieval.considered` already
+    # rebuilds it exactly, so this is the READABLE statement of the same fact.
+    conditions: Optional[tuple] = None
 
     @property
     def prompt_hash(self):
@@ -264,7 +270,7 @@ class Composition:
         return backends.prompt_hash(self.prompt)
 
     def as_dict(self):
-        return {
+        record = {
             "composition_id": self.composition_id,
             "kind": self.kind,
             "repair_of": self.repair_of,
@@ -291,6 +297,15 @@ class Composition:
             # check the claim instead of being asked to believe it.
             "created_primitives": [],
         }
+        # OMITTED when the library was not partitioned, rather than written as
+        # null. Every composition committed before the arm partition existed was
+        # composed over the whole library, `conditions: None` is exactly what
+        # they mean, and adding the key to them would rewrite eight records of
+        # committed evidence to say something they already said. Absent and null
+        # are read as the same thing everywhere this field is consumed.
+        if self.conditions:
+            record["conditions"] = list(self.conditions)
+        return record
 
     def write(self, directory=None):
         directory = Path(directory or RECORDS)
@@ -303,7 +318,7 @@ class Composition:
 
 def compose(spec, library, backend, retrieval=None, snapshot=None,
             include_toys=False, kind="initial", repair_of=None,
-            record=True, records=None, transcripts=None):
+            record=True, records=None, transcripts=None, conditions=None):
     """One composition call: spec -> retrieval -> model -> tree.
 
     Never raises for a plan's own faults; a bad plan is a recorded failure with
@@ -330,7 +345,7 @@ def compose(spec, library, backend, retrieval=None, snapshot=None,
     result = Composition(composition_id=composition_id, spec=spec,
                          retrieval=retrieval, snapshot=snapshot, prompt=prompt,
                          response=response, kind=kind, repair_of=repair_of,
-                         include_toys=include_toys)
+                         include_toys=include_toys, conditions=conditions)
     try:
         result.plan = parse_plan(response.text)
         result.tree = build(result.plan, retrieval, snapshot=snapshot)
@@ -358,7 +373,8 @@ def repair(previous, failure_signature, backend, library=None, **kwargs):
                        "failure_signature": failure_signature})
     return compose(spec, library, backend, retrieval=previous.retrieval,
                    snapshot=previous.snapshot,
-                   include_toys=previous.include_toys, kind="repair",
+                   include_toys=previous.include_toys,
+                   conditions=previous.conditions, kind="repair",
                    repair_of=previous.composition_id, **kwargs)
 
 
@@ -432,7 +448,8 @@ def _library_as_recorded(data, records, staging, cards):
         # reconstruct from, so fall back to the old meaning and its refusal —
         # better than silently loading a library the record cannot vouch for.
         library = load_library(staging=staging, include_toys=include_toys,
-                               cards=cards)
+                               cards=cards,
+                               conditions=data.get("conditions"))
         if library.snapshot() != data["library_snapshot"]:
             raise CompositionError(
                 "SNAPSHOT_MISMATCH",
