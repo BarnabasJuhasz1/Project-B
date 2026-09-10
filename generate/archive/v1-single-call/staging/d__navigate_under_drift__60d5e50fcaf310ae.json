@@ -1,0 +1,12 @@
+{
+  "backend": "claude-cli",
+  "card_id": null,
+  "condition": "d",
+  "emitted_code": true,
+  "model_id": "claude-opus-5",
+  "node_id": "gen_d_60d5e50fcaf310ae",
+  "prompt_hash": "60d5e50fcaf310ae",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "navigate_under_drift",
+  "temperature": null
+}

@@ -1,0 +1,103 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition A's card call (given the reference alone).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: dynamic_window_velocity_search
+node_name: SelectVelocityByDynamicWindow
+source:
+  citation: Fox, D., Burgard, W. & Thrun, S. (1997). "The Dynamic Window Approach
+    to Collision Avoidance." IEEE Robotics & Automation Magazine 4(1), 23-33.
+  span: Section "The Dynamic Window Approach", subsections on admissible velocities
+    (braking condition v <= sqrt(2 * dist(v,omega) * accel_brake)) and on maximizing
+    the objective function G = sigma(alpha*heading + beta*dist + gamma*velocity).
+    Section/equation NUMBERS not asserted - not recalled with certainty.
+  verified: unverified
+mechanism: 'Collision avoidance is posed as a constrained search in VELOCITY space
+  rather than in position space. At each control step the controller considers a two-dimensional
+  set of candidate commands (forward speed v, turn rate omega), each of which implies
+  a circular arc the robot would follow if that command were held. The set is cut
+  down twice. First by REACHABILITY: only velocities attainable from the current velocity
+  within one short acceleration-limited interval are considered, so the chosen command
+  is one the body can actually produce next step rather than one it would have to
+  teleport to. Second by ADMISSIBILITY: a candidate survives only if the robot, travelling
+  that arc, could still brake to a standstill before reaching the nearest obstacle
+  lying on it - formally v <= sqrt(2 * dist(v,omega) * a_brake), where dist is the
+  free arc length. Among the survivors, one command is chosen by maximising a weighted
+  sum of three normalised terms: alignment of the resulting heading with the target
+  direction, clearance (the free arc length), and speed. It helps because safety becomes
+  a hard feasibility constraint derived from physics - an inadmissible command is
+  never even scored - while goal progress and speed remain soft preferences traded
+  off against clearance. Unlike a reactive repulsion field, it never commands a velocity
+  from which stopping is impossible, and unlike pure goal-seeking it prefers arcs
+  with room to spare when several arcs make comparable progress.'
+trigger: 'Active whenever the tree must emit a Twist while moving toward a target
+  direction AND the local surroundings are constrained enough that an unconstrained
+  command could be unsafe: at least one lidar beam whose bearing satisfies |range_angles|
+  <= pi/2 returns a finite range below 2.5 m. When every forward beam is beyond 2.5
+  m (or all are inf) the constraint set is the whole window and the node should yield
+  to a cheaper straight-line pursuit leaf. Requires at least one finite lidar return;
+  with a fully inf scan the precondition fails.'
+derivation: 'MOTION MODEL. Search only over (vx, wz) with vy = 0, because the arc
+  model underlying the braking condition assumes motion along a circle of radius vx/wz;
+  a nonzero vy would invalidate every dist() computation. Search bounds are the actuation
+  saturations: vx in [0, 0.8] m/s (no reverse - the lidar is omnidirectional but the
+  objective''s heading term makes reverse arcs self-defeating) and wz in [-1.0, 1.0]
+  rad/s. DYNAMIC WINDOW. The frozen locomotion policy hides the true acceleration
+  limits, so they are estimated, and these numbers are MINE, not the paper''s: a_v
+  = 2.0 m/s^2 and a_w = 4.0 rad/s^2, being roughly the rate at which a ~15 kg quadruped
+  can change commanded body velocity without the tracker falling behind. With a window
+  horizon T_w = 0.25 s (about the settling time of the policy on a step command) the
+  window is vx in [vx_prev - 0.5, vx_prev + 0.5] and wz in [wz_prev - 1.0, wz_prev
+  + 1.0], intersected with the saturation box. vx_prev/wz_prev are the command this
+  node emitted last step (initialise to 0,0). Sample it on a grid of 11 vx values
+  by 21 wz values = 231 candidates; at ~2e2 candidates times ~181 beams this is a
+  few 1e4 operations per step, cheap enough for a control-rate leaf. dist(v,omega).
+  For each candidate, convert every finite lidar return to a point (r*cos(theta),
+  r*sin(theta)) in the robot frame. Forward-simulate the arc for T_sim = 2.0 s (2.0
+  s * 0.8 m/s = 1.6 m, comfortably longer than the worst-case braking distance below)
+  and take dist = arc length travelled until the swept disc of radius r_safe = 0.35
+  m first contains a lidar point, else dist = min(range_max, T_sim * |v|) = at most
+  6.0 m. r_safe = 0.35 m is the Go2''s circumscribed body radius (~0.70 m long, ~0.31
+  m wide) with no extra margin, so the margin is bought by the clearance term, not
+  smuggled in here. ADMISSIBILITY. Keep a candidate iff |v| <= sqrt(2 * dist * a_brake)
+  with a_brake = 2.0 m/s^2 - the paper''s condition, with the Go2 number substituted.
+  At the top speed 0.8 m/s this demands dist >= 0.16 m of free arc. Apply the rotational
+  analogue |wz| <= sqrt(2 * dist_ang * a_w) where dist_ang is the arc angle to first
+  contact. If the admissible set is EMPTY, emit (0, 0, 0) and return FAILURE so a
+  recovery leaf takes over; do not emit the least-bad inadmissible command. OBJECTIVE.
+  Score survivors with G = alpha*heading + beta*clear + gamma*speed, each term min-max
+  normalised to [0,1] across the surviving set (this is the role of the paper''s smoothing/normalisation
+  operator sigma). heading = 1 - |wrap_to_pi(bearing_to_target - yaw_after_T_w)| /
+  pi, where the target bearing is computed from goal and pose_estimate when goal is
+  not None, and otherwise defaults to the robot''s current heading, which makes the
+  node degrade gracefully into "hold the committed direction on the fastest safe arc".
+  clear = min(dist, 2.0) / 2.0, saturating at 2.0 m because extra room beyond two
+  metres should not outbid goal progress. speed = |v| / 0.8. Weights alpha = 0.6,
+  beta = 0.3, gamma = 0.1 are MINE: heading dominates so the node still makes progress,
+  clearance is half of heading''s weight so it can flip the choice between two arcs
+  of similar bearing, and speed only breaks ties. Emit the argmax as (vx, 0, wz).
+  DRIFT ROBUSTNESS. Two of the three terms (clear, speed) and both constraints are
+  computed purely in the robot frame from lidar, so pose drift and a large pose_error_estimate
+  degrade only goal alignment, never the safety guarantee.'
+prediction:
+  statement: On unmapped indoor navigation with occluding walls and furniture, replacing
+    the baseline's command selection with the dynamic-window admissible-velocity search
+    reduces the mean number of collisions per episode by at least 50% relative to
+    goal_seeker, over a fixed set of seeds.
+  metric: collisions
+  baseline: goal_seeker
+  min_effect: 0.5
+  cost_metric: time_to_goal
+confidence: medium
+generated:
+  condition: a
+  task: navigate_to_goal
+  treatment: citation
+  card_prompt_hash: fac8c7b94fe6b1c6
+  card_row_key: fac8c7b94fe6b1c6
+  card_model_id: claude-opus-5
+  ref_id: limit_speed_dwa
+  paper_sha256: null
+  generated_card_id: dynamic_window_velocity_search
+  generated_node_name: SelectVelocityByDynamicWindow
+  citation_substituted: false

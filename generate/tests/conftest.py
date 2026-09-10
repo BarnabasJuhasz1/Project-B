@@ -58,8 +58,22 @@ def vague_card():
 
 @pytest.fixture
 def replay():
+    """Replay over the ARCHIVED v1 transcripts.
+
+    Both committed transcripts this package replays — `GOOD_PROMPT_HASH` and
+    `VAGUE_PROMPT_HASH` — were recorded by the one-call pipeline and moved to
+    `generate/archive/v1-single-call/` on 2026-09-08 so that
+    `generate/transcripts/` holds the current experiment and nothing else. The
+    records are unchanged; only their address is.
+
+    Chunk 42's two-call chain has its own fixture pair and its own backend —
+    see `test_replay.py:chain`. Do not point that at this directory: a v1
+    transcript cannot answer a v2 prompt, and the failure would look like a
+    pipeline bug rather than a fixture mistake.
+    """
     from generate.backends import ReplayBackend
-    return ReplayBackend()
+    from generate.generator import V1_TRANSCRIPTS
+    return ReplayBackend(V1_TRANSCRIPTS)
 
 
 @pytest.fixture

@@ -18,7 +18,8 @@ The real numbers come from scripts/run_episode.py inside the container.
 
 import math
 
-from core.drift import make_drift
+from core.localisation import make_localiser
+from core.sensor_noise import make_sensor_noise
 from core.geometry import ROBOT_RADIUS, clearance, raycast
 from core.metrics import EpisodeTrace
 from core.observation import Observation, clamp
@@ -42,7 +43,15 @@ def rollout(scenario, controller, dt=CONTROL_DT):
     # whose unit scenario discloses the goal on a different step from the
     # benchmark is a node whose unit scenario proves nothing about the run.
     goal_known = scenario.goal_known
-    drift = make_drift(scenario)
+    # Built through make_localiser() so a unit scenario and the benchmark
+    # resolve the pose estimate identically -- the same argument make_drift()
+    # already made, one level up. With no `localisation` set this IS the drift
+    # model it always was, wrapped.
+    localiser = make_localiser(scenario)
+    localiser.reset(scenario, scenario.localisation_rng())
+    # NoNoise.scan() IS raycast(), so a scenario without sensor_noise takes the
+    # code path it always took -- see core/sensor_noise.py.
+    sensor = make_sensor_noise(scenario)
     # Micro-worlds are measured by THIS code, not a second implementation, or a
     # node that passes its unit scenario was tested against different geometry
     # from the benchmark.
@@ -52,20 +61,25 @@ def rollout(scenario, controller, dt=CONTROL_DT):
         t = step * dt
         gap = float(clearance((x, y), world)) - ROBOT_RADIUS
         goal_known = goal_known or scenario.disclosed_at((x, y))
-        drift.advance(dt)
+        # The scan is cast BEFORE the localiser updates, because a localiser
+        # matches the scan it is about to be judged on. `raycast` is a pure
+        # function of pose, so hoisting it changes nothing for the drift path.
+        ranges = sensor.scan((x, y), yaw, angles, scenario.range_max, world)
+        localiser.update(dt, (x, y, yaw), ranges, angles)
+        estimate = localiser.estimate()
         obs = Observation(
             t=t,
-            ranges=raycast((x, y), yaw, angles, scenario.range_max, world),
+            ranges=ranges,
             range_angles=angles,
             range_max=scenario.range_max,
-            pose_estimate=drift.estimate((x, y, yaw)),
-            pose_error_estimate=drift.error_estimate(),
+            pose_estimate=estimate,
+            pose_error_estimate=localiser.error_estimate(),
             goal=scenario.goal if goal_known else None,
             contact=gap <= 0.0,
         )
         command = clamp(controller.step(obs), scenario.max_lin, scenario.max_ang)
         trace.append(t, (x, y, 0.55, yaw), command, gap, gap <= 0.0,
-                     drift.estimate((x, y, yaw)), goal_known)
+                     estimate, goal_known)
 
         nx = x + (command.vx * math.cos(yaw) - command.vy * math.sin(yaw)) * dt
         ny = y + (command.vx * math.sin(yaw) + command.vy * math.cos(yaw)) * dt

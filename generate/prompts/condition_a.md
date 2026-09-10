@@ -134,8 +134,27 @@ Speeds are saturated by the runner to `|vx|, |vy| <= 0.8 m/s` and
 <!-- ---- LITERATURE BLOCK BEGIN ---- -->
 ## What to base the node on
 
-Nothing is supplied. Choose the mechanism yourself, from what you already know
-about making a legged robot navigate an indoor space it has no map of.
+A published paper bears on this task. **You are given the reference and nothing
+else** — not its text, not its figures, not its numbers, and not anyone's
+summary of what it found.
+
+```
+{{CITATION}}
+```
+
+Work from what you already know of this reference. Recall the mechanism it
+established and implement that, not a mechanism you would have picked yourself.
+
+If you do not recognise the reference, **say so in prose outside the fence** and
+then implement the mechanism you judge it most likely describes, given the title
+and the venue. Say which it is. An honest "I do not know this paper" is worth
+more here than a confident reconstruction, and guessing silently is the one
+outcome that makes the result unreadable.
+
+Do not invent a source span, a page, a section, an equation number or a
+quantitative threshold and attribute it to this paper. If a number is your
+engineering judgement rather than something you recall from the work, say that
+where you state it.
 
 Pick one mechanism and implement it well. A node that does one thing that works
 is worth more than a node that gestures at three.

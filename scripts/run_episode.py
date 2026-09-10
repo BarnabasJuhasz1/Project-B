@@ -145,6 +145,41 @@ parser.add_argument("--drift", type=float, default=None, metavar="SIGMA_XY",
                          "per root-second of RMS radial error, so 0.12 crosses "
                          "LOC_FAIL_THRESHOLD at ~69 s. A scenario's own "
                          "DriftSpec is the real source; this only fills one in.")
+parser.add_argument("--sensor-noise", type=float, default=None, metavar="SCALE",
+                    help="inject lidar noise into a scenario that declares "
+                         "none, for debugging. SCALE multiplies "
+                         "core.sensor_noise.NOISE_MODERATE, so 1.0 is ~3 cm at "
+                         "6 m with 2%% dropout. LIKE --goal-hidden and UNLIKE "
+                         "--drift this RENAMES the scenario (<id>+noise): "
+                         "drift perturbs the pose ESTIMATE and leaves what the "
+                         "robot can see alone, whereas sensor noise changes "
+                         "Observation.ranges itself — which every controller "
+                         "and every node reads — so it is a different scenario "
+                         "and must not be scored under the same run id")
+parser.add_argument("--localisation", choices=("perfect", "slam"), default=None,
+                    metavar="KIND",
+                    help="replace the pose estimate's producer, for debugging "
+                         "epic 03. 'perfect' is the ground-truth CONTROL and is "
+                         "never a result; 'slam' runs core/slam end to end and "
+                         "needs a sensor, so pass --sensor-noise with it or the "
+                         "matcher is fed core.geometry's EXACT ranges and "
+                         "reports an accuracy that means nothing. LIKE "
+                         "--sensor-noise and UNLIKE --drift this RENAMES the "
+                         "scenario (<id>+slam / <id>+perfect): it changes what "
+                         "the controller believes about where it is, so it is a "
+                         "different scenario and must not be scored under the "
+                         "same run id. Mutually exclusive with --drift, which "
+                         "core.scenario.validate() also enforces")
+parser.add_argument("--slam-map", action="store_true",
+                    help="keep the map and the pose graph, and write them to "
+                         "slam_map.npz beside slam.csv, for "
+                         "scripts/visualise_slam.py to draw. INERT: a recorded "
+                         "run produces a byte-identical trace.csv and "
+                         "slam.csv, on the same terms nodes/trace.py is inert, "
+                         "and core/tests/test_slam_record.py pins that. Off by "
+                         "default because it costs a copy of every scan point, "
+                         "which a sweep has no use for. Ignored by a localiser "
+                         "that has no map, which is all of them but slam")
 parser.add_argument("--goal-hidden", action="store_true",
                     help="withhold the goal from a scenario that discloses it, "
                          "for debugging a search-family controller against a "
@@ -225,7 +260,8 @@ import numpy as np
 
 from core.geometry import ROBOT_RADIUS, clearance, raycast
 from core.manifest import capture, run_id, write as write_manifest
-from core.drift import make_drift
+from core.localisation import make_localiser
+from core.sensor_noise import make_sensor_noise
 from core.metrics import EpisodeTrace, score
 from core.observation import Observation, clamp
 from core.scenario import load, validate
@@ -241,6 +277,46 @@ if args.drift is not None:
     scenario = dataclasses.replace(
         scenario, drift=DriftSpec(sigma_xy=args.drift,
                                   sigma_yaw=args.drift / 2.0))
+if args.sensor_noise is not None:
+    # The id changes with it, for the reason in the flag's help: this alters
+    # what the controller can SEE, which is the line --goal-hidden is on and
+    # --drift is not. A committed result called doorway_traverse that was run
+    # with a degraded sensor is exactly the kind of thing nobody catches until
+    # the write-up.
+    import dataclasses as _dc
+
+    from core.sensor_noise import NOISE_MODERATE
+    scale = args.sensor_noise
+    scenario = _dc.replace(
+        scenario,
+        id=f"{scenario.id}+noise",
+        sensor_noise=_dc.replace(
+            NOISE_MODERATE,
+            sigma_range_frac=NOISE_MODERATE.sigma_range_frac * scale,
+            dropout=min(1.0, NOISE_MODERATE.dropout * scale),
+            spurious_max_range=min(1.0, NOISE_MODERATE.spurious_max_range * scale),
+            sigma_angle=NOISE_MODERATE.sigma_angle * scale))
+
+if args.localisation is not None:
+    # Odometry noise at the same magnitude the drift model uses, and for the
+    # same reason --drift halves sigma_yaw: so that a SLAM debugging run and a
+    # DRIFT_MODERATE run are insulted by comparable amounts and the two numbers
+    # can be put beside each other. `scripts/compare_localisers.py` is what
+    # actually does that comparison; this flag is for looking at one episode.
+    import dataclasses as _dc
+
+    from core.scenario import LocalisationSpec as _LocSpec
+    _sigma = args.drift if args.drift is not None else 0.12
+    scenario = _dc.replace(
+        scenario,
+        id=f"{scenario.id}+{args.localisation}",
+        # validate() refuses a scenario carrying both; --drift here is being
+        # read as "how noisy", not as "use the random walk".
+        drift=None,
+        localisation=_LocSpec(kind=args.localisation,
+                              odom_sigma_lin=_sigma,
+                              odom_sigma_ang=_sigma / 2.0))
+
 CAPPED = False
 if args.goal_hidden:
     # The id changes with it. `results/<run_id>.json` is committed and names the
@@ -320,34 +396,44 @@ def parse_resolution(text):
     return (int(width), int(height))
 
 
-def observe(t, pose, angles, goal_known, drift):
+def observe(t, pose, angles, goal_known, localiser, dt, sensor):
     """Build the controller's view of the world.
 
-    Ground truth does not enter here. `pose_estimate` is the true pose today, so
-    nothing behaves differently yet — but it is a separate field, so drift can
-    later be injected into it alone and every controller becomes measurable
-    against a localisation-failure metric with no rewrites.
+    Ground truth does not enter here. `pose_estimate` is whatever the localiser
+    believes — the true pose when nothing is configured, the drifted pose under
+    a DriftSpec, and a SLAM estimate once chunk 23 lands. It is a separate field
+    from the truth precisely so the producer can be swapped without rewriting
+    anything downstream of it.
 
-    `goal_known` and `drift` are passed in rather than built here, because both
-    carry episode state and this function is pure — the caller owns the memory.
+    `goal_known` and `localiser` are passed in rather than built here, because
+    both carry episode state and this function is otherwise pure — the caller
+    owns the memory.
 
-    `pose_estimate` is the DRIFTED pose. It is the only pose a controller sees,
-    and `pose_error_estimate` is what the robot BELIEVES its error to be, never
-    what it actually is: the realised error is ground truth and stays with the
+    `pose_error_estimate` is what the robot BELIEVES its error to be, never what
+    it actually is: the realised error is ground truth and stays with the
     runner, where the trace records it for scoring.
+
+    THE SCAN IS CAST BEFORE THE LOCALISER UPDATES, and the order matters once
+    the localiser is a real one: it matches the scan it is about to be judged
+    on, and it must not see a scan from a step it has already reported a pose
+    for. `raycast` is a pure function of pose, so hoisting it above the update
+    changes nothing at all on the drift path — the trace stays byte-identical,
+    which is chunk 19's acceptance criterion.
 
     `clearance` is deliberately NOT in the Observation. It is ground truth about
     geometry the robot cannot see, and it exists only to be scored.
     """
     x, y, z, yaw = pose
     gap = float(clearance((x, y))) - ROBOT_RADIUS
+    ranges = sensor.scan((x, y), yaw, angles, scenario.range_max)
+    localiser.update(dt, (x, y, yaw), ranges, angles)
     obs = Observation(
         t=t,
-        ranges=raycast((x, y), yaw, angles, scenario.range_max),
+        ranges=ranges,
         range_angles=angles,
         range_max=scenario.range_max,
-        pose_estimate=drift.estimate((x, y, yaw)),
-        pose_error_estimate=drift.error_estimate(),
+        pose_estimate=localiser.estimate(),
+        pose_error_estimate=localiser.error_estimate(),
         goal=scenario.goal if goal_known else None,
         contact=gap <= 0.0,
     )
@@ -366,6 +452,19 @@ def main():
     # answer different questions and only the first is reportable.
     manifest["time_limit"] = scenario.time_limit
     manifest["time_limit_capped"] = CAPPED
+    # What produced Observation.ranges and Observation.pose_estimate. Recorded
+    # as VALUES, not as a flag: chunk 20's sigma is a calibration choice, and a
+    # result that says only "noise: on" cannot be compared with one run at a
+    # different sigma. None on both is the state every committed result is in.
+    manifest["sensor_noise"] = (
+        dataclasses.asdict(scenario.sensor_noise)
+        if scenario.sensor_noise is not None else None)
+    manifest["localisation"] = (
+        dataclasses.asdict(scenario.localisation)
+        if scenario.localisation is not None else None)
+    manifest["drift"] = (
+        dataclasses.asdict(scenario.drift)
+        if scenario.drift is not None else None)
     if manifest["usd_sha256"] is None:
         sim_app.close()
         sys.exit(f"Scene not found: {scene_path}. Run build_scene.py first.")
@@ -453,12 +552,32 @@ def main():
     # flips once and never flips back. Held here because it is the only piece of
     # episode state the runner owns on the controller's behalf.
     goal_known = scenario.goal_known
-    drift = make_drift(scenario)
-    if drift.__class__.__name__ != "NoDrift":
+    localiser = make_localiser(scenario)
+    # Before reset(), so the anchor snapshot is taken. Duck-typed rather than
+    # isinstance-checked against SlamLocaliser: `--slam-map` on a perfect or
+    # drift run is a no-op and not an error, because the flag says what to keep
+    # if there is anything to keep, and chunk 25's PerfectLocaliser control runs
+    # the same command line as the SLAM run it is a control for.
+    if args.slam_map and hasattr(localiser, "enable_recording"):
+        localiser.enable_recording()
+    localiser.reset(scenario, scenario.localisation_rng())
+    sensor = make_sensor_noise(scenario)
+    if scenario.sensor_noise is not None:
+        log(f"sensor noise on: {scenario.sensor_noise}")
+    if scenario.drift is not None:
         log(f"drift on: sigma_xy={scenario.drift.sigma_xy} m/sqrt(s), "
             f"crosses LOC_FAIL_THRESHOLD at ~"
             f"{(1.0 / scenario.drift.sigma_xy) ** 2:.0f}s of "
             f"{scenario.time_limit:.0f}s")
+    elif scenario.localisation is not None:
+        log(f"localiser: {scenario.localisation.kind} "
+            f"({localiser.__class__.__name__})")
+    # Diagnostics sidecar. Written only when a localiser actually reports
+    # something, so a drift or no-drift run produces the same run directory it
+    # always did -- TRACE_COLUMNS is fixed-width because scoring is a pure
+    # function of the trace and rescore.py depends on it, so this goes beside
+    # the trace and never into it. Same shape as nodes.csv (chunk 18).
+    slam_log = []
 
     for step in range(steps):
         if args.gui and not sim_app.is_running():
@@ -469,8 +588,11 @@ def main():
         # Evaluate the rule BEFORE building the observation, so the step the
         # robot first sees the goal is the step it is told about it.
         goal_known = goal_known or scenario.disclosed_at(pose[:2])
-        drift.advance(control_dt)
-        obs, gap = observe(t, pose, angles, goal_known, drift)
+        obs, gap = observe(t, pose, angles, goal_known, localiser, control_dt,
+                           sensor)
+        diag = localiser.diagnostics()
+        if diag:
+            slam_log.append(dict(diag, t=t))
         command = clamp(controller.step(obs), scenario.max_lin, scenario.max_ang)
         trace.append(t, pose, command, gap, obs.contact, obs.pose_estimate,
                      goal_known)
@@ -536,11 +658,47 @@ def main():
     if tick_log is not None and len(tick_log):
         tick_log.write_csv(os.path.join(run_dir, "nodes.csv"))
         log(f"{len(tick_log)} node ticks over {tick_log.steps} steps -> nodes.csv")
+        # ⚠️ These four lines were INSIDE `if slam_log:` between chunks 19 and
+        # 23. Nothing caught it because no run produced a slam_log until chunk
+        # 23's first SLAM episode, and then it crashed AFTER the simulation had
+        # finished but BEFORE the result was written -- three minutes of physics
+        # discarded on an AttributeError in a log line. Same family as the sweep
+        # rehearsal's "exit 0, wrote nothing": the expensive part succeeded and
+        # the cheap part threw it away.
         for line in tick_log.format_summary().splitlines():
             log("  " + line)
         log("  timeline  # drove, + ticked, . gated out:")
         for node_id in tick_log.summary():
             log(f"  {node_id[:24]:24s} |{tick_log.timeline(node_id, 72)}|")
+
+    # The localiser sidecar, written on exactly the same terms as nodes.csv:
+    # a run that has nothing to report produces no file, so every run directory
+    # committed before chunk 19 is reproduced byte for byte.
+    if slam_log:
+        import csv as _csv
+        columns = sorted(slam_log[0])
+        with open(os.path.join(run_dir, "slam.csv"), "w", newline="",
+                  encoding="utf-8") as fh:
+            writer = _csv.DictWriter(fh, fieldnames=columns)
+            writer.writeheader()
+            for row in slam_log:
+                writer.writerow(row)
+        log(f"{len(slam_log)} localiser samples -> slam.csv")
+        last = slam_log[-1]
+        log(f"  {last['submaps']} submaps, {last['graph_edges']} edges "
+            f"({last['closure_edges']} closures), {last['solves']} solves; "
+            f"closures {last['closures_accepted']}/"
+            f"{last['closures_considered']} accepted")
+
+    # The map, on the same terms again: only if something recorded one.
+    recorder = getattr(localiser, "recorder", None)
+    if recorder is not None and recorder.scans:
+        map_path = os.path.join(run_dir, "slam_map.npz")
+        recorder.save_npz(map_path)
+        log(f"map: {recorder.n_submaps} submaps, {recorder.scans} scans, "
+            f"{len(recorder.closures())} closure edges -> slam_map.npz "
+            f"({os.path.getsize(map_path) / 1e6:.1f} MB)")
+        log(f"  draw it:  $P scripts/visualise_slam.py {run_dir}")
     write_manifest(manifest, os.path.join(run_dir, "manifest.json"))
 
     # Written in the run directory FIRST, and copied to results/ second. The run

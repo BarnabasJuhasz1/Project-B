@@ -138,9 +138,32 @@ parallelism. Every algorithmic choice in chunks 21–23 is made **in favour of d
 accuracy**, and chunk 24 is a gate that will not pass on a "usually identical" result.
 
 **Cost.** Scan matching at the 50 Hz control rate over 181 beams, plus a graph optimisation, is
-not free. Real SLAM runs at scan rate rather than control rate, and so should this: chunk 24
+not free. Real SLAM runs at scan rate rather than control rate, and so should this: chunk 24a
 measures the budget and sets the localiser rate, which is a realism improvement as well as a
-cost one.
+cost one. **Settled at 5 Hz, on a laptop** (moved from 10 — see 24a's Decided for why the first
+answer was wrong) — the localiser's cost is a pure function of the scans and poses it is handed, so
+this was never a GPU question. The measurement also moved the dominant
+cost: at the control rate **closure search costs twice what matching does**, because a proposal
+round is a wider match against every nearby submap and submaps finish five times as often.
+
+⚠️ **And it found a fourth risk the epic had not named: cost is SUPERLINEAR in episode length.**
+A 4.2x longer episode costs 3.31x more *per simulated second*. Matching is linear; **closure search
+is quadratic** (22x over 4.2x of episode), because `loop.candidates()` returns every finished
+submap within `SEARCH_RADIUS` and lab42 is smaller than the sensor range — so the candidate set
+grows with the episode. Two things follow. The held-out scenarios run 120–240 s and both measured
+trajectories are shorter, so a budget extrapolated from them **under-reads in the unsafe
+direction**. And the same rate costs 0.35x real time on a one-way traverse against 3.12x on a
+trajectory that revisits, which means **the sweep's wall clock is a function of what the controller
+does** — the same shape as the epic's central claim, and a scheduling problem rather than a
+scientific one.
+
+**The rate absorbed it and the sweep is affordable** — 10 -> 5 Hz, which is a *quadratic* lever on
+closure search and saved 3.3-4.1x. ⚠️ **There is no second application of it**: 2 Hz is already
+below any real 2D lidar. **The real fix is a bound on the candidate set per proposal round** —
+best-N by distance, or a decay in revisit frequency. It is a design change with its own accuracy
+cost, it needs a `Decided` section, and it is **the largest open design item in this epic**. It is explicitly *not* a knob to turn while
+reading a budget table: chunk 24's own `Not in scope` says a budget that cannot be met is a finding
+for the epic, not a licence to retune 21–23.
 
 **Confounding.** Once every condition has a localiser that can fail, a difference in goal-reach
 rate may be a difference in localisation rather than in navigation. `PerfectLocaliser` exists to
@@ -153,12 +176,15 @@ localisation contribution. Chunk 25 makes reporting it mandatory rather than opt
 
 | # | Chunk | Depends on | Needs Isaac Sim |
 |---|---|---|---|
-| 19 | [The localisation contract](todo/19-localisation-contract.md) | — | no |
-| 20 | [The sensor noise model](todo/20-sensor-noise.md) | 19 | no |
-| 21 | [Scan matching: the front end](todo/21-scan-matching.md) | 19, 20 | no |
-| 22 | [Submaps and loop closure](todo/22-loop-closure.md) | 21 | no |
-| 23 | [Pose graph: the back end](todo/23-pose-graph.md) | 22 | no |
-| 24 | [Determinism and cost gate](todo/24-slam-determinism.md) | 23 | **yes** |
+| 19 | [The localisation contract](doing/19-localisation-contract.md) | — | no |
+| 20 | [The sensor noise model](doing/20-sensor-noise.md) | 19 | no |
+| 21 | [Scan matching: the front end](doing/21-scan-matching.md) | 19, 20 | no |
+| 22 | [Submaps and loop closure](doing/22-loop-closure.md) | 21 | no |
+| 23 | [Pose graph: the back end](doing/23-pose-graph.md) | 22 | no |
+| 22a | [The closure travel gate](doing/22a-closure-travel-gate.md) | 22 | no |
+| 24a | [The cost model and the scan rate](doing/24a-slam-cost-model.md) | 23 | no |
+| 24b | [Seeing the SLAM run](doing/24b-slam-visualisation.md) | 23, 24a | no |
+| 24 | [Determinism and cost gate](todo/24-slam-determinism.md) | 23, 24a | **yes** |
 | 25 | [Recalibration: what moves](todo/25-slam-recalibration.md) | 24 | no |
 | 26 | [The cards SLAM unlocks](todo/26-slam-cards.md) | 25 | no |
 | 27 | [Camera VO](todo/27-camera-vo.md) — bonus, deferred | 24 | **yes** |

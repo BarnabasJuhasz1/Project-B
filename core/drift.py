@@ -103,6 +103,10 @@ class DriftModel:
         never for anything a controller can reach."""
         return float(np.hypot(*self._offset))
 
+    def diagnostics(self):
+        """Nothing to report. Deliberately empty — see NoDrift.diagnostics."""
+        return {}
+
     @property
     def elapsed(self):
         return self._t
@@ -132,6 +136,21 @@ class NoDrift:
 
     def true_error(self):
         return 0.0
+
+    def diagnostics(self):
+        """Empty, and that is what suppresses the `slam.csv` sidecar.
+
+        Chunk 19 added `diagnostics()` to the localisation protocol so that a
+        localiser can be reported on separately from the navigation stack. A
+        random walk has no internal state worth inspecting that the trace does
+        not already carry — the realised error is recorded by the runner for
+        scoring, and the predicted error is a deterministic function of elapsed
+        time. Returning {} means no sidecar file appears, so a run directory
+        produced today is identical to one produced before the protocol existed.
+        That is not tidiness: byte-identity of the existing path is this
+        chunk's acceptance criterion.
+        """
+        return {}
 
     @property
     def elapsed(self):

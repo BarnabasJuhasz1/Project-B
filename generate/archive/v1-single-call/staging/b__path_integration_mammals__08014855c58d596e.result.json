@@ -1,0 +1,55 @@
+{
+  "admitted": false,
+  "admitted_v2": true,
+  "detail": "effect 0.000 below the required 0.500",
+  "detail_v2": "valid; goal_reached effect 0.000 against a reported floor of 0.500",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "path_integration_mammals",
+    "citation_id": null,
+    "condition": "b",
+    "confidence": "high",
+    "contribution": {
+      "baseline": 0.0,
+      "candidate": 0.0,
+      "cleared_floor": false,
+      "effect": 0.0,
+      "measured": true,
+      "metric": "goal_reached",
+      "reason": "effect 0.000 below the required 0.500",
+      "required": 0.5
+    },
+    "emitted_code": true,
+    "is_traceable": true,
+    "mechanism_family": "MaintainHomingVector",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_08014855c58d596e",
+    "origin": "card",
+    "precondition_fired": {
+      "drove": 600,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prediction_restated_faithfully": true,
+    "prompt_hash": "08014855c58d596e",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": "p. 186, section \"Binding of Landmark Information and Self-Motion Cues\": \"In circular test arenas, mice (Alyan and Jander, 1994) and hamsters (Etienne et al., 1990) return to their nest along compromise directions, distal landmarks predominating over the directional component of PI as long as both types of information do not diverge by more than 90 deg.\" A review that yields an explicit threshold, not merely a section.",
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_08014855c58d596e",
+  "reason": "UNIT_SCENARIO_FAILED",
+  "reason_v2": "admitted",
+  "unit": {
+    "baseline": 0.0,
+    "candidate": 0.0,
+    "effect": 0.0,
+    "metric": "goal_reached",
+    "required": 0.5
+  }
+}

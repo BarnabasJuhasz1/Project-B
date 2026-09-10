@@ -24,7 +24,7 @@ import pytest
 
 from cards.schema import Verification
 from generate.admit import admit
-from generate.generator import generate
+from generate.tests.test_replay import _v1_candidate
 from nodes.contract import Origin
 from nodes.library import Library
 
@@ -35,8 +35,7 @@ from generate.tests.conftest import GOOD_PROMPT_HASH
 def admitted(pilot_card, replay, staging):
     """The committed condition-B generation, admitted into a fresh library."""
     library = Library()
-    candidate = generate("b", "navigate_to_goal", replay, card=pilot_card,
-                         staging=staging, record=False)
+    candidate = _v1_candidate("b", "navigate_to_goal", pilot_card, replay)
     result = admit(candidate.metadata(), candidate.source, card=pilot_card,
                    library=library)
     assert result.admitted, f"{result.reason}: {result.detail}"
@@ -127,8 +126,7 @@ def test_the_snapshot_tag_covers_the_generation_metadata(pilot_card, replay,
     from. Two libraries holding the same node from different models must not
     share a tag, or the snapshot cannot mean what it claims."""
     library_a, library_b = Library(), Library()
-    candidate = generate("b", "navigate_to_goal", replay, card=pilot_card,
-                         staging=staging, record=False)
+    candidate = _v1_candidate("b", "navigate_to_goal", pilot_card, replay)
 
     admit(candidate.metadata(), candidate.source, card=pilot_card,
           library=library_a)

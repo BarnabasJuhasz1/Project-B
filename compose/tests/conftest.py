@@ -3,7 +3,14 @@ compose/tests/conftest.py
 
 Shared fixtures. **No test in this package calls a model**, for the reasons
 `generate/tests/conftest.py` sets out: every model-dependent test replays a
-committed transcript from `generate/transcripts/`.
+committed transcript.
+
+⚠️ **All eight committed compositions are v1 records**, composed against
+`lib-006-…` libraries built from the one-call staging. Those records moved to
+`generate/archive/v1-single-call/` on 2026-09-08 (chunk 42), so every fixture
+here addresses them through `generator.V1_STAGING` / `V1_TRANSCRIPTS`. Nothing
+about the compositions changed; the live directories now hold the current
+experiment instead of both.
 
 **No test in this package imports `core.scenarios_held_out`.** Chunk 11's AST
 guard covers `compose/` including its tests, and it is a stronger seal for
@@ -65,14 +72,16 @@ def library():
     benchmark condition — see nodes/toys.py.
     """
     from compose.library import load_library
-    return load_library(include_toys=True)
+    from generate.generator import V1_STAGING
+    return load_library(include_toys=True, staging=V1_STAGING)
 
 
 @pytest.fixture(scope="session")
 def generated_only():
     """The library as an evaluation would see it: no fixtures."""
     from compose.library import load_library
-    return load_library(include_toys=False)
+    from generate.generator import V1_STAGING
+    return load_library(include_toys=False, staging=V1_STAGING)
 
 
 @pytest.fixture
@@ -101,7 +110,33 @@ def found(library, spec):
     return retrieve(library, spec)
 
 
+@pytest.fixture(scope="session")
+def recorded_library():
+    """The library as it stood when the committed compositions were recorded.
+
+    **Any test that replays a committed record must use this, not `library`.**
+    The live library grows with every admission; a record does not. Retrieval
+    keeps a bounded working set, so a plan recorded when the library was six
+    entries long can name a node that today's retrieval crowds out — which
+    surfaces as `UNRETRIEVED_NODE` and looks like a broken composition when it
+    is only a composition being replayed against the wrong library. Rebuilt
+    from the record's own `retrieval.considered`, with no model call.
+    """
+    from compose.compose import library_as_recorded
+    from generate.generator import V1_STAGING
+    return library_as_recorded(NAVIGATE_ID, staging=V1_STAGING)
+
+
+@pytest.fixture
+def recorded_found(recorded_library, spec):
+    """Retrieval over the historical library. Retrieval is a pure function of
+    (library, spec), so this reproduces the record's `retrieved` list."""
+    from compose.retrieve import retrieve
+    return retrieve(recorded_library, spec)
+
+
 @pytest.fixture
 def replay():
     from generate.backends import ReplayBackend
-    return ReplayBackend()
+    from generate.generator import V1_TRANSCRIPTS
+    return ReplayBackend(V1_TRANSCRIPTS)

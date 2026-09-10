@@ -194,8 +194,38 @@ def test_a_card_node_must_actually_be_traceable():
         NodeMetadata(node_id="n", origin=Origin.CARD, card_id="card-1")
     ok = NodeMetadata(node_id="n", origin=Origin.CARD, card_id="card-1",
                       source_span="Fox et al. 1997, p. 24",
-                      confidence=Confidence.HIGH)
+                      confidence=Confidence.HIGH, span_verified=True)
     assert ok.is_traceable
+
+
+def test_an_unverified_span_is_not_traceable_however_precise_it_looks():
+    """**Chunk 42's provenance rule.** Every arm now writes its own card, so a
+    span on a generated node is the MODEL's claim about a document — checkable
+    for the arm that read one, pure confabulation risk for the arm that did not.
+    Recording it is the point; counting it would make G1's fraction a measure of
+    fluency."""
+    claimed = NodeMetadata(node_id="n", origin=Origin.CARD, card_id="card-1",
+                           source_span="Section 3.2, equation (14)",
+                           confidence=Confidence.HIGH,
+                           generated_card_id="gen-1")
+    assert claimed.source_span and not claimed.is_traceable
+
+
+def test_a_citation_node_may_claim_a_span_but_never_a_verified_one():
+    """Relaxed and tightened by chunk 42 in the same move. A is pointed at a
+    paper it cannot read, so a span in A's own card is exactly the confabulation
+    the provenance axis exists to detect — refusing to store it would throw the
+    finding away. What stays forbidden is the verification, because nobody
+    opened anything on this node's behalf."""
+    claimed = NodeMetadata(node_id="n", origin=Origin.CITATION,
+                           card_id="card-1", source_span="p. 27, eq. (3)",
+                           confidence=Confidence.HIGH,
+                           generated_card_id="gen-1")
+    assert not claimed.is_traceable
+    with pytest.raises(ValueError, match="span_verified"):
+        NodeMetadata(node_id="n", origin=Origin.CITATION, card_id="card-1",
+                     source_span="p. 27", confidence=Confidence.HIGH,
+                     span_verified=True)
 
 
 def test_origin_is_required_and_handwritten_is_not_traceable():
@@ -284,7 +314,8 @@ def test_provenance_is_computed_not_asserted():
 
     lib.add(_NoProducer, NodeMetadata(
         node_id="sourced", origin=Origin.CARD, card_id="card-1",
-        source_span="Fox et al. 1997, p. 24", confidence=Confidence.MEDIUM))
+        source_span="Fox et al. 1997, p. 24", confidence=Confidence.MEDIUM,
+        span_verified=True))
     p = lib.provenance()
     assert (p["node_count"], p["traceable_count"]) == (3, 1)
     assert p["traceable_fraction"] == pytest.approx(1 / 3)

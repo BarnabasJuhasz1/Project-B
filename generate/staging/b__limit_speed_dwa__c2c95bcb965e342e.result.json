@@ -1,0 +1,49 @@
+{
+  "admitted": true,
+  "detail": "valid; contribution not measured (the candidate's own micro-world is malformed: micro 'dwa_doorway_with_blocked_exit': goal (5.2, 0.9) is too close to a wall for the whole GOAL_RADIUS disc to be reachable, so optimal_distance() would understate the denominator)",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "limit_speed_dwa",
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "8b9bae817eca9f31",
+    "card_row_key": "c2c95bcb965e342e",
+    "citation_id": null,
+    "citation_substituted": false,
+    "condition": "b",
+    "confidence": "medium",
+    "contribution": {
+      "measured": false,
+      "reason": "the candidate's own micro-world is malformed: micro 'dwa_doorway_with_blocked_exit': goal (5.2, 0.9) is too close to a wall for the whole GOAL_RADIUS disc to be reachable, so optimal_distance() would understate the denominator"
+    },
+    "emitted_code": true,
+    "generated_card_id": "dynamic_window_velocity_selection",
+    "generated_node_name": "SelectDynamicWindowVelocity",
+    "is_traceable": false,
+    "mechanism_family": "LimitSpeedToVisibleRange",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_c2c95bcb965e342e",
+    "origin": "card",
+    "paper_sha256": "7b398d18448ca622a4011957a57dd32714cc97c8e8f981a98722baafa7f68ff1",
+    "pipeline_version": "v2-card-first",
+    "precondition_fired": {
+      "drove": 600,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prompt_hash": "07963236f21af081",
+    "ref_id": "limit_speed_dwa",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": "Sec. 4.1 Eq. (14) admissible velocities, Eq. (15) dynamic window, Eq. (16) Vr = Vs \u2229 Va \u2229 Vd; Sec. 4.2 Eq. (13) objective function and the target-heading definition \"180 - \u03b8\"; Sec. 5.2 with Fig. 19 for the arc distance \"\u03b3 \u00b7 r\"; Sec. 5.4 \"Parameter Settings\" for \u03b1 = 0.8, \u03b2 = 0.1, \u03b3 = 0.1; Sec. 4 for the 0.25 s cycle time.\n",
+    "span_verified": false,
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "treatment": "paper",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_c2c95bcb965e342e",
+  "reason": "admitted"
+}

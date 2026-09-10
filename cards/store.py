@@ -71,6 +71,22 @@ def metric_keys():
     return _METRIC_KEYS
 
 
+def _opt(mapping, key, default=""):
+    """An optional field, whether it is absent or present-and-null.
+
+    `dict.get(key, default)` fires the default only when the key is MISSING, so
+    a YAML `span:` with nothing after it — which parses to None, not to "" —
+    slips a None past every `.get(..., "")` below and blows up much later on a
+    `.strip()`. That is not hypothetical: it is how the citations probe crashed
+    on `limit_speed_ics`, and it crashed on precisely the answer the probe
+    prompt calls correct, because "I do not know this document" is written as an
+    empty span. A null and an omission mean the same thing here — no value —
+    and the loader now says so once instead of at every use site.
+    """
+    value = mapping.get(key, default)
+    return default if value is None else value
+
+
 def card_from_dict(data, where):
     """One parsed mapping -> a validated Card.
 
@@ -87,10 +103,10 @@ def card_from_dict(data, where):
             node_name=data["node_name"],
             source=Source(
                 citation=src["citation"],
-                span=src.get("span", ""),
-                verified=Verification(src.get("verified", "unverified")),
-                verified_by=src.get("verified_by", ""),
-                url=src.get("url", ""),
+                span=_opt(src, "span"),
+                verified=Verification(_opt(src, "verified", "unverified")),
+                verified_by=_opt(src, "verified_by"),
+                url=_opt(src, "url"),
             ),
             mechanism=data["mechanism"],
             trigger=data["trigger"],
@@ -99,14 +115,14 @@ def card_from_dict(data, where):
                 statement=pred["statement"],
                 metric=pred["metric"],
                 baseline=pred["baseline"],
-                min_effect=float(pred.get("min_effect", 0.0)),
-                cost_metric=pred.get("cost_metric", ""),
+                min_effect=float(_opt(pred, "min_effect", 0.0)),
+                cost_metric=_opt(pred, "cost_metric"),
             ),
             confidence=Confidence(data["confidence"]),
-            tags=tuple(data.get("tags", ())),
-            supplies=tuple(data.get("supplies", ())),
-            notes=data.get("notes", ""),
-            mechanism_family=data.get("mechanism_family", ""),
+            tags=tuple(_opt(data, "tags", ())),
+            supplies=tuple(_opt(data, "supplies", ())),
+            notes=_opt(data, "notes"),
+            mechanism_family=_opt(data, "mechanism_family"),
         )
     except KeyError as exc:
         raise CardError(f"{where}: missing field {exc}") from exc
@@ -188,6 +204,25 @@ class CardStore:
                 f"are MODEL RECONSTRUCTIONS rather than extractions. Loading "
                 f"them as real cards would put a confabulated mechanism into "
                 f"condition B. Read them with generate.probe instead.")
+        # ⚠️ `generate/cards/{a,b,d}/` holds MODEL-WRITTEN cards — chunk 42's
+        # card call, one per arm per row. Same refusal, same reason, different
+        # directory: these are what a condition wrote for itself, not what
+        # anybody extracted from a document, and one of them entering the corpus
+        # would put a model's own claim into the number G1 reports about the
+        # corpus. They are read with `generate.cardgen.load_generated`.
+        if directory.parent.name == "generate" and directory.name == "cards":
+            raise CardError(
+                f"{directory}: this is the GENERATED card store — one card per "
+                f"arm per row, written by the model itself. They are not "
+                f"extractions and nobody has verified a word of them. Loading "
+                f"them here would pool a model's claims with the human corpus. "
+                f"Read them with generate.cardgen.load_generated instead.")
+        if directory.parent.parent.name == "generate" and \
+                directory.parent.name == "cards":
+            raise CardError(
+                f"{directory}: this is condition {directory.name!r}'s GENERATED "
+                f"card store. See the refusal above — these are the model's own "
+                f"cards, not the corpus.")
         paths = sorted(p for p in directory.glob("*.yaml"))
         return cls(load_card(p) for p in paths)
 

@@ -1,0 +1,73 @@
+# ⚠️ MODEL RECONSTRUCTION — NOT A PRINCIPLE CARD.
+# Produced from the citation alone by generate/probe.py. Nobody has
+# opened this paper to write this file. The span is a GUESS.
+# Reconstructs: cards/limit_speed_ics.yaml
+# cards.store refuses to load this directory. See cards/probe/README.md.
+id: inevitable_collision_state_braking_veto
+node_name: VetoInevitableCollisionTwists
+source:
+  citation: 'Fraichard, T. & Asama, H. (2004). "Inevitable Collision States: a step
+    towards safer robots." Advanced Robotics 18(10), 1001-1024.'
+  span: ''
+  verified: unverified
+mechanism: 'A state is an Inevitable Collision State (ICS) if, no matter what control
+  trajectory the system applies from that state onward, a collision with an obstacle
+  eventually occurs. The key claim is that collision-freeness of the current state
+  is not a safety property: a robot can be arbitrarily far from every obstacle and
+  still be doomed, because its dynamics and bounded deceleration make the collision
+  unavoidable over the infinite horizon. Safety therefore has to be a property of
+  the *state* (pose plus velocity) evaluated against the *future* trajectory set,
+  not of the instantaneous clearance. The paper shows ICS is characterised by intersecting
+  over the set of possible future trajectories and unioning over the obstacles, and
+  proves the property that makes this usable online: evaluating the intersection over
+  a *subset* of future trajectories yields a superset of the true ICS set. Checking
+  only a few evasive manoeuvres is therefore conservative — it may refuse a state
+  that was actually salvageable, but it never certifies a doomed state as safe. This
+  helps because it converts an infinite-horizon guarantee into a finite, cheap-to-evaluate
+  test, and it makes the finite manoeuvre set a tunable safety/permissiveness dial
+  rather than a heuristic.
+
+  '
+trigger: 'Applies whenever a command is about to be committed for a control interval
+  to a system with bounded deceleration, non-zero current velocity, and a sensing
+  horizon shorter than its stopping distance. On the Go2 all three hold: the frozen
+  locomotion policy cannot stop instantly, commanded speed is non-negligible, and
+  the planar lidar sees a bounded range with blind sectors. It does not apply at rest
+  with a verified-clear braking envelope, where the zero-velocity state is trivially
+  non-ICS.
+
+  '
+derivation: 'Model the Go2 under the frozen policy as a bounded-acceleration unicycle
+  in the body frame: state (x, y, theta, vx, vy, wz), control the Twist. Before emitting
+  any candidate Twist u, evaluate the state it will produce after one control interval,
+  s'' = f(s, u, tau), and test s'' against a finite evasive manoeuvre set E — the
+  paper''s conservative subset. Take E to be three braking manoeuvres: brake straight,
+  brake while turning at +wz_max, brake while turning at -wz_max, each decelerating
+  at a_max until rest. Roll each manoeuvre forward in the body frame from s'' and
+  sweep the robot footprint (inflated by the collision radius) along it. If *every*
+  manoeuvre in E intersects an obstacle, s'' is declared ICS and u is vetoed; the
+  node then emits the best surviving candidate, falling back to the pure braking Twist
+  (0, 0, 0) if none survives. Obstacles come from the 181-beam scan in the current
+  body frame only, which sidesteps odometry drift: the check is re-run every cycle
+  from fresh range data, so a drifting pose estimate cannot corrupt it. My numbers,
+  not the paper''s: a_max = 1.0 m/s^2, tau = 0.2 s actuation-plus-latency interval
+  (so braking distance vx^2/(2*a_max) + vx*tau), inflation radius 0.35 m, wz_max =
+  1.0 rad/s. Extension beyond this paper, flagged as such: beams at or past max range
+  and the two angular sectors the 181-beam scan does not cover are treated as *occupied*
+  at the range limit, so unseen space cannot be mistaken for a valid escape corridor.
+  That closure is not in Fraichard & Asama 2004 and is the part of this card most
+  in need of independent support.
+
+  '
+prediction:
+  statement: 'Gating every emitted Twist on a three-manoeuvre braking ICS check will
+    cut collisions per episode by at least half relative to a reactive avoidance baseline,
+    in cluttered unmapped indoor runs, because the baseline''s instantaneous-clearance
+    test admits states whose stopping envelope is already committed to an obstacle.
+
+    '
+  metric: collisions
+  baseline: reactive_avoid
+  min_effect: 0.5
+  cost_metric: time_to_goal
+confidence: medium

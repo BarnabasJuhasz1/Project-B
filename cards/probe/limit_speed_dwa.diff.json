@@ -1,0 +1,66 @@
+{
+  "card_id": "limit_speed_dwa",
+  "citation": "Fox, D., Burgard, W. & Thrun, S. (1997). \"The Dynamic Window Approach to Collision Avoidance.\" IEEE Robotics & Automation Magazine 4(1), 23-33.",
+  "exact": {
+    "confidence": {
+      "human": "medium",
+      "match": false,
+      "model": "high"
+    },
+    "prediction.baseline": {
+      "human": "reactive_avoid",
+      "match": true,
+      "model": "reactive_avoid"
+    },
+    "prediction.cost_metric": {
+      "human": "time_to_goal",
+      "match": true,
+      "model": "time_to_goal"
+    },
+    "prediction.metric": {
+      "human": "collisions",
+      "match": true,
+      "model": "collisions"
+    }
+  },
+  "exact_field_count": 5,
+  "exact_match_count": 4,
+  "model_id": "claude-opus-5",
+  "node_name": {
+    "human": "LimitSpeedToVisibleRange",
+    "model": "SelectAdmissibleVelocityInDynamicWindow"
+  },
+  "numeric": {
+    "prediction.min_effect": {
+      "human": 0.5,
+      "match": true,
+      "model": 0.5
+    }
+  },
+  "prompt_hash": "17c57a84cb1895c4",
+  "prose": {
+    "derivation": {
+      "human": "d is measured as the free distance along the intended heading, not the nearest return anywhere in the forward cone: a wall passing to one side is not something the robot is about to hit, and using the cone minimum brakes for it anyway. a_brake is not a published figure for this robot - the locomotion policy is frozen and inherited, so the achievable deceleration has to be measured on the Go2 under that policy and treated as a scenario constant.",
+      "model": "The frozen locomotion policy accepts only a Twist, so the velocity space is the command space directly \u2014 the paper's assumption holds unusually cleanly here. Extend the paper's (v,w) plane to the Go2's (vx, vy, wz); the lateral axis is not in the original formulation, so either hold vy = 0 and recover the paper's exact case, or sample (vx, vy, wz) on a grid and replace the circular arc with a constant-twist rollout, which reduces to the arc when vy = 0. Rollouts are propagated in the odometry frame over a short horizon only, so the drifting pose estimate never enters \u2014 this node consumes raw 181-beam lidar in the body frame and is indifferent to global localisation error, which is what makes it the right layer to put underneath an unreliable goal. dist(v,w) is the free path length along the rollout, computed by inflating the Go2 footprint and finding first intersection with the beam set; beams are treated as the only evidence of free space, so unseen sectors are obstacles. The admissibility inequality is used exactly as the paper states it. The numbers it needs are NOT in the paper and are mine: I take braking accelerations v_dot_b = 1.0 m/s^2 and wz_dot_b = 2.0 rad/s^2 as conservative estimates for what the frozen policy will actually deliver on flat indoor floor, a dynamic-window interval t = 0.1 s at 10 Hz control, and a footprint inflation of 0.15 m beyond the Go2's hull. These must be measured on hardware, not trusted; if the policy's true deceleration is lower than assumed the guarantee is void. The objective weights are likewise mine \u2014 the paper's weighted sum of heading, clearance and velocity is adopted in form, but with the heading term dropped to zero when no goal has been disclosed, which degrades the node gracefully into a clearance-and-speed maximiser rather than letting it fail.",
+      "similarity": 0.034
+    },
+    "mechanism": {
+      "human": "A velocity is admissible only if the robot can still stop before the nearest obstacle along the corresponding trajectory. With a braking deceleration a_brake and a free distance d, that bounds forward speed at v <= sqrt(2 * d * a_brake).",
+      "model": "Rather than planning a path in configuration space and then tracking it, the search is carried out directly in the two-dimensional space of reachable velocity commands. That space is pruned twice before anything is optimised. First, a velocity pair is *admissible* only if the robot can still come to a full stop on the arc that pair generates before reaching the nearest obstacle on it: v <= sqrt(2 * dist(v,w) * v_dot_b), with the same form for the angular term, where dist is the free path length along that curvature and v_dot_b the braking acceleration. Second, the *dynamic window* keeps only velocities the actuators can actually reach within the next control interval, v in [v_a - v_dot*t, v_a + v_dot*t]. What remains is a set every element of which is both physically commandable and provably survivable; the objective function (a weighted sum of goal heading, clearance, and forward speed) then merely picks the best member of an already-safe set. Safety is therefore a property of the admitted set, not something the cost function has to be tuned hard enough to enforce \u2014 which is why the method stays safe at high speed where pure-cost reactive schemes start to clip corners.",
+      "similarity": 0.151
+    },
+    "trigger": {
+      "human": "The free distance along the intended heading falls below the distance needed to stop at the current commanded speed.",
+      "model": "Applies on every control cycle in which the robot is commanding non-zero motion and any lidar return lies within the distance the robot needs to stop from its current commanded speed. Equivalently: always active, but only binding when the braking envelope reaches an obstacle. It does not apply to the stationary/turn-in-place case, where the constraint is trivially satisfied.",
+      "similarity": 0.198
+    }
+  },
+  "reconstructed": true,
+  "span": {
+    "checkable": true,
+    "has_answer_key": true,
+    "human": "Section \"Admissible Velocities\", eq. (14). The paper states the closed form explicitly rather than qualitatively: \"A velocity is considered admissible, if the robot is able to stop before it reaches this obstacle. Let v_b and w_b be the accelerations for breakage.\" Eq. (14) then gives Va = {(v,w) | v <= sqrt(2 * dist(v,w) * v_b) and w <= sqrt(2 * dist(v,w) * w_b)}. NOTE the one real deviation: the paper's dist(v,w) is measured along the CORRESPONDING CURVATURE, whereas this card measures d along the intended heading. That difference is the card's own adaptation and is why this stays MEDIUM rather than HIGH.",
+    "model": "The \"Search Space\" part of the dynamic window approach \u2014 the subsections defining admissible velocities V_a (the stopping-distance constraint v <= sqrt(2 * dist(v,w) * v_dot_b), likewise for w) and the dynamic window V_d (velocities reachable within the next interval given bounded acceleration) \u2014 together with the objective function G(v,w) = sigma * (alpha*heading(v,w) + beta*dist(v,w) + gamma*velocity(v,w)) in the optimization part. I do not recall the equation or page numbers with confidence and have deliberately not guessed them.",
+    "model_offered_one": true
+  }
+}

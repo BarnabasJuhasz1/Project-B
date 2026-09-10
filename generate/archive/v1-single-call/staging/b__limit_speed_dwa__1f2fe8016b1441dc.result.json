@@ -1,0 +1,50 @@
+{
+  "admitted": true,
+  "admitted_v2": true,
+  "detail": "admitted",
+  "detail_v2": "valid; collisions effect 1.000 against a reported floor of 0.500",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "limit_speed_dwa",
+    "condition": "b",
+    "contribution": {
+      "baseline": 2.0,
+      "candidate": 0.0,
+      "cleared_floor": true,
+      "effect": 1.0,
+      "measured": true,
+      "metric": "collisions",
+      "reason": "admitted",
+      "required": 0.5
+    },
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_1f2fe8016b1441dc",
+    "precondition_fired": {
+      "drove": 600,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prediction_restated_faithfully": true,
+    "prompt_hash": "1f2fe8016b1441dc",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "superseded_by": "d6ae93648c7b4f25",
+    "superseded_reason": "The prompt this was generated from rendered the card's `span` and `confidence`. Both were dropped from generator._render_card when limit_speed_dwa was verified on 2026-08-27, because verifying a citation is provenance work and must not change the code the model writes. The record is KEPT: it is real evidence of a real generation, and deleting it would edit G1's denominator after the fact. It is excluded from the pass rate so one mechanism is not counted as two primitives.",
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_1f2fe8016b1441dc",
+  "reason": "admitted",
+  "reason_v2": "admitted",
+  "unit": {
+    "baseline": 2.0,
+    "candidate": 0.0,
+    "effect": 1.0,
+    "metric": "collisions",
+    "required": 0.5
+  }
+}

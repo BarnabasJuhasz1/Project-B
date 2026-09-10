@@ -82,3 +82,15 @@ def test_conditions_come_back_in_write_up_order(tmp_path):
         {"label": "A", "controller": "goal_seeker"}]})
     assert [c.label for c in load_spec(path).conditions] == ["A", "B"]
     assert list(CONDITION_LABELS) == ["A", "B", "C", "D"]
+
+
+def test_a_bare_node_binding_is_refused_as_a_condition(tmp_path):
+    """Chunk 36 makes `node:<id>` resolve so one leaf can be run under physics.
+    That is evidence about the leaf. A condition is a whole navigator, and a
+    sweep bound to `Sequence[ContractPorts, ONE_LEAF]` would score it happily —
+    the same failure #3 refuses scaffolding for."""
+    node_name = controllers.library_nodes()[0]
+    path = write(tmp_path, {"reportable": False, "conditions": [
+        {"label": "A", "controller": node_name}]})
+    with pytest.raises(ValueError, match="ONE LEAF"):
+        load_spec(path)

@@ -13,8 +13,8 @@ import json
 import pytest
 
 from compose.compose import (Composition, CompositionError, RECORDS, build,
-                             compose, load_composition, parse_plan, render,
-                             repair)
+                             compose, library_as_recorded, load_composition,
+                             parse_plan, render, repair)
 from compose.tests.conftest import (NAVIGATE_ID, REPAIR_ID, SEARCH_ID,
                                     SPLIT_PLAN_ID, STARVED_ID)
 from nodes.tree import Tree
@@ -99,20 +99,20 @@ def test_two_fenced_blocks_are_refused():
 
 # --- composite ids ----------------------------------------------------------
 
-def test_composite_ids_are_deterministic(found):
+def test_composite_ids_are_deterministic(recorded_found):
     plan = plan_of(NAVIGATE_ID)
-    first = [n.metadata.node_id for n in build(plan, found).nodes()]
-    second = [n.metadata.node_id for n in build(plan, found).nodes()]
+    first = [n.metadata.node_id for n in build(plan, recorded_found).nodes()]
+    second = [n.metadata.node_id for n in build(plan, recorded_found).nodes()]
     assert first == second
 
 
-def test_a_composite_carries_no_provenance(found):
+def test_a_composite_carries_no_provenance(recorded_found):
     """A composite emits nothing of its own, so it names no card and no source.
     Where the CONTROL FLOW came from is recorded in the composition record, with
     the prompt hash that produced it."""
     from nodes.contract import Origin
     from nodes.tree import Composite
-    for node in build(plan_of(NAVIGATE_ID), found).nodes():
+    for node in build(plan_of(NAVIGATE_ID), recorded_found).nodes():
         if isinstance(node, Composite):
             assert node.metadata.origin is Origin.HANDWRITTEN
             assert node.metadata.card_id is None
@@ -122,10 +122,10 @@ def test_a_composite_carries_no_provenance(found):
 # --- the replayed compositions ----------------------------------------------
 
 def test_composing_from_a_committed_transcript_reproduces_the_record(
-        library, spec, found, replay, tmp_path):
+        recorded_library, spec, recorded_found, replay, tmp_path):
     """Reproducible, not repeatable — the property chunk 15 established and
     `ReplayBackend` exists to provide."""
-    result = compose(spec, library, replay, retrieval=found,
+    result = compose(spec, recorded_library, replay, retrieval=recorded_found,
                      include_toys=True, records=tmp_path,
                      transcripts=tmp_path)
     assert result.ok, f"{result.reason}: {result.detail}"
@@ -341,3 +341,94 @@ def test_the_composed_tree_reaches_the_goal_on_doorway_traverse():
                    scenario)
     assert result["goal_reached"] is True
     assert result["spl"] > 0.9
+
+
+# --- a composition survives the library growing under it ---------------------
+#
+# The cost this section exists to remove, stated once. #7 makes the library
+# append-only and #8 makes every result name its snapshot, so before 2026-09-06
+# **every admission invalidated every composition recorded against the smaller
+# library** — and the cost compounded: two admissions that day took this suite
+# from five failures to seven. Reproducing a composition now means running its
+# recorded plan against the library THE RECORD NAMES, rebuilt from the record's
+# own `retrieval.considered` with no model call. Decided by the user; see
+# `_library_as_recorded` for what it does and does not give up.
+
+
+def test_the_historical_library_is_rebuilt_from_the_record(recorded_library):
+    """The reconstruction is verified by the tag the record already carries.
+
+    This is the load-bearing assertion of the whole approach: the rebuilt
+    library's own `snapshot()` must equal the tag written at composition time.
+    The tag is a hash of the assembled contents, so matching it is proof the set
+    was reassembled exactly — #8 enforced against the artefact rather than
+    asserted about it.
+    """
+    from compose.library import load_library
+    record = json.loads(
+        (RECORDS / f"{NAVIGATE_ID}.json").read_text(encoding="utf-8"))
+    assert recorded_library.snapshot() == record["library_snapshot"]
+    assert len(recorded_library.all()) == record["retrieval"]["library_size"]
+
+    # And the test is not passing for free: the live library really has moved
+    # on, so reconstruction is doing the work. If this ever fails, the two
+    # libraries have converged and every other assertion here is vacuous.
+    assert load_library(include_toys=True).snapshot() != record["library_snapshot"], (
+        "the live library equals the recorded one, so these tests no longer "
+        "prove reconstruction happens")
+
+
+def test_a_committed_composition_still_loads_after_the_library_grew():
+    """The failure this replaces: `SNAPSHOT_MISMATCH` on every record, every
+    time anything was admitted."""
+    tree = load_composition(NAVIGATE_ID)
+    assert isinstance(tree, Tree)
+
+
+def test_a_repair_inherits_its_parents_library():
+    """A repair records `considered: []` — `repair()` reuses the previous
+    retrieval and creates nothing — so its historical library is its parent's,
+    reached through `repair_of`. That the chain is sound is a design guarantee,
+    not an inference: reusing the retrieval is exactly what stops a repair
+    reaching a node the parent could not."""
+    record = json.loads(
+        (RECORDS / f"{REPAIR_ID}.json").read_text(encoding="utf-8"))
+    assert not record["retrieval"]["considered"], (
+        "this test is about a record with no considered list of its own")
+    assert record["repair_of"]
+    assert library_as_recorded(REPAIR_ID).snapshot() == record["library_snapshot"]
+    assert isinstance(load_composition(REPAIR_ID), Tree)
+
+
+def test_reconstruction_refuses_a_library_it_cannot_reassemble():
+    """The limit of the approach, pinned rather than papered over.
+
+    `6f9686b0` starves on `gen_b_1f2fe8016b1441dc`, the SUPERSEDED generation,
+    which `admitted_stems` drops so that one mechanism is not in the library
+    twice. That is right for the live library and it is exactly what makes this
+    record's library unrecoverable. Refused loudly: returning the six-minus-one
+    entries would hash to a tag naming a set it is not.
+
+    So finding 1 is still read off the plan structurally, by
+    `test_a_composition_can_succeed_and_still_not_work`, and the half of the
+    pair that does run still runs.
+    """
+    with pytest.raises(CompositionError) as exc:
+        load_composition(STARVED_ID)
+    assert exc.value.reason == "UNRECONSTRUCTABLE_LIBRARY"
+    assert "gen_b_1f2fe8016b1441dc" in str(exc.value)
+
+
+def test_reconstruction_cannot_conjure_a_node_that_was_never_admitted():
+    """`only` is a FILTER over the committed records, never a source of them.
+
+    Without this, "rebuild the library the record names" would be a way to put
+    an id into a library by writing it in a JSON file — which would make the
+    snapshot tag meaningless and hand G3 a route to a primitive that was never
+    admitted.
+    """
+    from compose.library import LibraryReconstructionError, load_library
+    with pytest.raises(LibraryReconstructionError) as exc:
+        load_library(include_toys=True,
+                     only=["observation_ports", "never_admitted_node"])
+    assert "never_admitted_node" in str(exc.value)

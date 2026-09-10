@@ -1,0 +1,47 @@
+{
+  "condition": "d",
+  "duration_api_ms": 2095317,
+  "error": "claude exited 1\n  stderr: (empty)\n  stdout: {\"duration_api_ms\":2095317,\"stop_reason\":\"stop_sequence\",\"session_id\":\"cde61d3e-6649-4a97-b5ec-59dadd406e34\",\"total_cost_usd\":4.685401000000001,\"usage\":{\"input_tokens\":18,\"cache_creation_input_tokens\":51909,\"cache_read_input_tokens\":350544,\"output_tokens\":159389,\"output_tokens_details\":{\"thinking_tokens\":157894},\"server_tool_use\":{\"web_search_requests\":0,\"web_fetch_requests\":0},\"service_tier\":\"standard\",\"cache_creation\":{\"ephemeral_1h_input_tokens\":51909,\"ephemeral_5m_input_tokens\":0},\"inference_geo\":\"not_available\",\"iterations\":[{\"input_tokens\":2,\"output_tokens\":64000,\"cache_read_input_tokens",
+  "key": "88c49cee31e01477",
+  "kind": "node",
+  "pipeline_version": "v2-card-first",
+  "prompt_chars": 18619,
+  "prompt_hash": "11584eec78f48c09",
+  "stem": "d__navigate_to_goal__88c49cee31e01477",
+  "stop_reason": "stop_sequence",
+  "task": "navigate_to_goal",
+  "total_cost_usd": 4.685401000000001,
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 51909,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 51909,
+    "cache_read_input_tokens": 350544,
+    "inference_geo": "not_available",
+    "input_tokens": 18,
+    "iterations": [
+      {
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 389,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "cache_creation_input_tokens": 389,
+        "cache_read_input_tokens": 51209,
+        "input_tokens": 2,
+        "output_tokens": 64000,
+        "type": "message"
+      }
+    ],
+    "output_tokens": 159389,
+    "output_tokens_details": {
+      "thinking_tokens": 157894
+    },
+    "server_tool_use": {
+      "web_fetch_requests": 0,
+      "web_search_requests": 0
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  }
+}

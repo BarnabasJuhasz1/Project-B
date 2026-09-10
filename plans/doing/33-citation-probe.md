@@ -147,3 +147,82 @@ and none of that is bought by the question this chunk asks.
 3. `limit_speed_ics`'s span is unverified on purpose (wrong edition of the paper). It has no
    answer key, so it is a **fifth call with no scoreable result** — include it for completeness
    or exclude it and say so?
+
+---
+
+## Status 2026-08-31 — the five calls are made. Three findings.
+
+All five citations probed with `claude-cli` / `claude-opus-5` — **the same model and backend
+every condition-B generation used**, checked against the committed transcripts, so open question
+1 is answered: B−E is not confounded with model identity. Five transcripts committed. Results:
+
+| Citation | Outcome | Exact fields |
+|---|---|---|
+| `limit_speed_dwa` | loadable card | 4/5 |
+| `path_integration_ants` | loadable card | 3/5 |
+| `limit_speed_ics` | loadable card | 2/5 |
+| `path_integration_mammals` | **card returned, loader refused it** | — |
+| `reorient_geometry` | **card returned, loader refused it** | — |
+
+Open question 3 resolved in favour of **including** `limit_speed_ics`. It has no answer key and
+its span row reads "no answer key" rather than a score, so it costs one call and contaminates no
+number; when the *Advanced Robotics* edition is obtained the reconstruction is already on disk
+and becomes scoreable without re-running.
+
+### Finding 1 — the probe crashed on the one answer its own prompt calls correct
+
+Two of the five calls died with `AttributeError: 'NoneType' object has no attribute 'strip'`.
+Cause: `cards/store.py:card_from_dict` read every optional field with `dict.get(key, default)`,
+and **that default fires only when the key is MISSING**. A YAML `span:` with nothing after it
+parses to `None`, not to `""`, so the None sailed past the loader and detonated at a distant
+`.strip()` in `probe.diff()`.
+
+`generate/prompts/probe_card.md` explicitly invites *"I do not know this document"*, and an
+empty span is how a model writes it — so the failure landed precisely on the honest-refusal path
+the probe exists to reward. Fixed at the loader with `_opt()`, which treats a null and an
+omission as the same thing, since they mean the same thing. This was **never probe-specific**: a
+hand-written card with a bare `span:` would have crashed the same way.
+
+**No model call was lost.** `probe()` writes the transcript before it diffs, so both crashed
+calls were recovered with `--backend replay` at zero cost — which is the committed-transcript
+design from chunk 15 paying for itself in the way it was meant to.
+
+### Finding 2 — the two non-producers had not refused, and the report said they had
+
+`path_integration_mammals` and `reorient_geometry` each returned a well-formed card in the
+frozen six-field schema. Both were rejected by `card_from_dict`, both for **the same reason**:
+each named `localisation_failures` as its `prediction.metric`, and `CONTROLLER_INDEPENDENT`
+refuses it because no controller can move it — it is identical across controllers that behave
+nothing alike and varies only with episode length.
+
+`diff()` filed both under the fixed note *"the model returned no card"*, which is false, and
+`write_findings()` printed that note **in preference to the recorded error**, so the reason
+never reached the report. Two very different outcomes — the prompt working, and a fluent
+reconstruction failing a falsifiability rule — were collapsed into one heading that named the
+less interesting of them.
+
+Fixed: `diff()` no longer asserts a cause it cannot know (it is handed `None` and cannot tell
+the two apart); `probe()`, which saw the exception, sets the specific note; and `FINDINGS.md`
+now carries **Returned a card the loader refused** and **Declined to reconstruct** as separate
+sections with the headline naming all three outcomes. The split is derived from `error` rather
+than a new key, so diffs already on disk classify correctly.
+
+⚠️ **This is a result about the probe, not yet about the model.** Two of five reconstructions
+proposing an unfalsifiable metric is the sharpest thing the run produced, and it is worth
+stating carefully in the write-up: the human cards for these two citations name metrics a
+controller *can* move, and the model — pointed at the same papers by citation alone — did not.
+That is a claim about **one sample per citation**, on a pipeline whose non-repeatability chunk
+15 already established. It is a lead, not a measured rate.
+
+### Finding 3 — the verdicts still need a human, and that is by design
+
+`cards/probe/FINDINGS.md` reports every mechanical field and marks `limit_speed_dwa`'s
+reconstructed span **UNRESOLVED**. The generator has no PDF, and writing a verdict nobody
+checked would be the same confabulation the probe exists to detect, one level up.
+
+**The Done-when is therefore still open**, and what remains is not machinery: someone opens
+`out/corpus/limit_speed_dwa.pdf` and decides whether the model's claimed span is real, then
+writes the *Written verdicts* section. The reconstructions, diffs and transcripts are all on
+disk and committed; nothing needs re-running.
+
+Suite: **570 sim-free tests** (565 + 5 regression tests for the two defects above).

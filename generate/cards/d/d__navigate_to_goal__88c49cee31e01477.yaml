@@ -1,0 +1,137 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition D's card call (given no source at all).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: gap_clipped_goal_bearing
+node_name: SteerThroughWidestAdmissibleGap
+source:
+  citation: (no source - the principle was devised, not extracted)
+  span: ''
+  verified: unverified
+mechanism: 'When the straight line to the goal is occluded, a purely goal-directed
+  heading command drives the robot into the occluder and a purely repulsive one drives
+  it away from the goal; both fail at the same places, namely openings (doorways,
+  furniture gaps, corridor mouths) that are narrower than the obstacle beside them.
+  The mechanism replaces the commanded heading with the *free-space-clipped* goal
+  heading: from the current scan, extract the maximal contiguous angular intervals
+  of beams that are free to at least the depth the robot needs to turn through them;
+  discard those whose chord is narrower than the body plus a safety margin; and command
+  the bearing inside the surviving interval that is angularly closest to the goal,
+  held at least one body-clearance away from either edge of that interval. This helps
+  for two reasons. First, it turns a local occlusion into an implicit subgoal — the
+  opening — without any map, so the robot commits to a traversable aperture instead
+  of grinding along the obstacle face. Second, because the aim bearing is pushed off
+  the interval edges by the angle that a body-radius subtends at the aperture depth,
+  the robot passes through the middle of an opening rather than clipping its jamb,
+  which raises the closest approach distance in exactly the situations (narrow apertures)
+  where it is smallest. The rule reads geometry only from the lidar, in the robot
+  frame; the drifting pose estimate enters solely as a bearing preference.
+
+  '
+trigger: 'Applies when (a) `goal` is not None, i.e. the goal position has been disclosed
+  or latched, AND (b) the goal-bearing corridor is obstructed: the minimum finite
+  range over beams within +/-0.43 rad of the goal bearing is below 1.2 m, AND (c)
+  at least one admissible gap (defined in the derivation) exists in the forward half-plane.
+  If (a) fails the node returns FAILURE without commanding (a goal-unknown explorer
+  owns that case); if (b) fails the node returns FAILURE so that an unobstructed straight-line
+  pursuit node keeps control; if (c) fails the node returns FAILURE so that a recovery/backtrack
+  node takes over. The node never returns SUCCESS on its own — it returns RUNNING
+  while it is steering, and the tree''s goal-reached condition terminates it.
+
+  '
+derivation: 'All numbers below are mine; none come from a source.
+
+  Frame and inputs. Wrap all bearings to (-pi, pi]. Sort beams by `range_angles`.
+  Treat `inf` and any range > `range_max` as exactly range_max = 6.0 m for free-space
+  tests and for width computation (an unreturned beam is free, not unknown, at this
+  range). Beam spacing is 2*pi/181 = 0.0347 rad (~2.0 deg).
+
+  Goal bearing. theta_g = wrap(atan2(gy - y, gx - x) - yaw) using `pose_estimate`
+  = (x, y, yaw). Only the bearing is consumed, never the range, and it is recomputed
+  every step in the robot frame, so `pose_estimate` drift perturbs the *preference*
+  by at most asin(min(1, pose_error_estimate / D)) radians at goal distance D and
+  never corrupts the geometry: the gap edges, widths and clearances come from the
+  scan alone. No pose history is integrated, so drift cannot accumulate inside this
+  node.
+
+  Body scale. A Go2 standing is about 0.70 m long, 0.31 m wide. Circumscribed radius
+  sqrt(0.35^2 + 0.155^2) = 0.38 m, rounded to r_body = 0.40 m. Safety margin 0.15
+  m gives r_clear = 0.55 m as the lateral half-width the robot wants around its commanded
+  line.
+
+  Depth thresholds from the actuation limits given. The tightest arc the frozen policy
+  can be asked for is v/w = 0.8 / 1.0 = 0.8 m radius. To swing the commanded heading
+  off an obstacle that lies on the goal bearing, the robot therefore needs about 0.8
+  m of turning room plus its own 0.4 m radius: d_block = 1.2 m. That is the corridor-obstructed
+  test in the trigger. Its angular half-width is atan(r_clear / d_block) = atan(0.55
+  / 1.2) = 0.43 rad (~25 deg). A beam counts as *free* for gap construction if its
+  range is at least d_free = 1.5 m — d_block plus 0.3 m, so the robot does not commit
+  to an aperture that closes at exactly the distance it needs to turn.
+
+  Gap construction. Restrict to the forward half-plane |phi| <= pi/2; gaps behind
+  the robot would require reversing the direction of travel, which belongs to a backtracking
+  node, not this one. Take maximal runs of consecutive free beams. For a run spanning
+  [phi_lo, phi_hi] with angular extent dphi = phi_hi - phi_lo, let d_eval = min(range
+  at phi_lo, range at phi_hi, 3.0) — the min makes the width estimate conservative,
+  and the 3.0 m cap stops a distant run from being credited with a width the 2.0 deg
+  beam spacing cannot resolve. Chord width w = 2 * d_eval * sin(dphi / 2).
+
+  Admissibility. Require w >= w_min = 0.60 m. Derivation: the robot needs its 0.31
+  m width plus roughly 0.145 m either side to pass an aperture head-on without the
+  margin being smaller than a foot placement. 0.60 m is below the 0.76-0.90 m of ordinary
+  interior doorways, so real openings survive the test, while slots narrower than
+  the body (chair legs, table-to-wall slivers) are rejected. w_min < 2*r_clear = 1.10
+  m deliberately: r_clear is what the robot *wants*, w_min is what it can *fit through*,
+  and refusing to fit through doorways would defeat the mechanism.
+
+  Selection and aim. Among admissible gaps choose the one minimising |wrap(phi_c -
+  theta_g)| where phi_c = (phi_lo + phi_hi)/2; break ties by lowest beam index, so
+  the choice is deterministic. Edge standoff delta = min(atan(r_clear / d_eval), dphi
+  / 2 - 0.02) rad — the angle a body-clearance subtends at the aperture, floored so
+  a just-admissible gap still yields a non-empty aim interval. Aim bearing phi_aim
+  = clip(theta_g, phi_lo + delta, phi_hi - delta). When the goal bearing already lies
+  well inside the gap the robot drives straight at the goal; when it lies near a jamb,
+  the clip pushes it to the middle-safe side.
+
+  Command. wz = clip(1.5 * phi_aim, -1.0, 1.0) rad/s, with wz = 0 for |phi_aim| <
+  0.05 rad to avoid dithering; gain 1.5 1/s saturates the yaw limit at |phi_aim| >
+  0.67 rad, i.e. large heading errors are turned at full rate. vx = clip(0.8 * cos(phi_aim),
+  0.0, 0.8) * min(1.0, d_ahead / d_block) m/s, where d_ahead is the minimum finite
+  range within +/-0.43 rad of phi_aim: speed falls linearly to zero as the aim direction
+  itself closes to nothing, and the cosine stops the robot from translating fast while
+  it is still turning far off its target. vy = 0 — strafing is not needed by this
+  mechanism and mixing it in would confound the effect being tested. If `contact`
+  is true, emit (vx, vy, wz) = (-0.2, 0.0, wz) for one step before resuming, so a
+  grazing contact does not become a push.
+
+  Deliberately excluded: commitment hysteresis between competing gaps across steps.
+  Two nearly equal gaps either side of a pillar can make this rule alternate. That
+  is a real failure and a separate mechanism; it is a separate card, because a unit
+  scenario cannot isolate both effects at once.
+
+  '
+prediction:
+  statement: 'On unmapped indoor layouts where the straight line from start to a disclosed
+    goal is occluded by walls or furniture, replacing the goal-bearing heading command
+    with the gap-clipped goal bearing raises the fraction of seeds on which the goal
+    is reached, relative to the goal_seeker baseline, because the robot passes through
+    apertures instead of stalling against the occluder face.
+
+    '
+  metric: goal_reached
+  baseline: goal_seeker
+  min_effect: 0.15
+  cost_metric: path_length
+confidence: low
+generated:
+  condition: d
+  task: navigate_to_goal
+  treatment: none
+  card_prompt_hash: 88c49cee31e01477
+  card_row_key: 88c49cee31e01477
+  card_model_id: claude-opus-5
+  ref_id: null
+  paper_sha256: null
+  generated_card_id: gap_clipped_goal_bearing
+  generated_node_name: SteerThroughWidestAdmissibleGap
+  citation_substituted: false

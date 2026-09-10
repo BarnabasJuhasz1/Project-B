@@ -329,3 +329,72 @@ def test_coverage_counts_mechanisms_not_sources():
 def test_an_unknown_card_names_the_known_ones():
     with pytest.raises(KeyError, match="no card"):
         STORE.get("nope")
+
+
+def test_a_null_optional_field_loads_as_absent_not_as_None():
+    """`span:` with nothing after it parses to None, not to "".
+
+    Found by the citations probe (chunk 33) crashing on `limit_speed_ics` with
+    `AttributeError: 'NoneType' object has no attribute 'strip'` — on precisely
+    the answer `generate/prompts/probe_card.md` invites as correct, since "I do
+    not know this document" is written as an empty span. `dict.get(k, default)`
+    fires the default only when the key is MISSING, so a present-and-null field
+    slipped a None past the loader and blew up at a distant `.strip()`.
+
+    A null and an omission mean the same thing here: no value.
+    """
+    # The base card is VERIFIED, and the schema is right to refuse a
+    # verification with no span — so unverify first. That refusal is a
+    # different rule and test_verification_requires_a_span_and_someone
+    # _accountable already covers it.
+    unverified = {"source.verified": "unverified", "source.verified_by": ""}
+
+    card = _load(_card_dict(**dict(unverified, **{"source.span": None})))
+    assert card.source.span == ""
+    assert not card.source.is_traceable
+
+    # A null `verified:` is an omission too, and the default is UNVERIFIED —
+    # the safe direction. A null must never read as a verification.
+    assert _load(_card_dict(**dict(unverified, **{"source.verified": None}))
+                 ).source.verified is Verification.UNVERIFIED
+
+    # Every optional string on the card, not just the one that was hit.
+    for key, attr in (("source.verified_by", lambda c: c.source.verified_by),
+                      ("source.url", lambda c: c.source.url),
+                      ("prediction.cost_metric",
+                       lambda c: c.prediction.cost_metric)):
+        assert attr(_load(_card_dict(**dict(unverified, **{key: None})))) == "", key
+
+    for key, attr in (("notes", lambda c: c.notes),
+                      ("mechanism_family", lambda c: c.mechanism_family)):
+        assert attr(_load(_card_dict(**{key: None}))) == "", key
+
+    for key, attr in (("tags", lambda c: c.tags),
+                      ("supplies", lambda c: c.supplies)):
+        assert attr(_load(_card_dict(**{key: None}))) == (), key
+
+    # A null number is the schema's own default, not a TypeError.
+    assert _load(_card_dict(**{"prediction.min_effect": None})
+                 ).prediction.min_effect == 0.0
+
+
+def test_a_reconstruction_that_offers_no_span_still_diffs():
+    """The probe's honest-refusal path, end to end at the seam that broke.
+
+    `generate.probe.diff()` reaches straight for `reconstructed.source.span
+    .strip()`, so a reconstruction with a null span has to arrive as "" or the
+    diff raises instead of recording the refusal as the outcome it is.
+    """
+    from generate.probe import diff
+
+    human = CardStore.load().get("limit_speed_dwa")
+    reconstructed = _load(_card_dict(**{"source.span": None,
+                                        "source.verified": "unverified",
+                                        "source.verified_by": ""}))
+    out = diff(human, reconstructed)
+
+    assert out["span"]["model"] == ""
+    assert out["span"]["model_offered_one"] is False
+    # No span offered means nothing to check against the paper, whether or not
+    # a key exists. An absent claim is not a confabulation.
+    assert out["span"]["checkable"] is False

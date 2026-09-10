@@ -1,0 +1,55 @@
+{
+  "admitted": true,
+  "admitted_v2": true,
+  "detail": "admitted",
+  "detail_v2": "valid; min_clearance effect 3.462 against a reported floor of 0.100",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "limit_speed_ics",
+    "citation_id": null,
+    "condition": "b",
+    "confidence": "low",
+    "contribution": {
+      "baseline": -0.11751821258587652,
+      "candidate": 0.28934569879128397,
+      "cleared_floor": true,
+      "effect": 3.462134952740575,
+      "measured": true,
+      "metric": "min_clearance",
+      "reason": "admitted",
+      "required": 0.1
+    },
+    "emitted_code": true,
+    "is_traceable": false,
+    "mechanism_family": "LimitSpeedToVisibleRange",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_f199f233fd9cd65e",
+    "origin": "card",
+    "precondition_fired": {
+      "drove": 0,
+      "fraction": 0.0,
+      "passed": 0,
+      "ticks": 600
+    },
+    "prediction_restated_faithfully": true,
+    "prompt_hash": "f199f233fd9cd65e",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": null,
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_f199f233fd9cd65e",
+  "reason": "admitted",
+  "reason_v2": "admitted",
+  "unit": {
+    "baseline": -0.11751821258587652,
+    "candidate": 0.28934569879128397,
+    "effect": 3.462134952740575,
+    "metric": "min_clearance",
+    "required": 0.1
+  }
+}

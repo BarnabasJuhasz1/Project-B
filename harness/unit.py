@@ -28,6 +28,31 @@ it cannot dodge:
 A rejection is an outcome, not an error. Chunk 15 keeps rejected candidates with
 their reason, because G1's pass rate needs a denominator and because a rejected
 node is the most informative artefact the pipeline produces.
+
+⚠️ CHUNK 37: THE THREE REQUIREMENTS ABOVE NO LONGER GATE ADMISSION
+-------------------------------------------------------------------
+They are still computed, still reported, and still exactly as described. What
+changed is that `generate/admit.py` **no longer rejects on them**. Admission is
+now decided by `run_validity()` below — does the node RUN — and the effect is
+recorded as a measurement beside it.
+
+The reason is measured, not theoretical. `ExtendedSurfaceDetour` (condition A,
+Cheng 1986) **fails its own unit scenario when the paper's mechanism is ablated**
+— which says this file worked — and the *same ablated node still reaches the
+goal on both dev scenarios*. The micro-world was honest and unrepresentative at
+the same time, and no improvement to micro-worlds fixes that, because the
+generator picks them.
+
+Worse, gating on isolated efficacy **forces breadth**: only an Action can move a
+navigation metric alone, so a narrow mechanism could only pass by being packaged
+with a carrier — which is the two-effect violation, the orphan port and the
+starvation, all one cause. And half of condition D's rejections were this file
+refusing the generator's *world*, not judging its node.
+
+So: efficacy in a self-designed world is a weak instrument, and it was wired to
+the strongest possible consequence. It is now wired to a number. The question it
+was trying to answer — does this node help — moves to `harness/ablate.py`, which
+asks it of a TREE over scenarios the generator did not design.
 """
 
 from dataclasses import dataclass, field
@@ -100,6 +125,72 @@ class UnitResult:
 
     def __bool__(self):
         return self.admitted
+
+
+@dataclass(frozen=True)
+class ValidityResult:
+    """Does this node RUN? Chunk 37's gate, and the whole of it.
+
+    `ticks`, `precondition_passed` and `drove` are diagnostics rather than
+    criteria — none of them can fail a node. They are recorded because they
+    separate two things the old gate conflated: a node that did not help and a
+    node that never fired. Measured on the same day this was written:
+    `LimitSpeedToOcclusionBoundary` passed its precondition 0 times in 6000
+    ticks, `ReorientToGeometry` 6000 out of 6000. Those are different findings
+    and both were previously reported as one number.
+    """
+
+    node_id: str
+    valid: bool
+    reason: str
+    ticks: int = 0
+    precondition_passed: int = 0
+    drove: int = 0
+
+    def __bool__(self):
+        return self.valid
+
+    @property
+    def fired_fraction(self):
+        return self.precondition_passed / self.ticks if self.ticks else 0.0
+
+
+def run_validity(tree_factory, node_id, scenario=None):
+    """Tick the node in a HARNESS-OWNED world and see whether it survives.
+
+    ⚠️ The world is deliberately NOT the candidate's. `harness.micro`
+    owns and commits it, because a generator that writes a broken world would
+    otherwise fail a node that is perfectly fine — which is exactly what
+    happened to two of condition D's four candidates, both recorded as
+    `UNIT_SCENARIO_FAILED` without a node ever being run.
+
+    Reaching the goal here proves nothing and is not checked. The only question
+    is whether the node can be ticked without raising.
+    """
+    from core.tests.kinematic import rollout
+    from harness.micro import validity_scenario
+
+    scenario = scenario or validity_scenario()
+    try:
+        tree = tree_factory()
+    except Exception as exc:                     # noqa: BLE001 — recorded, not raised
+        return ValidityResult(node_id, False,
+                              f"could not be built: {type(exc).__name__}: {exc}")
+
+    log = tree.enable_trace()
+    try:
+        rollout(scenario, tree)
+    except Exception as exc:                     # noqa: BLE001
+        return ValidityResult(
+            node_id, False,
+            f"raised while ticking the validity world: "
+            f"{type(exc).__name__}: {exc}")
+
+    seen = log.summary().get(node_id, {})
+    return ValidityResult(node_id, True, "valid",
+                          ticks=seen.get("ticks", 0),
+                          precondition_passed=seen.get("precondition_passed", 0),
+                          drove=seen.get("drove", 0))
 
 
 def _aggregate(controller_factory, unit):

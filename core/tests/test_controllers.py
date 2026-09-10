@@ -253,3 +253,98 @@ def test_boxed_in_turns_towards_the_goal_not_by_beam_order():
     left = c.step(_obs(sc, (5.0, 5.0, 0.0), goal=(5.0, 9.0), ranges=ranges))
     right = c.step(_obs(sc, (5.0, 5.0, 0.0), goal=(5.0, 1.0), ranges=ranges))
     assert left.wz > 0.0 and right.wz < 0.0
+
+
+# --- the `node:` form (chunk 36) -------------------------------------------
+#
+# `node:<id>` is how one admitted leaf reaches `run_episode.py` under physics.
+# The value of the result depends entirely on the tree being the SAME tree the
+# admission decision was taken on, so that is what these pin.
+
+def test_node_prefix_resolves_to_the_admission_tree():
+    """Not merely "a Tree" — the same leaves `generate.admit.build_tree` builds.
+
+    Two constructions of "the admission tree" would drift apart silently, and
+    only a wiring failure would ever say so. This is the assertion that makes
+    the physics result a claim about the admitted node.
+    """
+    from compose.compose import RECONSTRUCTION_STAGING
+    from compose.library import load_library
+    from generate.admit import build_tree
+    from nodes.tree import Tree
+
+    # A v1 node, archived on 2026-09-08, and deliberately still the subject:
+    # `results/` commits seven episodes whose controller is a `node:` id like
+    # this one, and the point of the test is that a committed result stays
+    # re-scorable. It reads through the SAME widened path `controllers.make`
+    # uses — resolving it here by a narrower one would compare two different
+    # libraries and call the difference a drift.
+    node_id = "gen_a_69724a1f2c31010e"
+    tree = controllers.make(controllers.NODE_PREFIX + node_id)
+    assert isinstance(tree, Tree)
+
+    entry = load_library(staging=RECONSTRUCTION_STAGING,
+                         only=[node_id]).get(node_id)
+    expected = build_tree(entry.node_cls, entry.metadata)
+    assert _leaf_ids(tree) == _leaf_ids(expected)
+    assert node_id in _leaf_ids(tree)
+
+
+def _leaf_ids(tree):
+    """Node ids of every leaf in a tree, in tick order."""
+    out = []
+
+    def walk(node):
+        children = getattr(node, "children", None)
+        if children:
+            for child in children:
+                walk(child)
+        else:
+            out.append(node.metadata.node_id)
+
+    walk(tree.root)
+    return out
+
+
+def test_every_library_node_resolves_and_is_a_controller():
+    """`library_nodes()` is the listing; each entry must actually make.
+
+    `Controller` is a plain Protocol and not runtime-checkable, so the check is
+    structural: reset() and step() are what `run_episode.py` calls.
+    """
+    names = controllers.library_nodes()
+    assert names, "the library is empty; this test is about a non-empty one"
+    for name in names:
+        assert name.startswith(controllers.NODE_PREFIX)
+        tree = controllers.make(name)
+        assert callable(tree.reset) and callable(tree.step)
+
+
+def test_library_nodes_are_not_in_available():
+    """A single leaf is evidence about that leaf, never a benchmark condition.
+    Nothing that sweeps `available()` may pick one up."""
+    assert not set(controllers.library_nodes()) & set(controllers.available())
+
+
+def test_the_port_publisher_is_not_offered_as_a_node():
+    """`ContractPorts` is the harness's own publisher. A tree containing only
+    it drives nothing, so naming it is a mistake worth an error."""
+    from compose.library import CONTRACT_PORTS_ID
+
+    assert controllers.NODE_PREFIX + CONTRACT_PORTS_ID \
+        not in controllers.library_nodes()
+    with pytest.raises(KeyError):
+        controllers.make(controllers.NODE_PREFIX + CONTRACT_PORTS_ID)
+
+
+@pytest.mark.parametrize("node_id", [
+    "nope",                       # never existed
+    "gen_b_1f2fe8016b1441dc",     # admitted, then superseded by a re-record
+    "gen_a_4b6fe714f7154470",     # retired with the naive arm
+])
+def test_a_node_outside_the_live_library_is_refused(node_id):
+    """The library is one definition, not two: `node:` reads the same records
+    `pass_rate` and `compose.library` do, so a node that is not in the library
+    today cannot be run today."""
+    with pytest.raises(KeyError):
+        controllers.make(controllers.NODE_PREFIX + node_id)

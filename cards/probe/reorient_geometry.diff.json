@@ -1,0 +1,9 @@
+{
+  "card_id": "reorient_geometry",
+  "citation": "Cheng, K. (1986). \"A purely geometric module in the rat's spatial representation.\" Cognition 23(2), 149-178.",
+  "error": "CardError: <probe reconstruction>: prediction.metric 'localisation_failures' cannot be moved by a controller, so a prediction about it is not falsifiable ABOUT THE NODE. See cards.store.CONTROLLER_INDEPENDENT for why - localisation_failures in particular is identical across controllers that behave nothing alike, and differs only with episode length.",
+  "model_id": "claude-opus-5",
+  "note": "the model returned no card \u2014 see the transcript",
+  "prompt_hash": "3d99ed1bc816e080",
+  "reconstructed": false
+}

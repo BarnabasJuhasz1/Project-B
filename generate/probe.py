@@ -170,7 +170,12 @@ def diff(human, reconstructed):
             "card_id": human.id,
             "citation": human.source.citation,
             "reconstructed": False,
-            "note": "the model returned no card — see the transcript",
+            # Deliberately does NOT say why. `diff()` is handed None and cannot
+            # tell a refusal from a card that would not load, and those are
+            # different results: one is the honest answer the prompt invites,
+            # the other is a confident reconstruction failing a rule. `probe()`
+            # knows which and overwrites this.
+            "note": "no card was parsed from the response",
         }
 
     out = {
@@ -242,6 +247,20 @@ def probe(card, backend, record=True):
     result["model_id"] = getattr(response, "model_id", None)
     if error:
         result["error"] = error
+    if reconstructed is None:
+        # The two ways to produce no card are not one outcome, and collapsing
+        # them loses the more interesting half. `extract_card` returns None only
+        # when the response carries no yaml block at all — the "I do not know
+        # this document" the prompt calls correct. Anything else RAISED, which
+        # means the model did return a card and the REAL loader refused it.
+        # That is a reconstruction failure with a reason, and the reason is the
+        # result: both cards rejected on the first run named a prediction metric
+        # no controller can move.
+        result["outcome"] = "rejected" if error else "refused"
+        result["note"] = (
+            f"the model returned a card and the loader refused it — {error}"
+            if error else
+            "the model declined to reconstruct — no yaml block in the response")
     return result, reconstructed
 
 
@@ -314,6 +333,34 @@ def load_results(directory=None):
     return out
 
 
+def _rejected(result):
+    """Did the model return a card the loader refused, as opposed to no card?
+
+    Derived from `error` rather than read from a key, because `error` is the
+    signal that was always there: `extract_card` returns None only for a
+    response with no yaml block, and raises for everything else. That makes this
+    correct for diffs written before `outcome` existed, which are on disk.
+    """
+    return not result.get("reconstructed") and bool(result.get("error"))
+
+
+def _headline(results, got):
+    """The one-line count, split the way the outcomes actually split.
+
+    "N produced a card" read as though the rest were refusals. On the first real
+    run both non-producers had in fact returned a card that the loader refused,
+    and the summary hid it — so the headline names all three outcomes or none.
+    """
+    rejected = sum(1 for r in results if _rejected(r))
+    refused = len(results) - len(got) - rejected
+    parts = [f"{len(got)} produced a loadable card"]
+    if rejected:
+        parts.append(f"{rejected} returned one the loader refused")
+    if refused:
+        parts.append(f"{refused} declined to reconstruct")
+    return f"{len(results)} citation(s) probed: " + ", ".join(parts) + "."
+
+
 def write_findings(results, directory=None):
     """FINDINGS.md, generated from the diffs rather than maintained by hand.
 
@@ -335,7 +382,7 @@ def write_findings(results, directory=None):
         "the tables**; the written verdicts below them are the part a human "
         "owns.",
         "",
-        f"{len(results)} citation(s) probed, {len(got)} produced a card.",
+        _headline(results, got),
         "",
         "## Mechanical fields",
         "",
@@ -400,10 +447,39 @@ def write_findings(results, directory=None):
                      f"{p['trigger']['similarity']:.2f} | "
                      f"{p['derivation']['similarity']:.2f} |")
 
-    failed = [r for r in results if not r.get("reconstructed")]
-    if failed:
-        lines += ["", "## No card returned", ""]
-        for r in failed:
+    # Split, because "no card" bundles the probe's most and least interesting
+    # outcomes under one heading. A refusal is the prompt working; a rejection
+    # is a fluent reconstruction failing a rule the real loader enforces.
+    refused = [r for r in results
+               if not r.get("reconstructed") and not _rejected(r)]
+    rejected = [r for r in results if _rejected(r)]
+
+    if rejected:
+        lines += [
+            "",
+            "## Returned a card the loader refused",
+            "",
+            "The model produced a card in the frozen schema and "
+            "`cards.store.card_from_dict` — the **real** loader, not a laxer "
+            "one — rejected it. These are reconstruction failures **with a "
+            "stated reason**, not refusals, and the reason is the result.",
+            "",
+        ]
+        for r in sorted(rejected, key=lambda r: r["card_id"]):
+            lines.append(f"- `{r['card_id']}` — {r.get('error')}")
+
+    if refused:
+        lines += [
+            "",
+            "## Declined to reconstruct",
+            "",
+            "No yaml block in the response. `generate/prompts/probe_card.md` "
+            "invites *\"I do not know this document\"* explicitly, so this is "
+            "a **correct** answer and belongs in the denominator, not in the "
+            "errors.",
+            "",
+        ]
+        for r in sorted(refused, key=lambda r: r["card_id"]):
             lines.append(f"- `{r['card_id']}` — {r.get('note') or r.get('error')}")
 
     lines += [

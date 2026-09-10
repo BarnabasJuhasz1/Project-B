@@ -154,3 +154,103 @@ runs only against the dev set would have missed this.**
 - **No held-out scenario has been composed for.** The leak tests prove a
   held-out TaskSpec discloses nothing; they do not prove the library can solve
   one.
+
+---
+
+## ⚠️ 2026-09-06 — reproducing a composition now means the library the record names
+
+**Decided by the user.** The table above, and finding 1's note that `6f9686b0`
+"is no longer executable", were both written under a definition of reproduction
+that made a composition perishable: `load_composition` reloaded the library **as
+it stands today** and refused on `SNAPSHOT_MISMATCH` if it had grown.
+
+#7 (append-only) and #8 (every result names its snapshot) together made that
+self-defeating. **Every admission invalidated every composition recorded against
+the smaller library**, and the cost compounded rather than being paid once — on
+2026-09-06 two admissions took `compose/tests/` from five failures to seven, the
+two new ones surfacing as `UNRETRIEVED_NODE` because today's retrieval crowds
+out a node a recorded plan names.
+
+It now means: **run the recorded plan against the library the record names**,
+rebuilt from that record's own `retrieval.considered` — the full list of ids the
+library held at composition time — with **no model call**. A repair records
+`considered: []`, because `repair()` reuses the previous retrieval and creates
+nothing, so its library is its parent's, reached through `repair_of`. That chain
+is a design guarantee, not an inference.
+
+**#8 is not weakened; it is enforced harder.** The rebuilt library's own
+`snapshot()` must equal the tag in the record. The tag hashes the assembled
+contents, so matching it *proves* the set was reassembled exactly, where before
+the tag was only asserted about a library nobody rebuilt. Verified on the three
+live records: all three reconstruct to `lib-006-23c57a77269e` bit for bit, and
+retrieval over the reconstruction reproduces each record's `retrieved` list
+exactly.
+
+What is given up is only the accidental property that a composition stopped
+loading whenever something *else* was admitted — which was never a check on
+anything. `only=` is a **filter over the committed admission records, never a
+source of them**: an id that was never admitted cannot be conjured by writing it
+into a JSON file, and a test pins that.
+
+**`6f9686b0` is still not executable, and the reason is unchanged** — it starves
+on `gen_b_1f2fe8016b1441dc`, the superseded generation, which `admitted_stems`
+drops so one mechanism is not in the library twice. That is right for the live
+library and is exactly what makes this one record's library unrecoverable.
+Reconstruction refuses it explicitly, with `UNRECONSTRUCTABLE_LIBRARY` naming
+the missing node, rather than returning a short library that would hash to a tag
+naming a set it is not. Finding 1 is still read off the plan structurally and
+the half of the pair that runs still runs. **The user was offered an exemption
+allowing a reconstruction to materialise a superseded node and declined it**, so
+this stays a refusal by choice, not by oversight.
+
+New public entry point: `compose.compose.library_as_recorded(composition_id)`.
+
+---
+
+## ⚠️ 2026-09-07 — finding 1 is not an anecdote, it is four nodes out of five, and finding 2 is 14 of 14
+
+Chunk 39 measured both of the findings above rather than illustrating them, over
+ten generated nodes on the three dev scenarios. Evidence and full tables:
+`out/evidence/nodes/ab-comparison/README.md`.
+
+**Finding 1 (starvation) generalises.** Put each generated node in front of a
+fixed carrier — `Sequence[ContractPorts, Fallback[NODE, AvoidObstacles]]` — and
+ablate it back to the carrier alone:
+
+| arm | Δ goal_reached when the node is removed |
+|---|---|
+| A ×5 | `+0.000` on every one |
+| B ×4 | `−0.333`, `−1.000`, `−1.000`, `−0.667` |
+| B ×1 | `+0.000`, and it **never fires** (9/9) |
+
+A negative delta means **the tree does better without the node**. Four of the
+five condition-B nodes take a carrier that solves all three dev scenarios and
+break it, by returning RUNNING and short-circuiting the `Fallback` — exactly the
+mechanism `6f9686b0` demonstrated once. The composer that declined to sequence
+the node ahead of a driving Action, three times out of three, was **right**, and
+now there is a number saying so.
+
+**Finding 2 (two effects) is universal, not a single node.** Every generated node
+in the live library — **14 of 14** — both calls `ports.drive()` and publishes an
+OUT port. Not one of them declares a single IN port. The §2 note asking chunk 17
+to "decide whether an Action that drives may also publish a port" was written
+about one violation; there is no generated node that does not violate it.
+
+**The two findings are one cause.** `nodes/contract.py` has no *modifier* kind: a
+speed cap is not a Condition, not an Action and not a Decorator as defined, so
+every mechanism was forced into an Action with a carrier welded on. That gives a
+B node exactly two ways to affect the robot — drive itself and starve whatever
+else would have, or publish into the void — and the table above is both of them.
+`plans/todo/40-modifier-kind.md` is the decision.
+
+**⚠️ The reference row that reframes all of it.** The carrier alone —
+`AvoidObstacles`, a handwritten fixture that is scaffolding under #3 and that
+neither prompt has ever seen — reaches the goal on all three dev scenarios at
+SPL 0.982. **Nine of the ten generated nodes fail to beat it**; the tenth,
+`PathIntegrationGoalVector`, beats it by +0.007 SPL. Composition rate was already
+not a proxy for goal-reach rate; this adds that **admission is not a proxy for
+usefulness either**, and that the composed condition B being "toys only" was
+costing less than it appeared to.
+
+Kinematic, dev scenarios only, not reportable, not a G2 number — the same
+standing caveats as everything else in this file.

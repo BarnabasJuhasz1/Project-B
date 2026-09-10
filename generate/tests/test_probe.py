@@ -213,3 +213,58 @@ def test_a_probe_condition_was_not_added_to_the_ablation():
     from generate.generator import CONDITIONS
     assert CONDITIONS == ("a", "b", "d")
     assert not (probe.PROMPT.parent / "condition_e.md").exists()
+
+
+# --- refusal and rejection are different results ----------------------------
+
+def test_a_rejected_reconstruction_is_not_reported_as_a_refusal(dwa, tmp_path):
+    """Both non-producers on the first real run had returned a card.
+
+    `path_integration_mammals` and `reorient_geometry` each produced a card in
+    the frozen schema naming `localisation_failures` as the prediction metric,
+    and `card_from_dict` refused it — a metric no controller can move is not
+    falsifiable about a node. FINDINGS.md filed both under "No card returned",
+    which read as though the model had declined. It had not, and the reason it
+    failed is the more interesting half of the result.
+    """
+    refusal = probe.diff(dwa, None)
+    refusal["note"] = "the model declined to reconstruct — no yaml block"
+
+    rejection = probe.diff(dwa, None)
+    rejection["card_id"] = "rejected_one"
+    rejection["error"] = ("CardError: prediction.metric "
+                          "'localisation_failures' cannot be moved")
+
+    assert not probe._rejected(refusal)
+    assert probe._rejected(rejection)
+
+    probe.write_result(refusal, None, tmp_path)
+    probe.write_result(rejection, None, tmp_path)
+    text = probe.write_findings(probe.load_results(tmp_path),
+                                tmp_path).read_text(encoding="utf-8")
+
+    assert "Returned a card the loader refused" in text
+    assert "Declined to reconstruct" in text
+    assert "localisation_failures" in text, "the reason was dropped"
+    # The headline names every outcome, not just the producers.
+    assert "returned one the loader refused" in text
+    assert "declined to reconstruct" in text
+
+
+def test_the_diff_alone_does_not_guess_why_there_is_no_card(dwa):
+    """`diff()` is handed None and cannot tell the two apart, so it must not
+    claim to. `probe()` sets the specific note, because only it saw the
+    exception."""
+    note = probe.diff(dwa, None)["note"]
+    assert "returned no card" not in note
+    assert "no card was parsed" in note
+
+
+def test_rejection_is_derived_from_the_error_not_a_stored_key(dwa):
+    """Diffs written before `outcome` existed are on disk and must still
+    classify correctly, so the split reads `error` — the signal that was always
+    there."""
+    old = probe.diff(dwa, None)
+    old["error"] = "CardError: something"
+    assert "outcome" not in old
+    assert probe._rejected(old)

@@ -1,0 +1,23 @@
+{
+  "backend": "claude-cli",
+  "card_id": "limit_speed_dwa",
+  "card_model_id": "claude-opus-5",
+  "card_prompt_hash": "8b9bae817eca9f31",
+  "card_row_key": "c2c95bcb965e342e",
+  "citation_id": null,
+  "citation_substituted": false,
+  "condition": "b",
+  "emitted_code": true,
+  "generated_card_id": "dynamic_window_velocity_selection",
+  "generated_node_name": "SelectDynamicWindowVelocity",
+  "model_id": "claude-opus-5",
+  "node_id": "gen_b_c2c95bcb965e342e",
+  "paper_sha256": "7b398d18448ca622a4011957a57dd32714cc97c8e8f981a98722baafa7f68ff1",
+  "pipeline_version": "v2-card-first",
+  "prompt_hash": "07963236f21af081",
+  "ref_id": "limit_speed_dwa",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "navigate_to_goal",
+  "temperature": null,
+  "treatment": "paper"
+}

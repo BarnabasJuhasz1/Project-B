@@ -1,0 +1,42 @@
+{
+  "admitted": false,
+  "admitted_v2": true,
+  "detail": "malformed micro-world: micro 'persistent_bearing_corridor_run': goal (8.0, 5.0) is too close to a wall for the whole GOAL_RADIUS disc to be reachable, so optimal_distance() would understate the denominator",
+  "detail_v2": "valid; contribution not measured (the candidate's own micro-world is malformed: micro 'persistent_bearing_corridor_run': goal (8.0, 5.0) is too close to a wall for the whole GOAL_RADIUS disc to be reachable, so optimal_distance() would understate the denominator)",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": null,
+    "condition": "d",
+    "contribution": {
+      "measured": false,
+      "reason": "the candidate's own micro-world is malformed: micro 'persistent_bearing_corridor_run': goal (8.0, 5.0) is too close to a wall for the whole GOAL_RADIUS disc to be reachable, so optimal_distance() would understate the denominator"
+    },
+    "emitted_code": true,
+    "model_id": "claude-opus-5",
+    "node_id": "gen_d_339274362795fdfa",
+    "precondition_fired": {
+      "drove": 600,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prompt_hash": "339274362795fdfa",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "task": "search_for_goal",
+    "temperature": null,
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_d_339274362795fdfa",
+  "reason": "UNIT_SCENARIO_FAILED",
+  "reason_v2": "admitted",
+  "unit": {
+    "baseline": 0.0,
+    "candidate": 0.0,
+    "effect": 0.0,
+    "metric": "",
+    "required": 0.0
+  }
+}

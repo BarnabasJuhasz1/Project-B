@@ -14,7 +14,8 @@ import json
 import pytest
 
 from generate import batch
-from generate.generator import CONDITIONS, TASKS
+from generate.cardgen import CITATION_CONDITIONS, PAPER_CONDITIONS
+from generate.generator import CONDITIONS, CORPUS_CONDITIONS, TASKS
 
 
 @pytest.fixture(scope="module")
@@ -38,20 +39,34 @@ def test_the_grid_is_the_ceiling(cards, empty):
     rows = batch.plan(cards=cards, staging=empty)
     per_condition = {c: sum(r["condition"] == c for r in rows)
                      for c in CONDITIONS}
-    assert per_condition == {"a": len(TASKS), "d": len(TASKS),
-                             "b": len(cards) * len(TASKS)}
-    assert len(rows) == len(TASKS) * (2 + len(cards))
+    corpus, alone = len(cards) * len(TASKS), len(TASKS)
+    assert per_condition == {"a": corpus, "b": corpus, "d": alone}
+    n_corpus = len(CORPUS_CONDITIONS)
+    assert len(rows) == len(TASKS) * (
+        (len(CONDITIONS) - n_corpus) + n_corpus * len(cards))
 
 
-def test_only_condition_b_gets_a_card(cards, empty):
-    """A card reaching A or D would void the ablation. render() refuses it, and
-    the grid never constructs the combination in the first place."""
+def test_the_reference_lands_in_the_right_column(cards, empty):
+    """One store entry, two treatments, and they must never be confused.
+
+    `card_id` set means the source's CONTENT reached the model — since chunk 42
+    that is the document itself (B). `citation_id` set means only the reference
+    did (A). D gets neither, and no row may carry both — that would be a node
+    claiming a provenance it did not receive."""
     for row in batch.plan(cards=cards, staging=empty):
-        assert (row["card_id"] is not None) == (row["condition"] == "b")
+        assert not (row["card_id"] and row.get("citation_id")), row["stem"]
+        assert (row["card_id"] is not None) == (
+            row["condition"] in PAPER_CONDITIONS)
+        assert (row.get("citation_id") is not None) == (
+            row["condition"] in CITATION_CONDITIONS)
 
 
-def test_the_node_id_is_the_prompt_hash(cards, empty):
-    """Which is why the grid IS the ceiling: no nonce, no sample index."""
+def test_the_node_id_is_the_row_key(cards, empty):
+    """Which is why the grid IS the ceiling: no nonce, no sample index.
+
+    The key is the CARD prompt's hash since chunk 42 — the node prompt depends
+    on a card that does not exist until the model writes one, so it cannot key a
+    grid that must be computable before any call. See generator.plan_hash."""
     for row in batch.plan(cards=cards, staging=empty):
         assert row["node_id"] == f"gen_{row['condition']}_{row['prompt_hash']}"
         assert row["stem"].endswith(row["prompt_hash"])

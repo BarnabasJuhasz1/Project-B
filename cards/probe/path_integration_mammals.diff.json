@@ -1,0 +1,9 @@
+{
+  "card_id": "path_integration_mammals",
+  "citation": "Etienne, A. S. & Jeffery, K. J. (2004). \"Path integration in mammals.\" Hippocampus 14(2), 180-192.",
+  "error": "CardError: <probe reconstruction>: prediction.metric 'localisation_failures' cannot be moved by a controller, so a prediction about it is not falsifiable ABOUT THE NODE. See cards.store.CONTROLLER_INDEPENDENT for why - localisation_failures in particular is identical across controllers that behave nothing alike, and differs only with episode length.",
+  "model_id": "claude-opus-5",
+  "note": "the model returned no card \u2014 see the transcript",
+  "prompt_hash": "52487c66b63365ae",
+  "reconstructed": false
+}

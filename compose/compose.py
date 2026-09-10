@@ -45,11 +45,18 @@ from nodes.contract import Kind, NodeMetadata, Origin
 from nodes.tree import Fallback, Sequence, Tree, WiringError
 
 from compose import retrieve as retrieve_mod
-from compose.library import load_library
+from compose.library import LibraryReconstructionError, load_library
 from compose.spec import TaskSpec
 
 PROMPTS = Path(__file__).resolve().parent / "prompts"
 RECORDS = Path(__file__).resolve().parent / "compositions"
+
+# Where a HISTORICAL reconstruction looks for the nodes a record names: the live
+# staging first, then the archived one-call records. Live-only is what
+# `load_library()` still defaults to, so the current library stays a clean slate;
+# this wider path is used only when rebuilding something already recorded.
+from generate.generator import STAGING as _LIVE_STAGING, V1_STAGING as _V1_STAGING
+RECONSTRUCTION_STAGING = (_LIVE_STAGING, _V1_STAGING)
 
 # One fenced json block, the same shape as the generator's code fence and for
 # the same reason: two blocks means the output contract was not followed, and
@@ -363,6 +370,114 @@ def _composition_id(spec, kind, prompt_hash):
 
 # --- rebuilding a recorded composition -------------------------------------
 
+def _recorded_library_ids(data, records):
+    """The node ids the library held when `data` was composed, or None.
+
+    `retrieval.considered` is the whole library at composition time — every id
+    that was scored, toys and `observation_ports` included — so it is the set,
+    not a subset of it.
+
+    A REPAIR records `considered: []`, because `repair()` deliberately reuses
+    the previous retrieval and creates nothing. So a repair's library is its
+    parent's, and `repair_of` names the parent. That is a chain the design
+    guarantees rather than an inference: reusing the retrieval is exactly what
+    makes the repair unable to reach a node the parent could not.
+    """
+    considered = data.get("retrieval", {}).get("considered") or []
+    if not considered and data.get("repair_of"):
+        parent_path = records / f"{data['repair_of']}.json"
+        if parent_path.exists():
+            parent = json.loads(parent_path.read_text(encoding="utf-8"))
+            considered = parent.get("retrieval", {}).get("considered") or []
+    return [c["node_id"] for c in considered] or None
+
+
+def _library_as_recorded(data, records, staging, cards):
+    """The library this composition was composed against, rebuilt.
+
+    ⚠️ **THIS CHANGES WHAT "REPRODUCING A COMPOSITION" MEANS**, deliberately and
+    with the user's decision behind it (2026-09-06). It used to mean "run the
+    recorded plan against the library as it stands today", which #7 and #8
+    together made a self-defeating definition: the library is append-only, every
+    result must name its snapshot, so **every admission invalidated every
+    composition recorded before it**. That cost compounds — two admissions on
+    2026-09-06 took the compose suite from five failures to seven — and it was
+    on course to discard the committed works/does-not-work pair chunk 16's
+    finding rests on.
+
+    It now means "run the recorded plan against the library the record names",
+    rebuilt from `retrieval.considered` with no model call.
+
+    **#8 is not weakened, it is enforced harder.** The rebuilt library's own
+    `snapshot()` must equal the tag written in the record; the tag is verified
+    against the reassembled contents rather than asserted. A reconstruction that
+    hashed to anything else is a mismatch and still refuses. What is given up is
+    only the accidental property that a composition stopped loading whenever
+    anything else was admitted, which was never a check on anything.
+    """
+    ids = _recorded_library_ids(data, records)
+    include_toys = data.get("include_toys", False)
+    # A RECONSTRUCTION looks wherever the record's nodes actually are. All eight
+    # committed compositions name v1 nodes, which moved to the archive on
+    # 2026-09-08 — so a historical rebuild reads live AND archive, while
+    # `load_library()` with no argument still reads the live directory alone.
+    # Without this the archive move would silently turn every committed
+    # composition into UNRECONSTRUCTABLE_LIBRARY, which is exactly the failure
+    # #8 exists to make loud.
+    if staging is None:
+        staging = RECONSTRUCTION_STAGING
+
+    if ids is None:
+        # A record with no `considered` and no reachable parent. Nothing to
+        # reconstruct from, so fall back to the old meaning and its refusal —
+        # better than silently loading a library the record cannot vouch for.
+        library = load_library(staging=staging, include_toys=include_toys,
+                               cards=cards)
+        if library.snapshot() != data["library_snapshot"]:
+            raise CompositionError(
+                "SNAPSHOT_MISMATCH",
+                f"the record names {data['library_snapshot']} and the library "
+                f"loads as {library.snapshot()}, and the record carries no "
+                f"`retrieval.considered` to rebuild the historical library "
+                f"from.")
+        return library
+
+    try:
+        library = load_library(staging=staging, include_toys=include_toys,
+                               cards=cards, only=ids)
+    except LibraryReconstructionError as exc:
+        raise CompositionError("UNRECONSTRUCTABLE_LIBRARY", str(exc)) from exc
+
+    if library.snapshot() != data["library_snapshot"]:
+        raise CompositionError(
+            "SNAPSHOT_MISMATCH",
+            f"the record names {data['library_snapshot']} and the library "
+            f"rebuilt from its own `retrieval.considered` hashes to "
+            f"{library.snapshot()}. The reconstruction is not faithful, so the "
+            f"tag would name a set this is not — which is the one thing #8 "
+            f"forbids.")
+    return library
+
+
+def library_as_recorded(composition_id, records=None, staging=None, cards=None):
+    """The library a recorded composition was composed against, rebuilt.
+
+    The public form of what `load_composition` does internally, because
+    "reproduce this composition" and "show me the library it saw" are the same
+    question asked twice, and anything replaying a committed record — a test, a
+    re-scoring, a person checking a claim — needs the second to do the first
+    honestly. Retrieval is a pure function of (library, spec), so retrieving
+    over this reproduces the record's `retrieved` list.
+    """
+    records = Path(records or RECORDS)
+    path = records / f"{composition_id}.json"
+    if not path.exists():
+        raise CompositionError(
+            "NO_SUCH_COMPOSITION", f"{path} does not exist")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return _library_as_recorded(data, records, staging, cards)
+
+
 def load_composition(composition_id, records=None, staging=None, cards=None):
     """Rebuild the Tree a recorded composition produced.
 
@@ -389,16 +504,7 @@ def load_composition(composition_id, records=None, staging=None, cards=None):
             f"{composition_id} was recorded as {data['reason']} and never "
             f"produced a tree")
 
-    library = load_library(staging=staging,
-                           include_toys=data.get("include_toys", False),
-                           cards=cards)
-    if library.snapshot() != data["library_snapshot"]:
-        raise CompositionError(
-            "SNAPSHOT_MISMATCH",
-            f"the record names {data['library_snapshot']} and the library "
-            f"loads as {library.snapshot()}. The library is append-only (#7), "
-            f"so it has grown; re-compose against the current snapshot rather "
-            f"than running an old plan under a new tag.")
+    library = _library_as_recorded(data, records, staging, cards)
 
     retrieved = data["retrieval"]["retrieved"]
     retrieval = retrieve_mod.Retrieval(

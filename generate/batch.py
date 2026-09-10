@@ -18,10 +18,16 @@ nothing. A combination with a staged record is skipped whatever its outcome:
 **re-running a rejection until it is admitted produces a pass rate with no
 denominator**, and the pass rate is what G1 reports.
 
-The ceiling this enumerates is not a budget. `render()` is a pure function of
-`(condition, task, card)` and the node id IS the prompt hash, so the reachable
-library is |TASKS| for A and D and |cards| x |TASKS| for B — asserted in
+The ceiling this enumerates is not a budget. `plan_hash()` is a pure function of
+`(condition, task, card)` and the node id is derived from it, so the reachable
+library is |cards| x |TASKS| for A and B and |TASKS| for D — asserted in
 `generate/tests/test_ceiling.py`, and the reason plans/todo/29 exists.
+
+⚠️ **THE ROW KEY IS THE CARD PROMPT'S HASH, NOT THE NODE PROMPT'S** — chunk 42.
+The node prompt depends on a card that does not exist until the model writes
+one, so it cannot key a grid that has to be computable before any call is made.
+`generator.plan_hash` is what took over, and it is still a pure function of the
+frozen inputs, so `--dry-run` remains the real code path minus the model calls.
 
 SIM-FREE.
 """
@@ -30,8 +36,10 @@ import json
 import time
 
 from cards.store import CardStore
-from generate import backends
-from generate.generator import CONDITIONS, STAGING, TASKS, render
+from generate import backends, corpus
+from generate.cardgen import CITATION_CONDITIONS, PAPER_CONDITIONS
+from generate.generator import (CONDITIONS, CORPUS_CONDITIONS, STAGING, TASKS,
+                                plan_hash)
 
 
 class BatchError(ValueError):
@@ -55,16 +63,31 @@ def plan(conditions=None, tasks=None, card_ids=None, cards=None, staging=None):
     rows = []
     for condition in conditions:
         for task in tasks:
-            for card in (selected if condition == "b" else [None]):
-                prompt_hash = backends.prompt_hash(render(condition, task, card))
-                stem = f"{condition}__{card.id if card else task}__{prompt_hash}"
+            for card in (selected if condition in CORPUS_CONDITIONS
+                         else [None]):
+                key = plan_hash(condition, task, card)
+                stem = f"{condition}__{card.id if card else task}__{key}"
                 outcome = _read_outcome(staging / f"{stem}.result.json")
                 rows.append({
                     "condition": condition,
                     "task": task,
-                    "card_id": card.id if card else None,
-                    "prompt_hash": prompt_hash,
-                    "node_id": f"gen_{condition}_{prompt_hash}",
+                    # Which column the reference lands in is the arm's card-call
+                    # treatment: B is handed the source document, A only the
+                    # reference. Both name the same store entry.
+                    "card_id": (card.id if card
+                                and condition in PAPER_CONDITIONS else None),
+                    "citation_id": (card.id if card
+                                    and condition in CITATION_CONDITIONS
+                                    else None),
+                    # Only the arm that reads the document needs one, and
+                    # out/corpus/ is gitignored — so a machine that never
+                    # fetched the corpus sees WHICH rows it cannot run, in the
+                    # dry run, instead of finding out one call in.
+                    "paper_available": (
+                        corpus.available(card.id)
+                        if card and condition in PAPER_CONDITIONS else None),
+                    "prompt_hash": key,
+                    "node_id": f"gen_{condition}_{key}",
                     "stem": stem,
                     "staged": (staging / f"{stem}.json").exists(),
                     "judged": outcome is not None,
@@ -112,8 +135,12 @@ def describe(row):
         state = "staged, unjudged"
     else:
         state = "PENDING"
+    ref = row["card_id"] or row.get("citation_id")
+    mark = "" if row["card_id"] or not ref else "@"      # @ = citation only
+    if row.get("paper_available") is False:
+        state = "NO PAPER — out/corpus/ is empty for this reference"
     return (f"  {row['condition']}  {row['task']:<22} "
-            f"{row['card_id'] or '-':<26} {row['prompt_hash']}  {state}")
+            f"{mark + ref if ref else '-':<26} {row['prompt_hash']}  {state}")
 
 
 def run(rows, backend, cards=None, seeds=None, record=True, staging=None,
@@ -134,11 +161,19 @@ def run(rows, backend, cards=None, seeds=None, record=True, staging=None,
     started = time.time()
     summary = {"admitted": 0, "rejected": 0, "failed": 0, "results": []}
     for i, row in enumerate(rows, 1):
-        card = cards.get(row["card_id"]) if row["card_id"] else None
+        # One reference, two treatments. `generate()` decides from the prompt
+        # which one the model actually saw; `admit()` is told separately, and
+        # the two agreeing is what keeps A out of B's provenance.
+        ref_id = row["card_id"] or row.get("citation_id")
+        card = cards.get(ref_id) if ref_id else None
         try:
             candidate = generate(row["condition"], row["task"], backend,
                                  card=card, record=record)
-            result = admit(candidate.metadata(), candidate.source, card=card,
+            result = admit(candidate.metadata(), candidate.source,
+                           card=card if candidate.card_id else None,
+                           citation_of=card if candidate.citation_id else None,
+                           generated_card=(candidate.generated.card
+                                           if candidate.generated else None),
                            seeds=seeds)
             (staging / f"{candidate.stem}.result.json").write_text(
                 json.dumps(result.as_dict(), indent=2, sort_keys=True) + "\n",

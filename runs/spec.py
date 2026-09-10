@@ -97,6 +97,9 @@ def load_spec(path=None):
       `controllers.scaffolding()` is the list. A sweep that quietly evaluated
       `scaffold_sweep` as condition A would produce a complete, plausible,
       meaningless table.
+    - **A bare `node:<id>` binding is refused.** It resolves — that is chunk
+      36's point — but it is one leaf plus `ContractPorts`, which is evidence
+      about that leaf and never a condition.
     - **An unresolvable controller is refused before the simulator boots**, the
       same discipline `run_episode.py`'s argparse validators use.
     - **A duplicate controller across two conditions is refused.** Two
@@ -121,6 +124,16 @@ def load_spec(path=None):
                 f"{CONDITION_LABELS}; a fifth would break the identical-episode"
                 f"-count argument in non-negotiable #10.")
         controller = entry["controller"]
+        if controller.startswith(controllers.NODE_PREFIX):
+            raise ValueError(
+                f"{path}: condition {label} is bound to {controller!r}, which "
+                f"is ONE LEAF plus the harness's port scaffold — the tree the "
+                f"admission decision was taken on, not a navigator. It is "
+                f"refused for the same reason scaffolding is (#3): a sweep "
+                f"would score it and produce a complete, plausible, "
+                f"meaningless table. A condition is a composed tree "
+                f"({controllers.COMPOSED_PREFIX}<id>) or a registered "
+                f"controller.")
         if controller in controllers.scaffolding():
             raise ValueError(
                 f"{path}: condition {label} is bound to {controller!r}, which "

@@ -4,12 +4,15 @@ generate/backends.py
 Where the model call happens, and the only place in the pipeline that is not a
 pure function.
 
-Three backends, and the reason there are three is that they answer three
+Four backends, and the reason there are four is that they answer four
 different questions:
 
   ClaudeCliBackend   what runs on this machine today
   AnthropicBackend   what a container run would use. NOT EXERCISED — see below.
   ReplayBackend      what makes a library regenerable without a model at all
+  ResumeBackend      how a HALF-FINISHED row is finished without re-making the
+                     calls that already succeeded. Generation-time only; never
+                     a reported path. See its docstring for why it has to exist.
 
 **THE DETERMINISM STORY CHANGED, AND IT IS WORTH READING BEFORE TRUSTING IT.**
 
@@ -81,6 +84,14 @@ DEFAULT_MODEL = "claude-opus-5"
 
 # Wall clock for one generation call. A node plus a micro-world is a few hundred
 # lines of thinking; two minutes is not enough and ten is a hang.
+#
+# ⚠️ Measured 2026-09-09: ten is NOT always a hang. Condition D's
+# `navigate_to_goal` NODE call exceeded 600 s against claude-opus-5 and was
+# killed mid-generation, while its CARD call on the same row finished inside it.
+# The default is left where it is — a default that waits half an hour hides a
+# real hang — and the override moved to the command line
+# (`generate_node.py --timeout`), so a long call is a recorded choice rather
+# than a constant nobody re-examines.
 CLI_TIMEOUT_S = 600
 
 # Models that still accept a sampling temperature. Everything else rejects the
@@ -95,6 +106,15 @@ class BackendError(RuntimeError):
     """The model could not be reached, or returned nothing usable. Distinct from
     a REJECTED candidate: a rejection is a result, this is a failure to get
     one."""
+
+    def __init__(self, message, payload=None):
+        super().__init__(message)
+        # What the CLI reported before failing. On a runaway generation this is
+        # the only record that the call happened at all: token counts, cost and
+        # stop reason, for a call that produced no transcript because it
+        # produced no usable response. Measured 2026-09-09 — see ResumeBackend.
+        self.payload = payload or {}
+
 
 
 def prompt_hash(text):
@@ -209,10 +229,22 @@ class ClaudeCliBackend(Backend):
             # Both streams: the CLI reports some failures on stdout and leaves
             # stderr empty, and a BackendError that says nothing is a debugging
             # session rather than a message.
+            #
+            # A non-zero exit still usually carries a JSON payload, and on a
+            # RUNAWAY generation that payload is the whole story — token counts,
+            # thinking tokens, cost and stop reason for a call that returned no
+            # code. Parse it if it is there, so `generate()` can record the
+            # failure instead of losing it.
+            payload = {}
+            try:
+                payload = json.loads(proc.stdout)
+            except (json.JSONDecodeError, ValueError):
+                pass
             raise BackendError(
                 f"claude exited {proc.returncode}\n"
                 f"  stderr: {proc.stderr.strip()[:600] or '(empty)'}\n"
-                f"  stdout: {proc.stdout.strip()[:600] or '(empty)'}")
+                f"  stdout: {proc.stdout.strip()[:600] or '(empty)'}",
+                payload=payload)
         try:
             payload = json.loads(proc.stdout)
         except json.JSONDecodeError as exc:
@@ -356,19 +388,91 @@ class ReplayBackend(Backend):
         return {"backend": self.name, "directory": str(self.directory)}
 
 
-def write_transcript(prompt, response, meta, directory=None):
+class ResumeBackend(Backend):
+    """Replay any call that already has a transcript; make the ones that do not.
+
+    **Why this exists.** `generator.generate()` is two calls and is not atomic:
+    the card call can succeed and the node call fail. That happened on
+    2026-09-09 — condition D's `navigate_to_goal` card was written and committed,
+    then the node call hit `CLI_TIMEOUT_S` and the row died half-made.
+
+    Re-running that row against a live backend is not a retry, it is a
+    **different experiment**. Generation is reproducible but not *repeatable*
+    (see the module docstring): the second card call would return a DIFFERENT
+    card, and because the card's stem is a deterministic function of the row key
+    it would overwrite the first one in place. A real model artefact would be
+    destroyed by the act of finishing the row it belongs to.
+
+    So resumption happens at the CALL level, keyed the same way replay is — on
+    the hash of the rendered prompt. A prompt with a transcript replays; a
+    prompt without one goes live and is recorded by the normal path.
+
+    ⚠️ **Not a reproducible backend, and never a reported one.** Its entire
+    purpose is to leave the tree in the state `--backend replay` needs: once the
+    row is complete, every call in it has a transcript and the whole chain
+    re-derives with no model at all. Re-derive with `replay`, not with this.
+    """
+
+    name = "resume"
+
+    def __init__(self, live=None, directory=None, model_id=DEFAULT_MODEL,
+                 **kwargs):
+        self.live = live if live is not None else ClaudeCliBackend(
+            model_id=model_id, **kwargs)
+        self.replay = ReplayBackend(directory=directory)
+        # Which calls came from where. The caller prints this: a resumed row
+        # that silently replayed the call you meant to re-make is the one
+        # mistake this backend can cause.
+        self.log = []
+
+    def complete(self, prompt):
+        digest = prompt_hash(prompt)
+        if self.replay.path_for(prompt).exists():
+            self.log.append(("replayed", digest))
+            return self.replay.complete(prompt)
+        self.log.append(("called", digest))
+        return self.live.complete(prompt)
+
+    def describe(self):
+        # Deliberately the LIVE backend's description, with no marker of its
+        # own. `generate()` re-records every call it makes, so a replayed call
+        # rewrites its own transcript; reporting "resume" here would mutate the
+        # meta of a committed transcript as a side effect of resuming, and the
+        # transcript would then describe the session that re-read it rather than
+        # the one that made the call. Where a response actually came from is
+        # recorded in the response itself (`response.backend`), which replay
+        # round-trips untouched.
+        return self.live.describe()
+
+
+def write_transcript(prompt, response, meta, directory=None, prompt_text=None):
     """Record one generation call. Filed under the prompt hash.
 
     The prompt text is stored in full alongside the response. It costs a few KB
     and it is the difference between a transcript you can audit and a hash you
     have to trust.
+
+    `prompt_text` is the ONE exception, and it exists for exactly one caller.
+    Condition B's card prompt carries a whole paper, and `out/corpus/` is
+    gitignored because the PNAS copy carries the downloader's IP address — so
+    storing that prompt verbatim would commit the corpus through the back door.
+    `generate/cardgen.py` passes a copy with the paper replaced by a marker
+    naming its sha256 and length.
+
+    **The hash is always of the REAL prompt**, never of the stored text. That is
+    what keeps replay working: a machine holding the PDF re-renders the prompt
+    byte-identically, hashes it, and finds this file. `prompt_redacted` records
+    that the two differ, so a transcript can never quietly claim to be something
+    it is not.
     """
     directory = Path(directory or TRANSCRIPTS)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"{prompt_hash(prompt)}.json"
+    stored = prompt if prompt_text is None else prompt_text
     payload = {
         "prompt_hash": prompt_hash(prompt),
-        "prompt": prompt,
+        "prompt": stored,
+        "prompt_redacted": stored != prompt,
         "response": response.as_dict(),
         "meta": meta,
     }
@@ -385,7 +489,10 @@ def make(name, model_id=DEFAULT_MODEL, **kwargs):
         return AnthropicBackend(model_id=model_id, **kwargs)
     if name == "replay":
         return ReplayBackend(**kwargs)
-    raise KeyError(f"no backend {name!r}. Known: claude-cli, anthropic-sdk, replay")
+    if name == "resume":
+        return ResumeBackend(model_id=model_id, **kwargs)
+    raise KeyError(
+        f"no backend {name!r}. Known: claude-cli, anthropic-sdk, replay, resume")
 
 
 # The system prompt is deliberately almost empty. Everything that steers the

@@ -84,6 +84,13 @@ class Origin(Enum):
     denominator and the numerator of G1's provenance fraction."""
 
     CARD = "card"                  # extracted from a principle card (condition B)
+    CITATION = "citation"          # POINTED at a source, never given its content
+                                   # (condition A). The model was handed a
+                                   # reference and had to recall the mechanism
+                                   # itself, so whatever it implemented is its
+                                   # own recollection wearing the paper's name.
+                                   # Never traceable: nobody opened the paper,
+                                   # so no span can honestly be recorded.
     INVENTED = "invented"          # the model devised the principle (condition D)
     HANDWRITTEN = "handwritten"    # a human wrote it: toys, harness fixtures
 
@@ -138,6 +145,23 @@ class NodeMetadata:
     # as twice what it is. None means "its own mechanism", which is right for
     # an INVENTED node: nothing pairs with it.
     mechanism_family: Optional[str] = None
+    # WHICH MODEL-WRITTEN CARD THIS NODE WAS BUILT FROM — chunk 42.
+    # Every arm writes its own card now, so `card_id` (which CORPUS entry the
+    # arm was pointed at) and this (which card the node was actually implemented
+    # from) are different facts. D has the second and not the first; a
+    # handwritten node has neither.
+    generated_card_id: Optional[str] = None
+    # Has a HUMAN opened the document and checked `source_span`?
+    #
+    # Before chunk 42 this did not need to exist: a CARD node inherited a human
+    # card's span, so a non-empty span WAS a verified one. Now the span on a
+    # generated node is the model's own claim about a paper — checkable for B,
+    # which read the document, and pure confabulation risk for A, which did not.
+    # Recording the claim is the point; counting it as provenance would make
+    # G1's fraction a measure of fluency. So the claim is stored and
+    # `is_traceable` demands this flag, which nothing in the generation path
+    # sets.
+    span_verified: bool = False
 
     def __post_init__(self):
         if not self.node_id:
@@ -171,6 +195,38 @@ class NodeMetadata:
                     f"node claiming a corpus source must name the card and the "
                     f"extraction confidence, or the provenance fraction G1 "
                     f"reports is a guess.")
+        if self.origin is Origin.CITATION:
+            # A citation node must say WHICH reference it was pointed at — that
+            # is the whole of its treatment, and a pointed node that cannot name
+            # its pointer is indistinguishable from an invented one.
+            if not self.card_id:
+                raise ValueError(
+                    f"{self.node_id}: origin is CITATION but card_id is empty. "
+                    f"The reference it was pointed at IS condition A's "
+                    f"independent variable; a node that cannot name it is an "
+                    f"INVENTED node with a misleading label.")
+            # RELAXED BY CHUNK 42, and the relaxation is the measurement.
+            #
+            # This used to forbid a span outright: before 42 the only span a
+            # citation node could carry was the HUMAN card's, and inheriting it
+            # would have handed A provenance B paid for. Now A writes its own
+            # card from the reference alone, and a span in it is A's own claim
+            # about a document A never saw — which is precisely the
+            # confabulation the provenance axis exists to detect. Refusing to
+            # store it would throw away the finding.
+            #
+            # What stays forbidden is the part that was ever the risk:
+            # `span_verified`. Nobody has opened a paper on a citation node's
+            # behalf and nobody can, so a verified span here would be a claim
+            # about work that did not happen, and `is_traceable` is what B-A
+            # would have been confounded by.
+            if self.span_verified:
+                raise ValueError(
+                    f"{self.node_id}: origin is CITATION but span_verified is "
+                    f"set. Verification means a human opened the document, and "
+                    f"a citation node was handed the reference only — marking "
+                    f"one verified would make A look traceable and confound "
+                    f"B-A.")
         if self.confidence is not None and not isinstance(self.confidence, Confidence):
             raise ValueError(
                 f"{self.node_id}: confidence must be a Confidence, not "
@@ -185,9 +241,23 @@ class NodeMetadata:
 
     @property
     def is_traceable(self):
-        """Exactly what G1 reports the fraction of."""
+        """Exactly what G1 reports the fraction of.
+
+        ⚠️ **CHUNK 42 CHANGED WHAT THIS COUNTS, AND THE NUMBER MOVED.** It used
+        to be satisfied by a CARD node with a span, because that span came from
+        a human-extracted card and 4 of the 5 pilot cards are verified. The node
+        is now built from a card the MODEL wrote, so the span is a claim until
+        somebody checks it, and `span_verified` is that check.
+
+        Nothing in the generation path sets it, so the node-level fraction is
+        0.0 today. That is the honest state and it is not a regression in the
+        corpus: `CardStore.provenance()` still reports 0.80 over `cards/*.yaml`,
+        which is a fact about the corpus and was never a fact about the nodes.
+        The two numbers are reported separately and must not be swapped.
+        """
         return (self.origin is Origin.CARD
-                and bool(self.source_span) and self.confidence is not None)
+                and bool(self.source_span) and self.confidence is not None
+                and self.span_verified)
 
 
 class PortAccessError(KeyError):

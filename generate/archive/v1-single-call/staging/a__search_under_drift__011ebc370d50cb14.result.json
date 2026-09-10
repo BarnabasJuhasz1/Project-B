@@ -1,0 +1,49 @@
+{
+  "admitted": false,
+  "admitted_v2": true,
+  "detail": "effect 0.000 below the required 0.500",
+  "detail_v2": "valid; goal_reached effect 0.000 against a reported floor of 0.500",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": null,
+    "condition": "a",
+    "contribution": {
+      "baseline": 0.0,
+      "candidate": 0.0,
+      "cleared_floor": false,
+      "effect": 0.0,
+      "measured": true,
+      "metric": "goal_reached",
+      "reason": "effect 0.000 below the required 0.500",
+      "required": 0.5
+    },
+    "emitted_code": true,
+    "model_id": "claude-opus-5",
+    "node_id": "gen_a_011ebc370d50cb14",
+    "precondition_fired": {
+      "drove": 600,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prompt_hash": "011ebc370d50cb14",
+    "retired_reason": "condition A was redefined on 2026-09-06: it is now handed each card's citation, where this record's prompt was handed no literature at all. The prompt is no longer reachable, so this is evidence about the retired naive arm and not about condition A.",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "task": "search_under_drift",
+    "temperature": null,
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_a_011ebc370d50cb14",
+  "reason": "UNIT_SCENARIO_FAILED",
+  "reason_v2": "admitted",
+  "unit": {
+    "baseline": 0.0,
+    "candidate": 0.0,
+    "effect": 0.0,
+    "metric": "goal_reached",
+    "required": 0.5
+  }
+}

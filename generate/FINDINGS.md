@@ -98,3 +98,73 @@ Fixed in `nodes/contract.py` by separating **origin** (where the node came from)
 **traceability** (whether anyone opened the paper). A CARD node must name its card and confidence;
 the span stays optional, and `is_traceable` still demands it. An unverified card now yields a node
 that is CARD and untraceable — the honest state, counted in G1's denominator and not its numerator.
+
+---
+
+## ⚠️ 2026-09-06 — condition A above is the RETIRED naive arm
+
+Everything in §0 and §1 describes conditions as they were defined before 2026-09-06, when **A
+received no literature at all**. A is now the **citation arm**: it is handed a card's citation
+and none of its content. See `PRE-REGISTRATION.md`'s 2026-09-06 append.
+
+Read the findings with that substitution in mind:
+
+- §0's A row (`FollowBoundaryToGoal`, REJECTED) is evidence about the **naive arm**, not about
+  condition A. So are the four A records generated on 2026-09-05; all are marked
+  `retired_reason` in `generate/staging/` and excluded from the pass rate and the library.
+- **§1 and §3 are unaffected and still bind.** Card infidelity is a property of the harness, not
+  of a condition's inputs, and it now applies to A as well — a citation node's mechanism is the
+  model's own recall wearing the paper's name, and nothing here can check it against the paper.
+  If anything, **A needs the caveat more than B does**: B's node can at least be diffed against a
+  card someone wrote, and A's cannot be diffed against anything.
+- §2 is unaffected: the generator still designs its own micro-world under every condition.
+
+**A new finding is now possible and has not been measured.** A's prompt asks the model to say so
+when it does not recognise a reference. Whether it does, and whether an unrecognised reference
+produces a worse node than a recognised one, is exactly the confabulation question the provenance
+axis exists for — and it is answerable from A's transcripts alone, with no episodes.
+
+## ⚠️ 2026-09-08 — generation is now TWO calls, and the findings above are about the first pipeline
+
+Everything above was produced by a **one-call** pipeline: a condition's prompt carried a card, a
+citation or nothing, and the model wrote a node straight from it. Chunk 42 split that in two —
+each arm writes its own principle card, then **one shared node prompt** implements it. See
+`PRE-REGISTRATION.md`'s 2026-09-08 append and `plans/doing/42-card-first-generation.md`.
+
+Read the findings above with that in mind:
+
+- **§1 (card infidelity) is unaffected in substance and sharper in form.** The harness still
+  cannot check a node against the card it claims to implement. What changed is that *every* arm
+  now has a card to be unfaithful to, including D — so the threat is symmetric across the
+  ablation instead of being B's alone, and `admit.py` records
+  `prediction_restated_faithfully` for all three.
+- **§2 is unaffected.** The generator still designs its own micro-world under every condition.
+- **§3 is unaffected and now covers a chain.** Replaying the card call reproduces the card, which
+  renders the node prompt, which replays the node call. `generate/tests/test_replay.py` exercises
+  the whole chain against a hand-built fixture pair with no model.
+- **§0's table is a v1 table.** `pass_rate` refuses to pool pipelines; read those numbers with
+  `pass_rate(pipeline_version="v1-single-call")`.
+
+### What the split makes newly measurable, and what it costs
+
+**Newly measurable.** The card is now an artefact for every arm, committed under
+`generate/cards/<condition>/`. So "what did each arm actually believe the principle *was*" is
+readable directly, per row, without inferring it from the node's code — and A's card against B's
+card, for the same paper, is `generate/probe.py`'s `B − E` diff computed on the live pipeline
+rather than in a side experiment. **The probe and A's card call now produce the same kind of
+artefact**; whether the probe should be folded into A is a real simplification and is deliberately
+not taken here.
+
+**What it costs, stated plainly.** Two model calls per row instead of one, and a second place a
+row can fail: a card call that produces no card stages a refusal and never reaches the node call.
+That refusal belongs in G1's denominator — the card prompts invite an honest "I do not know this
+paper" — but it means A's pass rate now mixes *two* failure modes, "would not write a card" and
+"wrote a card that would not admit", and the reason code is what separates them.
+
+### The finding the split produced before a single model call was spent
+
+The no-source arm was told to write `(no source: the principle was devised, not extracted)` into
+`source.citation`. **That is a YAML scanner error** — `mapping values are not allowed here` — so
+every card D was *instructed* to write would have been refused by the loader, and the arm would
+have shown a 0% card rate for a punctuation mistake the prompt asked for. Caught while building
+the replay fixture, which is what a fixture is for. The sentinel now uses a dash.

@@ -512,4 +512,302 @@ resolve. Each is deferred deliberately, with the reason, rather than left ambigu
 
 ## Amendments
 
-None. Add dated entries below; never edit above this line.
+Three, all dated 2026-08-31. Add dated entries below; never edit above this line.
+
+- **G1's reported coverage target** is a common ceiling every condition reaches on
+  equal terms, not ≥20. Supersedes §6's target. Nothing in G2 moves.
+- **The provenance fraction is 0.80**, not the 0.0 §6 states. The corpus arrived and
+  four of five spans were verified.
+- **`git tag split-v1` is applied**, closing that §10 deferral.
+
+### 2026-08-31 — G1's reported coverage target: a common ceiling, not ≥20
+
+**What changed.** §6 states G1's target as ≥20 admissible nodes per condition and warns that
+the library is one node. That warning understated the problem: **the shortfall is structural,
+not a budget shortfall**, and no amount of generation budget removes it.
+
+`generate/generator.py:render()` is a pure function of `(condition, task, card)` — no nonce,
+no sample index, no seed — and `Candidate.node_id` **is** the prompt hash. Two calls with the
+same inputs therefore produce the same node id and the same staging stem, and the second
+overwrites the first. With `TASKS` naming three families and `cards/` holding five cards, the
+number of *distinct* nodes reachable without changing anything is:
+
+| Condition | Distinct prompts | Ceiling if every one is admitted |
+|---|---|---|
+| A | 3 tasks | **3** |
+| B | 5 cards × 3 tasks | **15** |
+| D | 3 tasks | **3** |
+
+**A and D cannot reach 20 by spending more calls.** The binding constraint is the
+prompt-identity design, not the corpus. This is asserted by `generate/tests/test_ceiling.py`
+rather than left as prose, and a condition added to `CONDITIONS` without being costed fails
+that test.
+
+**The decision.** G1 is reported against **the largest count every condition reaches on equal
+terms**, not against 20. Concretely: 3 today, and **4** if chunk 29 takes the fourth cell of
+11a's frozen `goal_known` × `pose_drifts` contract (hidden goal under drift), which `TASKS`
+currently leaves unused. The reported number is whatever that common ceiling turns out to be,
+stated **against the target of 20 with the arithmetic above as the reason**. The shortfall is
+reported, never padded — which is what §6 already said, now with a number attached to why.
+
+**Why this and not the alternatives**, both of which were considered and rejected:
+
+- *Actually reach ≥20.* Needs new task families well beyond the free fourth cell, or a
+  declared sample index in the prompt. The latter changes the prompts, orphaning every
+  committed transcript — the exact ground on which chunk 15 rejected a prompt change — and it
+  changes the elicitation: asking one model for *n* distinct mechanisms is a different
+  measurement from asking it once, so the resulting coverage count is no longer the quantity
+  the pilot measured. Rejected on scope and on measurement validity.
+- *Grow B with more cards and cap A and D.* Rejected explicitly rather than silently. Having
+  cards **is B's treatment**, so enumerating over them lifts B alone and makes library size a
+  second, uncontrolled difference between conditions. A larger library composes better for
+  reasons that have nothing to do with the corpus and would look identical in the numbers.
+  That is a worse confound than the B−A confound §1 already accepts.
+
+**The rule this establishes, which binds anything later:** *any axis used to enumerate more
+nodes within a condition must be condition-neutral* — available in identical form to A, B and
+D. Cards fail that test. Task cells derived from the frozen contract pass it. Failure
+signatures from scored episodes pass it by construction, since the same signature is handed to
+all three.
+
+⚠️ **A task family invented by reading the held-out split is leakage and voids G3.** Chunk 11's
+procedural rule applies to the fourth cell: authored in a session that has never had
+`core/scenarios_held_out.py` in context.
+
+**What this does not change.** Nothing in §2, §3, §4 or §7. X stays 0.30, the seed set, the
+episode counts and the frozen constants are untouched, and the digest is unaffected. #10 holds:
+identical inputs per condition, identical episode counts. This amendment changes **what number
+G1 is reported against**, and nothing about G2.
+
+### 2026-08-31 — §6's provenance fraction of 0.0 is superseded: it is 0.80
+
+§6 states, twice, that the provenance fraction "is 0.0 today and will be reported as 0.0
+unless `cards/VERIFICATION.md` is worked through first", on the grounds that there was no
+corpus on the authoring machine. **That work has since been done.** A corpus was obtained,
+and on 2026-08-27 four of the five card spans were verified against the PDFs actually on disk,
+mechanically extracted by `scripts/testing/fetch_and_verify.py`, with each page number checked
+against the **printed** page rather than the PDF page index.
+
+`CardStore.provenance()` now returns `traceable_fraction: 0.8` — 5 cards, 4 traceable, 3
+distinct mechanisms. Three cards had their Confidence **raised** on verification
+(`reorient_geometry` low → high, `path_integration_ants` medium → high,
+`path_integration_mammals` low → high) and one held at medium (`limit_speed_dwa`: the closed
+form is the paper's, but the card measures distance along the intended heading where the paper
+measures it along the corresponding curvature — one substitution that is ours).
+
+`limit_speed_ics` remains **unverified on purpose**: the PDF obtained is the IROS 2003
+conference paper, and the card cites the *Advanced Robotics* 18(10) journal version. Different
+documents, different pagination. It is listed as outstanding with that reason rather than
+verified against the wrong edition, which is the behaviour §6 asks for.
+
+The principle §6 states is unchanged and is what produced this number: **an unverified span is
+never counted as traceable.** Only the value moves — 0.0 → 0.80 — and it moves because the
+work was done, not because the criterion was loosened. §10's deferred entry "Verifying the
+five card source spans" is closed by this amendment for four of five.
+
+### 2026-08-31 — §10's deferred `git tag split-v1` is closed
+
+§10 defers `git tag split-v1` on the ground that "there was no sealing commit to tag when
+chunk 11 ran, because the tree was untracked". The tree is now tracked: `a84cd46` is the
+commit that first tracks `core/scenarios_held_out.py`, and **both `split-v1` and `prereg-v1`
+are annotated tags pointing at it**. The sealed-split hash `00b3312b…` was re-checked at that
+commit and is unchanged. The seal is never re-sealed.
+
+### 2026-09-06 — the conditions are restructured: A becomes citation-only, the naive arm is retired
+
+**This amendment changes what the letters mean.** It is an append, not an edit, and the
+superseded definitions stay above it exactly as written, because every committed transcript,
+staged candidate and result was produced under them.
+
+**What changed.** Condition A was "naive LLM — no literature input, but given the node contract".
+It is now **the citation arm**: A is handed the `source.citation` of a card — authors, title,
+venue, year — and **none** of the extracted content. B is handed the same reference *with* the
+card. The pure-naive arm, which received no literature at all, is **retired**; it is not
+reassigned to another letter and it will not be run.
+
+**Why.** §1 already records that B−A confounds the corpus with the act of principle
+articulation, and that only B−D isolates the corpus. That confound is now removed at the source
+rather than absorbed: A and B are pointed at the same paper and differ by exactly one thing, the
+paper's content, so
+
+> **B−A is the measure of what EXTRACTION buys** — the same paper, read by a human or not.
+
+This is the comparison `generate/probe.py` already names as `B − E` and answers only at the level
+of a reconstructed card. Promoting it to a condition answers it at the level of nodes and
+episodes, which is the level G1 and G2 report at.
+
+**Consequences that are pre-registration material:**
+
+1. **A's ceiling changes.** A now enumerates over the card store, so its reachable node count is
+   `|cards| x |TASKS|` = 20, the same as B's, where it was `|TASKS|` = 4. The 2026-09-05 append
+   recording chunk 29's Option 2 stands, but **it now binds only the condition with no corpus
+   axis**. `generate/tests/test_ceiling.py` carries the numbers: (a 20, b 20, d 4).
+2. **G1's provenance fraction is protected by a new origin.** `nodes.contract.Origin.CITATION`
+   records a node that was pointed at a source and never given its content. Such a node may
+   carry **no source span and no extraction confidence** — both are products of a human reading
+   the paper — and `NodeMetadata` raises if either is set. **A citation node is therefore never
+   traceable**, and it enters G1's denominator and not its numerator. This is the honest state
+   and it is enforced, not conventional.
+3. **A is scored against its own prediction, never the card's.** Condition B's unit scenario is
+   taken from the card's `Prediction`. A's is not: it builds its own micro-world and states its
+   own claim, as an invented node does. Handing A the card's metric, baseline and minimum effect
+   would give it the extracted content through the back door and B−A would measure nothing.
+4. **Four records are retired from the counts.** The four condition-A candidates generated on
+   2026-09-05 under the old definition (one admitted, three rejected) were produced by prompts
+   that are no longer reachable. They remain on disk with a `retired_reason`, are reported under
+   `_retired` by `generate/admit.py:pass_rate`, and are **excluded from A's pass rate and from
+   the library** — pooling them with the new A would compute one number over two different
+   treatments. The library snapshot consequently returns to `lib-006-23c57a77269e`, the tag the
+   committed compositions name.
+5. **Condition D is unchanged by this amendment and is still `d`.** Its planned successor —
+   condition **C**, the same no-corpus arm given failure context from scored episodes — is
+   specified in `plans/todo/34-condition-c-failure-context.md` and is **not built**. The
+   off-the-shelf Nav2 human baseline that previously held the letter C is **retired and will not
+   be run this cycle**; the letter is being reused, and the write-up must say so plainly rather
+   than let a reader assume the baseline exists.
+
+**What this amendment does NOT change.** G2's decision rule, X = 0.30, the seed set, the episode
+count, the sealed split, the secondary metric list and the bootstrap procedure are all untouched.
+The rule is still stated over B and the no-corpus arm; when that arm becomes C, the rule's
+referent changes name and not content, and that renaming will be its own dated append.
+
+### 2026-09-06 — the corpus is deliberately in-distribution, and a second unseen corpus is planned
+
+Declared in advance rather than conceded afterwards, because it governs what the headline
+comparison is allowed to claim.
+
+**The five pilot cards are drawn from work the model can be expected to know.** This is a design
+choice, not a limitation discovered late. Confirmed with the first citation-arm run on
+2026-09-06: condition A was handed each reference alone and **recognised all four it was asked
+about**, naming Müller & Wehner (1988), Etienne & Jeffery (2004), Cheng (1986) and Fox, Burgard &
+Thrun (1997) correctly and unprompted. Recall is therefore not the variable under test on this
+corpus — it is held high and constant on purpose.
+
+**What that buys.** With knowledge of the paper held constant across A and B, the only thing
+separating them is whether a human turned the finding into a rule for this robot. So on this
+corpus:
+
+> **B−A is the measure of EXTRACTION** — what the Derivation step buys, given a model that
+> already knows the source.
+
+`limit_speed_dwa` is the demonstration and it is committed: A reconstructed the Dynamic Window
+Approach faithfully — velocity-space search, the dynamic window, the admissibility bound — and
+was **rejected**; B, given the card's derivation of the same finding onto a 181-beam scan, was
+**admitted**. Knowledge was not the binding constraint. That is a result about extraction that an
+out-of-distribution corpus could not have produced, because there the two arms would differ by
+knowledge as well.
+
+**What it does NOT buy, and what is deferred.** CLAUDE.md's first claim for a corpus is
+**novelty** — "findings published after the training cutoff". **This cycle does not test that
+claim and may not report on it.** A pilot corpus the model knows can say nothing about what a
+corpus supplies that a model cannot supply from itself. The claim is deferred to a **second
+corpus of unseen, post-cutoff papers**, planned in `plans/todo/35-unseen-corpus.md` and not built.
+
+The two corpora measure different quantities and neither number may be reported as the other:
+
+| corpus | holds constant | measures | status |
+|---|---|---|---|
+| pilot, in-distribution | the model knows the paper | **extraction** (B−A) | running |
+| unseen, post-cutoff | the model cannot know the paper | **novelty** | planned, not built |
+
+**This makes the citation arm load-bearing beyond B−A.** Because A is handed the reference alone,
+its transcripts record whether the model *claims* to recognise each source. "In-distribution" is
+therefore an observation with a per-card answer, recorded at generation time, rather than an
+assumption about the corpus — and the same instrument reads the unseen corpus when it exists. A
+claimed recognition of a post-cutoff paper is itself a finding, and it is the confabulation the
+provenance axis exists to detect.
+
+**Unchanged by this amendment:** G2's decision rule, X = 0.30, the seed set, the episode count,
+the sealed split, the secondary metric list and the bootstrap procedure.
+
+### 2026-09-08 — generation becomes two calls: every arm writes its own card first
+
+**This amendment changes where the independent variable lives.** It is an append, not an edit,
+and every superseded definition above stands exactly as written, because every committed
+transcript, staged candidate, library snapshot and composition was produced under them.
+
+**What changed.** Generation was one call: a condition's prompt carried a human's extracted card
+(B), a citation (A) or nothing (D), and the model wrote a leaf node straight from it. It is now
+**two calls**:
+
+1. **the card call** — `generate/prompts/card_{a,b,d}.md`, three files differing **only** inside
+   a delimited `SOURCE BLOCK`. Each arm writes a principle card in the frozen six-field schema,
+   parsed by `cards.store.card_from_dict`, the real loader.
+2. **the node call** — `generate/prompts/node.md`, **one file for every condition**, fed that
+   card and nothing that identifies which arm wrote it.
+
+This is the pipeline `ProjectB_pipeline.drawio` has shown since 2026-09-02 — three
+`LLM Writing Card` boxes feeding one `Node` step — and which the code had never implemented.
+
+**What each arm's card call is given.** A: the `source.citation` and nothing else. B: **the
+source document, in full**, extracted from the PDF. D: nothing.
+
+**Why.** Two reasons, and the second is the stronger one.
+
+- **B is now reading the paper rather than a human's summary of it.** Under the old structure B
+  was handed an extraction and D was handed nothing, so B−D confounded "has a corpus" with "has
+  somebody's derivation already done". B now does its own derivation from the document, which is
+  what the corpus actually supplies.
+- **The arms can no longer differ anywhere but the card.** The old guarantee was a diff test over
+  three node prompts: real, but a guarantee about files. After the card call the pipeline has one
+  node prompt and no condition parameter — `generate/tests/test_prompts.py` asserts
+  `render_node`'s signature is `(card, task)` — so the arms are indistinguishable downstream by
+  construction rather than by inspection.
+
+**Consequences that are pre-registration material:**
+
+1. **The ceiling is unchanged: A 20, B 20, D 4.** All three card prompts are task-conditioned —
+   the arm with no source needs a problem to invent against, and a prompt carrying `{{TASK}}` for
+   one arm and not another would differ outside the source block. So A and B write one card per
+   (paper × task family) and the grid keeps its shape. `generate/tests/test_ceiling.py` carries
+   the numbers and they did not move.
+
+2. **⚠️ G1's NODE-LEVEL provenance fraction becomes 0.0, and this is the honest state.** A node
+   is now implemented from a card the *model* wrote, so its span is a claim until somebody checks
+   it. `NodeMetadata` gains `span_verified`; `is_traceable` requires it; nothing in the generation
+   path sets it. Carrying the human card's verified span onto a node built from a model-written
+   one would hand the arm provenance it did not earn — the failure `Origin.CITATION` was invented
+   to prevent, one step further down.
+
+   **The CORPUS-level fraction is untouched at 0.80.** `CardStore.provenance()` is a fact about
+   `cards/*.yaml` and was never a fact about the nodes. **The two numbers are reported separately
+   and neither may be reported as the other.** Verifying generated spans against
+   `cards/VERIFICATION.md` — B has an answer key, having read the document — is a follow-up and
+   is not claimed here.
+
+3. **A's claimed spans become a measurement rather than a leak.** `NodeMetadata`'s CITATION guard
+   forbade a span outright. It now permits a *claimed* one and forbids `span_verified`. A is
+   pointed at a paper it cannot read, so a span in A's own card is precisely the confabulation the
+   provenance axis exists to detect, and refusing to store it threw the finding away.
+
+4. **Nothing is retired by hand, and nothing is pooled.** Candidate metadata carries
+   `pipeline_version`; `generate/admit.py:pass_rate` buckets on it and **refuses to pool**,
+   naming skipped records under `_superseded_pipeline`. The v1 records — 14 admitted nodes, the
+   `lib-019-…` snapshot, chunk 39's A/B table, every committed composition — stay on disk,
+   stay loadable, and stay readable with
+   `pass_rate(pipeline_version="v1-single-call")`. They keep the provenance they actually had:
+   a v1 CARD node really was built from a human-verified extraction, and rewriting it to the new
+   rule would restate history.
+
+5. **B's card call is reproducible only where the corpus is.** `out/corpus/` is gitignored and
+   never committed — the PNAS copy carries the downloader's IP address — and B's card prompt is a
+   whole paper, so the committed transcript stores it **redacted**, with the PDF's `sha256`, the
+   extractor and the character count in place of the text. The recorded hash is of the **real**
+   prompt, so a machine holding the PDF re-renders it byte-identically and replay resolves.
+   Everything downstream is reproducible from committed files with no corpus at all: the
+   generated cards are committed and the node call replays from them.
+
+   This is the same status the scene assets have — a named, hashed input — except that these are
+   not ours to ship. **It is stated in the write-up, not discovered by a reader.**
+
+6. **The superseded prompts are kept and frozen.** `condition_{a,b,d}.md` are never edited and
+   never rendered; `generator.render_v1()` exists solely so a committed v1 transcript can still be
+   checked against the prompt it was taken against, and a test verifies it reproduces
+   `d6ae93648c7b4f25` exactly.
+
+**What this amendment does NOT change.** G2's decision rule, X = 0.30, the seed set, the episode
+count, the sealed split, the secondary metric list, the bootstrap procedure, the condition letters
+and what they mean, and the two-corpus split of the 2026-09-06 amendment. The card call is a
+change to *how each arm's treatment is administered*, not to what the treatments are: A is still
+pointed at a reference and denied its content, B is still the arm with the literature, D still has
+no corpus.

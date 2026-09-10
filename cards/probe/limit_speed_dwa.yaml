@@ -1,0 +1,73 @@
+# ⚠️ MODEL RECONSTRUCTION — NOT A PRINCIPLE CARD.
+# Produced from the citation alone by generate/probe.py. Nobody has
+# opened this paper to write this file. The span is a GUESS.
+# Reconstructs: cards/limit_speed_dwa.yaml
+# cards.store refuses to load this directory. See cards/probe/README.md.
+id: dynamic_window_admissible_velocity
+node_name: SelectAdmissibleVelocityInDynamicWindow
+source:
+  citation: Fox, D., Burgard, W. & Thrun, S. (1997). "The Dynamic Window Approach
+    to Collision Avoidance." IEEE Robotics & Automation Magazine 4(1), 23-33.
+  span: The "Search Space" part of the dynamic window approach — the subsections defining
+    admissible velocities V_a (the stopping-distance constraint v <= sqrt(2 * dist(v,w)
+    * v_dot_b), likewise for w) and the dynamic window V_d (velocities reachable within
+    the next interval given bounded acceleration) — together with the objective function
+    G(v,w) = sigma * (alpha*heading(v,w) + beta*dist(v,w) + gamma*velocity(v,w)) in
+    the optimization part. I do not recall the equation or page numbers with confidence
+    and have deliberately not guessed them.
+  verified: unverified
+mechanism: 'Rather than planning a path in configuration space and then tracking it,
+  the search is carried out directly in the two-dimensional space of reachable velocity
+  commands. That space is pruned twice before anything is optimised. First, a velocity
+  pair is *admissible* only if the robot can still come to a full stop on the arc
+  that pair generates before reaching the nearest obstacle on it: v <= sqrt(2 * dist(v,w)
+  * v_dot_b), with the same form for the angular term, where dist is the free path
+  length along that curvature and v_dot_b the braking acceleration. Second, the *dynamic
+  window* keeps only velocities the actuators can actually reach within the next control
+  interval, v in [v_a - v_dot*t, v_a + v_dot*t]. What remains is a set every element
+  of which is both physically commandable and provably survivable; the objective function
+  (a weighted sum of goal heading, clearance, and forward speed) then merely picks
+  the best member of an already-safe set. Safety is therefore a property of the admitted
+  set, not something the cost function has to be tuned hard enough to enforce — which
+  is why the method stays safe at high speed where pure-cost reactive schemes start
+  to clip corners.'
+trigger: 'Applies on every control cycle in which the robot is commanding non-zero
+  motion and any lidar return lies within the distance the robot needs to stop from
+  its current commanded speed. Equivalently: always active, but only binding when
+  the braking envelope reaches an obstacle. It does not apply to the stationary/turn-in-place
+  case, where the constraint is trivially satisfied.'
+derivation: 'The frozen locomotion policy accepts only a Twist, so the velocity space
+  is the command space directly — the paper''s assumption holds unusually cleanly
+  here. Extend the paper''s (v,w) plane to the Go2''s (vx, vy, wz); the lateral axis
+  is not in the original formulation, so either hold vy = 0 and recover the paper''s
+  exact case, or sample (vx, vy, wz) on a grid and replace the circular arc with a
+  constant-twist rollout, which reduces to the arc when vy = 0. Rollouts are propagated
+  in the odometry frame over a short horizon only, so the drifting pose estimate never
+  enters — this node consumes raw 181-beam lidar in the body frame and is indifferent
+  to global localisation error, which is what makes it the right layer to put underneath
+  an unreliable goal. dist(v,w) is the free path length along the rollout, computed
+  by inflating the Go2 footprint and finding first intersection with the beam set;
+  beams are treated as the only evidence of free space, so unseen sectors are obstacles.
+  The admissibility inequality is used exactly as the paper states it. The numbers
+  it needs are NOT in the paper and are mine: I take braking accelerations v_dot_b
+  = 1.0 m/s^2 and wz_dot_b = 2.0 rad/s^2 as conservative estimates for what the frozen
+  policy will actually deliver on flat indoor floor, a dynamic-window interval t =
+  0.1 s at 10 Hz control, and a footprint inflation of 0.15 m beyond the Go2''s hull.
+  These must be measured on hardware, not trusted; if the policy''s true deceleration
+  is lower than assumed the guarantee is void. The objective weights are likewise
+  mine — the paper''s weighted sum of heading, clearance and velocity is adopted in
+  form, but with the heading term dropped to zero when no goal has been disclosed,
+  which degrades the node gracefully into a clearance-and-speed maximiser rather than
+  letting it fail.'
+prediction:
+  statement: Restricting the commanded Twist to the admissible set (only velocities
+    from which the robot can brake to zero before the nearest obstacle on its own
+    predicted arc) will reduce collisions relative to a reactive avoider that scores
+    candidate twists on clearance without a braking-distance constraint, and the gap
+    will widen as commanded speed rises. It will cost forward progress, because velocities
+    that would have been fast and lucky are now rejected.
+  metric: collisions
+  baseline: reactive_avoid
+  min_effect: 0.5
+  cost_metric: time_to_goal
+confidence: high

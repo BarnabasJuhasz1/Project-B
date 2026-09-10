@@ -1,0 +1,42 @@
+{
+  "admitted": false,
+  "admitted_v2": true,
+  "detail": "AttributeError: 'float' object has no attribute 'sigma_xy'\n\nTraceback (most recent call last):\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/generate/admit.py\", line 491, in admit\n    result = run_unit(tree_factory, unit)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/harness/unit.py\", line 167, in run_unit\n    base = _aggregate(baseline_factory, unit)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/harness/unit.py\", line 111, in _aggregate\n    result = score(rollout(micro, controller_factory()), micro)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/tests/kinematic.py\", line 50, in rollout\n    localiser = make_localiser(scenario)\n                ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/localisation.py\", line 245, in make_localiser\n    return DriftLocaliser(make_drift(scenario))\n                          ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/drift.py\", line 167, in make_drift\n    return DriftModel(scenario.drift, scenario.drift_rng())\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/drift.py\", line 55, in __init__\n    if spec.sigma_xy < 0 or spec.sigma_yaw < 0:\n       ^^^^^^^^^^^^^\nAttributeError: 'float' object has no attribute 'sigma_xy'\n",
+  "detail_v2": "valid; contribution not measured (run_unit raised AttributeError: 'float' object has no attribute 'sigma_xy'\n\nTraceback (most recent call last):\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/generate/admit.py\", line 490, in _measure_contribution\n    result = run_unit(tree_factory, unit)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/harness/unit.py\", line 258, in run_unit\n    base = _aggregate(baseline_factory, unit)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/harness/unit.py\", line 202, in _aggregate\n    result = score(rollout(micro, controller_factory()), micro)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/tests/kinematic.py\", line 50, in rollout\n    localiser = make_localiser(scenario)\n                ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/localisation.py\", line 245, in make_localiser\n    return DriftLocaliser(make_drift(scenario))\n                          ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/drift.py\", line 167, in make_drift\n    return DriftModel(scenario.drift, scenario.drift_rng())\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/drift.py\", line 55, in __init__\n    if spec.sigma_xy < 0 or spec.sigma_yaw < 0:\n       ^^^^^^^^^^^^^\nAttributeError: 'float' object has no attribute 'sigma_xy'\n)",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "path_integration_ants",
+    "citation_id": null,
+    "condition": "b",
+    "confidence": "high",
+    "contribution": {
+      "measured": false,
+      "reason": "run_unit raised AttributeError: 'float' object has no attribute 'sigma_xy'\n\nTraceback (most recent call last):\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/generate/admit.py\", line 490, in _measure_contribution\n    result = run_unit(tree_factory, unit)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/harness/unit.py\", line 258, in run_unit\n    base = _aggregate(baseline_factory, unit)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/harness/unit.py\", line 202, in _aggregate\n    result = score(rollout(micro, controller_factory()), micro)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/tests/kinematic.py\", line 50, in rollout\n    localiser = make_localiser(scenario)\n                ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/localisation.py\", line 245, in make_localiser\n    return DriftLocaliser(make_drift(scenario))\n                          ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/drift.py\", line 167, in make_drift\n    return DriftModel(scenario.drift, scenario.drift_rng())\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/drift.py\", line 55, in __init__\n    if spec.sigma_xy < 0 or spec.sigma_yaw < 0:\n       ^^^^^^^^^^^^^\nAttributeError: 'float' object has no attribute 'sigma_xy'\n"
+    },
+    "emitted_code": true,
+    "is_traceable": true,
+    "mechanism_family": "MaintainHomingVector",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_1dd85c92eac01838",
+    "origin": "card",
+    "precondition_fired": {
+      "drove": 0,
+      "fraction": 0.0,
+      "passed": 0,
+      "ticks": 600
+    },
+    "prediction_restated_faithfully": true,
+    "prompt_hash": "1dd85c92eac01838",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": "p. 5287, abstract: \"This approximation is characterized by small, but systematic, navigational errors that helped us elucidate the ant's way of computing its mean home vector.\" Same page: \"the homeward courses of the ants deviate significantly and systematically from the true homeward direction, with the error angle depending on the turning angle and the ratio a/b of the lengths of the two legs of the path\", quantified in Fig. 2B. (The Greek symbols for the two angles do not survive text extraction and are described rather than quoted here.)",
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_1dd85c92eac01838",
+  "reason": "CANDIDATE_RAISED",
+  "reason_v2": "admitted"
+}

@@ -1,0 +1,127 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition B's card call (given the source document in full).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: dynamic_window_velocity_selection
+node_name: SelectDynamicWindowVelocity
+source:
+  citation: 'D. Fox, W. Burgard, S. Thrun, "The Dynamic Window Approach to Collision
+    Avoidance", IEEE Robotics & Automation Magazine, 1997.
+
+    '
+  span: 'Sec. 4.1 Eq. (14) admissible velocities, Eq. (15) dynamic window, Eq. (16)
+    Vr = Vs ∩ Va ∩ Vd; Sec. 4.2 Eq. (13) objective function and the target-heading
+    definition "180 - θ"; Sec. 5.2 with Fig. 19 for the arc distance "γ · r"; Sec.
+    5.4 "Parameter Settings" for α = 0.8, β = 0.1, γ = 0.1; Sec. 4 for the 0.25 s
+    cycle time.
+
+    '
+  verified: unverified
+mechanism: 'Do not pick a direction and then a command; pick the command directly,
+  by searching the two-dimensional space of velocity pairs (v, ω) that the body can
+  actually reach in the next control interval. Each pair is read as a circular arc
+  the robot would follow if it held that command, so obstacle checking is a circle-intersection
+  test rather than a plan. The search space is pruned twice. First to the ADMISSIBLE
+  set: Eq. (14), "Va = {(v, ω) | v ≤ sqrt(2 · dist(v,ω) · v̇_b) ∧ ω ≤ sqrt(2 · dist(v,ω)
+  · ω̇_b)}", i.e. only commands from which braking at the maximum rate still stops
+  the robot short of the nearest obstacle lying on that arc. Second to the DYNAMIC
+  WINDOW, Eq. (15), "Vd = {(v, ω) | v ∈ [va - v̇·Δt, va + v̇·Δt] ∧ ω ∈ [ωa - ω̇·Δt,
+  ωa + ω̇·Δt]}" — the commands reachable from the current one within one interval.
+  Over what survives, Vr = Vs ∩ Va ∩ Vd (Eq. 16), maximise Eq. (13), "G(v, ω) = σ(α
+  · heading(v,ω) + β · dist(v,ω) + γ · vel(v,ω))", each term normalised to [0,1] (Sec.
+  4.2, "Smoothing"), with α = 0.8, β = 0.1, γ = 0.1 (Sec. 5.4). Why it helps: the
+  admissibility test makes commitment to a velocity conditional on being able to undo
+  it, so the robot slows itself exactly as much as the visible free space requires
+  and never enters a state from which stopping is impossible; the paper reports RHINO
+  decelerating from 95 cm/s to under 20 cm/s through an 80 cm passage without collision.
+  The paper is explicit that all three terms are needed: "By solely maximizing the
+  target heading the robot quickly would get stopped by the first obstacle that blocks
+  its way, unable to move around it."
+
+  '
+trigger: 'The goal is disclosed (goal is not None), the robot is not currently in
+  contact, and at least one candidate in the sampled window is admissible. If the
+  admissible set is empty — no command lets the robot translate and still stop — this
+  leaf must FAIL rather than emit anything, and hand over to a recovery behaviour
+  (the paper''s separate "rotate away mode", Sec. 5.3, is a different card and is
+  deliberately not included here). The paper''s other Sec. 5.3 addition, the speed-dependent
+  side clearance, is likewise excluded.
+
+  '
+derivation: 'MAPPING FROM THE PAPER''S ROBOT TO THIS ONE. The paper''s synchro-drive
+  has the non-holonomic constraint that translation leads the heading; the Go2 Twist
+  is holonomic. I resolve this by always commanding vy = 0 and searching only (vx,
+  wz), which makes the paper''s arc geometry (Eq. 10-12, radius v/ω) exactly valid
+  — that restriction is mine, not the paper''s. Vs is therefore vx ∈ [0, 0.8] m/s,
+  wz ∈ [-1.0, 1.0] rad/s; reverse translation is not sampled (mine), because the frozen
+  policy is not characterised backwards. ACCELERATIONS. The paper''s dynamics come
+  from motor torque limits; here the locomotion policy is frozen and exposes none,
+  so I reinterpret v̇, ω̇ as a slew-rate limit on the issued Twist, preserving the
+  paper''s window-to-range ratio. RHINO: v̇·Δt = 0.5 · 0.25 = 0.125 m/s on a 0.9 m/s
+  range (0.139), and ω̇·Δt = 60 deg/s² · 0.25 = 15 deg/s = 0.262 rad/s on a 1.571
+  rad/s range (0.167). Scaling to our limits gives Δv = 0.11 m/s and Δω = 0.175 rad/s
+  per interval; with the paper''s Δt = 0.25 s cycle that is v̇ = v̇_b = 0.45 m/s²
+  and ω̇ = ω̇_b = 0.7 rad/s². These four numbers are mine, obtained by holding the
+  paper''s ratios fixed. As in the paper''s Example 1, braking accelerations equal
+  driving accelerations. The observation carries no velocity, so (va, ωa) in Eq. (15)
+  is the Twist issued on the previous step (mine); on the first step after activation
+  use (0, 0). GRID. Recompute every control step, emit only the first command (Sec.
+  4.1 justification (b),(c)). Sample 7 values of v across [max(0, va - 0.11), min(0.8,
+  va + 0.11)] and 15 values of ω across [max(-1.0, ωa - 0.175), min(1.0, ωa + 0.175)]
+  — resolution is mine, the paper only says "by discretization of the resulting search
+  space". dist(v, ω) FROM LIDAR. The paper''s obstacle line field from 24 sonar cones
+  becomes the 181-beam scan directly: obstacle points p_i = (r_i cos θ_i, r_i sin
+  θ_i) in the robot frame for every finite r_i ≤ 6.0. Inflate by R_infl = 0.50 m —
+  Go2 footprint ≈ 0.70 × 0.31 m gives a circumscribed radius ≈ 0.38 m, rounded to
+  0.40 m plus a 0.10 m margin; the paper never states RHINO''s radius, so this is
+  mine. For |ω| ≥ 1e-3: r = v/ω, arc centre c = (0, r); a point collides iff | ‖p
+  - c‖ - |r| | ≤ R_infl; its arc distance is |r| · φ where φ is the sweep angle from
+  the robot''s start bearing α0 = atan2(-r, 0) to α_p = atan2(p_y - c_y, p_x - c_x),
+  taken as φ = wrap(sign(ω) · (α_p - α0)) into [0, 2π). This is the paper''s "γ ·
+  r" (Sec. 5.2, Fig. 19); I renamed the angle φ to avoid clashing with the weight
+  γ. For |ω| < 1e-3: dist = max(0, min{p_x : |p_y| ≤ R_infl, p_x > 0} - R_infl). dist
+  = min(dist, 6.0), and 6.0 when no point collides — the paper''s "If no obstacle
+  is on the curvature this value is set to a large constant"; here the large constant
+  is range_max, since 6.0 m is literally as far as we can see. For v = 0 candidates
+  set dist = 6.0 and vel = 0, so pure rotation wins only when nothing else is admissible.
+  OBJECTIVE TERMS, all in [0,1]. vel = v / 0.8. clearance = dist / 6.0. heading: the
+  paper uses 180 - θ evaluated at the position reached after the interval plus maximal
+  deceleration. Closed form here (mine, from that sentence): predict the arc for Δt
+  = 0.25 s from pose_estimate, then add the braking tail — extra yaw ω²/(2·ω̇_b) ·
+  sign(ω) and extra forward travel v²/(2·v̇_b) along the resulting heading; θ is the
+  bearing of goal from that predicted pose, and heading = 1 - |θ|/π. Score with α
+  = 0.8, β = 0.1, γ = 0.1 (Sec. 5.4), apply σ as a 3×3 box blur over the (v, ω) score
+  grid — the paper states only that σ "smoothes the weighted sum ... and results in
+  more side-clearance", never its form, so the blur is mine — then take the argmax
+  and emit Twist(vx = v*, vy = 0.0, wz = ω*). DRIFT. Only the heading term reads pose_estimate;
+  dist and vel are computed from the robot-frame scan and are immune to pose drift,
+  so under drift the mechanism degrades into a still-collision-free wander rather
+  than failing hard. pose_error_estimate is not used (using it to reweight α would
+  be a second mechanism and belongs on its own card).
+
+  '
+prediction:
+  statement: 'Substituting this velocity-space selection for a reactive avoider that
+    first chooses a heading and then a speed reduces the mean number of collisions
+    per episode by at least 40% across matched seeds in unmapped indoor scenes, because
+    commands from which the robot cannot brake to a stop before the nearest obstacle
+    on its own arc are never issued.
+
+    '
+  metric: collisions
+  baseline: reactive_avoid
+  min_effect: 0.4
+  cost_metric: time_to_goal
+confidence: medium
+generated:
+  condition: b
+  task: navigate_to_goal
+  treatment: paper
+  card_prompt_hash: 8b9bae817eca9f31
+  card_row_key: c2c95bcb965e342e
+  card_model_id: claude-opus-5
+  ref_id: limit_speed_dwa
+  paper_sha256: 7b398d18448ca622a4011957a57dd32714cc97c8e8f981a98722baafa7f68ff1
+  generated_card_id: dynamic_window_velocity_selection
+  generated_node_name: SelectDynamicWindowVelocity
+  citation_substituted: false

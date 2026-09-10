@@ -91,6 +91,105 @@ class DriftSpec:
     sigma_yaw: float     # radians per sqrt(second) of random walk on yaw
 
 
+# The localiser kinds. A closed vocabulary, because "unknown kind" must be an
+# error at validate() rather than a silent fall-through to a perfect pose.
+PERFECT = "perfect"
+SLAM = "slam"
+KINDS = frozenset({PERFECT, SLAM})
+
+
+@dataclass(frozen=True)
+class LocalisationSpec:
+    """What produces `pose_estimate`, when it is not `drift` and not the truth.
+
+    DECLARED HERE, IMPLEMENTED IN chunks 19 and 23 — the same pattern
+    `DriftSpec` follows one class up, and for the same reason: the field list is
+    fixed now so that nothing after chunk 19 has to touch the `Scenario`
+    contract. `kind="perfect"` is constructible today (chunk 19 builds
+    `PerfectLocaliser`); `kind="slam"` fails loudly at `make_localiser()` until
+    chunk 23 exists.
+
+    The SLAM parameters below are declared and unused. That is deliberate: they
+    are the knobs chunks 21-24 need, written down while the contract is being
+    changed anyway, so that adding one later is not a second contract change.
+    Every one of them is a determinism decision as much as an accuracy one —
+    epic 03 spends accuracy on determinism wherever the two trade, so there is
+    no convergence tolerance here and no iterate-until-small.
+    """
+
+    kind: str = PERFECT
+    # Real SLAM runs at scan rate, not control rate; chunk 24 measures the
+    # budget and sets this. 0.0 means "every control step".
+    scan_rate: float = 0.0
+    # Scans per submap (chunk 22) and the fixed Gauss-Newton iteration count
+    # (chunk 23). A FIXED count, never a tolerance: it is the only formulation
+    # whose cost and whose output are both identical run to run.
+    submap_scans: int = 0
+    solver_iterations: int = 0
+    # Huber kernel width on loop-closure edges only. Odometry edges are not
+    # robustified: a bad odometry edge means the front end failed, and that
+    # should surface rather than be absorbed.
+    huber_delta: float = 0.0
+
+    # ⚠️ DEAD-RECKONING NOISE, added 2026-08-31 while chunk 19 was still open.
+    #
+    # Chunk 19 said `update()` receives the true pose because "a localiser needs
+    # somewhere to derive its own odometry from -- the simulator standing in for
+    # wheel encoders and an IMU, and chunk 20 is what stops it being a free
+    # ride." **Chunk 20 does not.** Its four effects are all LIDAR effects
+    # (range noise, dropout, spurious max-range, angular jitter) and it says
+    # "four effects, and no more". Nothing degrades odometry.
+    #
+    # With perfect odometry the estimate is exact, there is nothing for a loop
+    # closure to correct, and the epic's whole claim -- that the pose estimate
+    # becomes a consequence of what the robot did -- is unmeasurable. So the
+    # noise lives HERE rather than in SensorNoiseSpec: it is a property of the
+    # localiser's dead reckoning, not of the lidar, and a scenario may sensibly
+    # want one without the other.
+    #
+    # Units match DriftSpec's deliberately -- per sqrt(second), so the two are
+    # directly comparable when chunk 25 asks whether SLAM beats the random walk.
+    odom_sigma_lin: float = 0.0        # metres per sqrt(second)
+    odom_sigma_ang: float = 0.0        # radians per sqrt(second)
+
+
+@dataclass(frozen=True)
+class SensorNoiseSpec:
+    """Per-beam lidar noise. DECLARED HERE, IMPLEMENTED IN chunk 20.
+
+    `core.geometry.raycast` is exact — the analytic distance to the nearest
+    rectangle, with no noise, no dropouts and no mixed pixels. Scan matching
+    against exact data is not SLAM; it is a lookup that reports centimetre
+    accuracy and means nothing. So chunk 21 is uninterpretable without this, and
+    the overstatement would be invisible.
+
+    **Off by default, and opt-in per scenario.** `Observation.ranges` is read by
+    every controller and every node that exists; turning noise on globally would
+    change `reactive_avoid`'s behaviour and silently invalidate `results/` and
+    the sealed split in one commit.
+
+    ⚠️ `inf` is load-bearing. `core/geometry.py` returns `inf` rather than
+    `range_max` specifically so a controller can tell "nothing out there" from
+    "a wall exactly at the sensor limit", and `LimitSpeedToVisibleRange` turns
+    on exactly that difference. Both `dropout` and `spurious_max_range` produce
+    `inf`, so a noisy scenario WEAKENS a distinction a card depends on. That is
+    realistic, and it is a real effect on that card's node — it goes in the
+    write-up rather than being tuned away.
+    """
+
+    # Gaussian range noise, as a fraction of the measured range. A 2D lidar at
+    # this scale is roughly +/-3 cm at 6 m, so 0.005 is the stand-in figure.
+    # A plausible sensor, not the Go2's actual sensor; chunk 20 says so.
+    sigma_range_frac: float = 0.0
+    # Per-beam Bernoulli probability of no echo at all -> inf.
+    dropout: float = 0.0
+    # Per-beam Bernoulli probability that a beam which DID hit reports inf.
+    spurious_max_range: float = 0.0
+    # Gaussian jitter on the beam bearing, applied BEFORE casting, so the
+    # matcher cannot exploit a perfectly regular beam grid. Radians.
+    sigma_angle: float = 0.0
+
+
 @dataclass(frozen=True)
 class Scenario:
     id: str
@@ -117,6 +216,16 @@ class Scenario:
     # None means the pose estimate is exact, which is what every episode
     # recorded so far assumed. Declared before it is implemented; see DriftSpec.
     drift: Optional[DriftSpec] = None
+
+    # Epic 03. ADDITIVE and MUTUALLY EXCLUSIVE with `drift` -- validate()
+    # rejects a scenario setting both, because one field decides what produces
+    # `pose_estimate` and two fields both claiming to is a scenario nobody can
+    # interpret. `drift` is NOT renamed, NOT deprecated and NOT touched: the
+    # sealed split, every committed result and core/tests/test_drift.py all
+    # reference it, and renaming a field to make a new one fit tidily is how a
+    # frozen contract stops being frozen.
+    localisation: Optional[LocalisationSpec] = None
+    sensor_noise: Optional[SensorNoiseSpec] = None
 
     def beam_angles(self):
         """Beam bearings in the robot frame.
@@ -158,6 +267,29 @@ class Scenario:
         controller's stream and never changes.
         """
         return np.random.default_rng([self.seed, 0xD41F7])
+
+    def sensor_rng(self):
+        """The sensor noise model's randomness (chunk 20). A THIRD stream.
+
+        Same argument as `drift_rng`, and it is the one that protects the
+        ablation: noise must be identical across conditions however much
+        randomness a controller draws. If noise came off the shared stream, a
+        condition that happened to sample one extra number would face a
+        different scan sequence, and the four conditions would be compared on
+        different worlds.
+        """
+        return np.random.default_rng([self.seed, 0x5E7150])
+
+    def localisation_rng(self):
+        """The localiser's randomness (chunk 23). A FOURTH stream, for the same
+        reason again.
+
+        Separate from `sensor_rng` as well: a localiser that draws — for a
+        sampled initial guess, say — must not shift the noise realisation the
+        scan matcher is being asked to cope with, or changing the back end would
+        silently change the front end's input.
+        """
+        return np.random.default_rng([self.seed, 0x10CA11])
 
     def disclosed_at(self, pose_xy):
         """Would the goal be disclosed to a controller standing here?
@@ -303,6 +435,21 @@ def _drift_ready():
     return True
 
 
+def _sensor_noise_ready():
+    """Does the sensor noise model exist yet? Feature probe, not a version flag.
+
+    Chunk 20 creates `core/sensor_noise.py`. Until then a scenario carrying a
+    SensorNoiseSpec must fail loudly, because the alternative is chunks 21-23
+    matching scans against `core.geometry.raycast`'s EXACT analytic ranges,
+    reporting centimetre accuracy, and being wrong in a way nothing shows.
+    """
+    try:
+        from core.sensor_noise import SensorNoise      # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
 def validate(scenario):
     """Raise ValueError if the scenario is not runnable. Returns it otherwise.
 
@@ -375,6 +522,39 @@ def validate(scenario):
                 f"{scenario.range_max}, so the goal would be disclosed at a "
                 f"range the robot's own sensor cannot resolve. That is ground "
                 f"truth entering Observation.")
+
+    # One field decides what produces `pose_estimate`. Two fields both claiming
+    # to is not a scenario anyone can interpret, and the failure would be
+    # silent: whichever the runner happened to check first would win.
+    if scenario.drift is not None and scenario.localisation is not None:
+        raise ValueError(
+            f"scenario {scenario.id!r}: sets BOTH drift and localisation, and "
+            f"they are mutually exclusive — each one fully determines "
+            f"pose_estimate. Use `drift` for the seeded random walk that the "
+            f"sealed split and every committed result use; use `localisation` "
+            f"for epic 03's localisers ({sorted(KINDS)}). For a ground-truth "
+            f"control, LocalisationSpec(kind={PERFECT!r}) is the explicit "
+            f"spelling of what leaving both unset already does.")
+
+    if scenario.localisation is not None:
+        kind = scenario.localisation.kind
+        if kind not in KINDS:
+            raise ValueError(
+                f"scenario {scenario.id!r}: unknown localisation kind "
+                f"{kind!r}. Known: {sorted(KINDS)}")
+        # NOT probed here. `make_localiser()` owns the readiness check, because
+        # `validate()` runs on every scenario at import and must not drag a
+        # SLAM stack in behind it. The scenario is well-formed; whether it can
+        # RUN is the runner's question, and it fails loudly there.
+
+    if scenario.sensor_noise is not None and not _sensor_noise_ready():
+        raise ValueError(
+            f"scenario {scenario.id!r}: carries a SensorNoiseSpec but "
+            f"core.sensor_noise does not exist yet, so the scan would be the "
+            f"exact analytic raycast and every scan-matching number computed "
+            f"from it would be an overstatement — invisibly. SensorNoiseSpec "
+            f"is declared ahead of its implementation on purpose (chunk 19); "
+            f"chunk 20 implements it.")
 
     # A declared-but-unimplemented field is a hard error, never a silent no-op.
     if scenario.drift is not None and not _drift_ready():

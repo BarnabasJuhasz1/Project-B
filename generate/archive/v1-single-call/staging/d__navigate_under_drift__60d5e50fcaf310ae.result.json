@@ -1,0 +1,42 @@
+{
+  "admitted": false,
+  "admitted_v2": true,
+  "detail": "malformed micro-world: micro 'uncertainty_scaled_goal_sweep': goal (8.9, 2.5) is unreachable from (0.9, 2.5)",
+  "detail_v2": "valid; contribution not measured (the candidate's own micro-world is malformed: micro 'uncertainty_scaled_goal_sweep': goal (8.9, 2.5) is unreachable from (0.9, 2.5))",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": null,
+    "condition": "d",
+    "contribution": {
+      "measured": false,
+      "reason": "the candidate's own micro-world is malformed: micro 'uncertainty_scaled_goal_sweep': goal (8.9, 2.5) is unreachable from (0.9, 2.5)"
+    },
+    "emitted_code": true,
+    "model_id": "claude-opus-5",
+    "node_id": "gen_d_60d5e50fcaf310ae",
+    "precondition_fired": {
+      "drove": 600,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prompt_hash": "60d5e50fcaf310ae",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "task": "navigate_under_drift",
+    "temperature": null,
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_d_60d5e50fcaf310ae",
+  "reason": "UNIT_SCENARIO_FAILED",
+  "reason_v2": "admitted",
+  "unit": {
+    "baseline": 0.0,
+    "candidate": 0.0,
+    "effect": 0.0,
+    "metric": "",
+    "required": 0.0
+  }
+}

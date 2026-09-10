@@ -9,10 +9,14 @@ so two calls with the same inputs produce the same node id, the same staging ste
 and the same transcript key, and the second silently overwrites the first. The
 reachable library is therefore not a budget question. It is arithmetic:
 
-    A:  |TASKS|                 D:  |TASKS|                 B:  |cards| x |TASKS|
+    A:  |cards| x |TASKS|       D:  |TASKS|                 B:  |cards| x |TASKS|
 
-G1 asks for >=20 admissible nodes per condition, so A and D **cannot reach it by
-spending more calls**. That fact drives the whole of plans/todo/29, and it was
+G1 asks for >=20 admissible nodes per condition, so D **cannot reach it by
+spending more calls**. A could once not either: until 2026-09-06 it was handed
+no literature at all and its ceiling was |TASKS|. It is now handed the CITATION
+of a card — the reference and none of its content — so it enumerates over the
+store exactly as B does and its ceiling is B's. **Only D is still capped.**
+That fact drives the whole of plans/doing/29, and it was
 prose in a plan file until this module made it a test. The numbers below are
 asserted explicitly rather than derived, so that adding a task family or a card
 fails here and the plan gets re-read, rather than the ceiling silently moving
@@ -24,14 +28,33 @@ No test in this module calls a model: rendering a prompt is free.
 import pytest
 
 from cards.store import CardStore
-from generate import backends
-from generate.generator import CONDITIONS, TASKS, render
+from generate.generator import (CONDITIONS, CORPUS_CONDITIONS, TASKS,
+                                plan_hash)
 
 # ---- the ceiling, stated. Below this line is data, not code. ----------------
-# Update these WITH plans/todo/29-grow-libraries.md, never instead of it.
-EXPECTED_TASKS = 3
+# Update these WITH plans/doing/29-grow-libraries.md, never instead of it.
+#
+# Moved 2026-09-05 from (3, 15, 3) to (4, 20, 4) by chunk 29's open question 2:
+# the fourth cell of chunk 11a's frozen 2x2 (hidden goal AND drifting pose) was
+# taken as a task family. It is the only condition-neutral growth lever — it
+# multiplies A, B and D alike — so the ablation is untouched and no committed
+# transcript is orphaned.
+#
+# Moved again 2026-09-06 from (4, 20, 4) to (20, 20, 4) by the condition
+# restructure: A is now handed each card's CITATION, so it enumerates over the
+# store and reaches B's ceiling. **A reaches G1_TARGET; D does not.** The
+# ceiling finding survives, narrowed to the one condition that still has no
+# corpus axis at all.
+#
+# UNCHANGED by chunk 42, and that is worth stating rather than assuming. Every
+# arm now writes its own card before its node, and all three card prompts are
+# task-conditioned, so the grid keeps the shape it had: A and B enumerate
+# |cards| x |TASKS|, D enumerates |TASKS|. What moved is which prompt the hash
+# is over — the CARD prompt, since the node prompt depends on a card that does
+# not exist until the model writes one. See generator.plan_hash.
+EXPECTED_TASKS = 4
 EXPECTED_CARDS = 5
-EXPECTED_PROMPTS = {"a": 3, "b": 15, "d": 3}
+EXPECTED_PROMPTS = {"a": 20, "b": 20, "d": 4}
 G1_TARGET = 20
 # ---- above this line is data ------------------------------------------------
 
@@ -43,8 +66,8 @@ def store():
 
 def _prompts(condition, store):
     """Every distinct prompt this condition can produce, as hashes."""
-    cards = list(store) if condition == "b" else [None]
-    return {backends.prompt_hash(render(condition, task, card))
+    cards = list(store) if condition in CORPUS_CONDITIONS else [None]
+    return {plan_hash(condition, task, card)
             for task in TASKS for card in cards}
 
 
@@ -55,26 +78,43 @@ def test_the_inputs_are_the_size_the_plan_costed(store):
 
 @pytest.mark.parametrize("condition", sorted(EXPECTED_PROMPTS))
 def test_the_reachable_node_count_is_fixed_by_the_prompt_inputs(condition, store):
-    """Distinct prompts == distinct node ids, because the id IS the hash."""
+    """Distinct prompts == distinct node ids, because the id is derived from
+    the row key, which is the card prompt's hash."""
     assert len(_prompts(condition, store)) == EXPECTED_PROMPTS[condition]
 
 
-def test_a_and_d_cannot_reach_g1s_target_by_spending_more_calls():
-    """The finding that plans/todo/29 exists to force a decision about. This is
-    an upper bound assuming EVERY candidate is admitted; the observed pass rate
-    is well below 1, so the expected yield is lower still."""
-    for condition in ("a", "d"):
-        assert EXPECTED_PROMPTS[condition] < G1_TARGET
-    assert EXPECTED_PROMPTS["a"] == EXPECTED_PROMPTS["d"] == len(TASKS)
+def test_d_cannot_reach_g1s_target_by_spending_more_calls():
+    """The finding that plans/doing/29 exists to force a decision about, now
+    narrowed to D. This is an upper bound assuming EVERY candidate is admitted;
+    the observed pass rate is well below 1, so the expected yield is lower still.
+
+    A is deliberately no longer in this test. It used to be capped at |TASKS|
+    because it received no literature; since 2026-09-06 it receives a citation
+    per card, so its ceiling is the corpus's and the cap is D's alone."""
+    assert EXPECTED_PROMPTS["d"] < G1_TARGET
+    assert EXPECTED_PROMPTS["d"] == len(TASKS)
 
 
-def test_condition_b_scales_with_the_corpus_and_a_and_d_do_not():
-    """Why 'more cards' is not the answer to the ceiling: it is not
-    condition-neutral. Cards are B's treatment, so enumerating over them lifts
-    B alone and makes library size a second, uncontrolled difference between
-    conditions — which is chunk 29's Option 3, recorded to be rejected."""
+def test_the_conditions_that_see_the_corpus_scale_with_it():
+    """A and B both enumerate over the store — A over citations, B over the
+    extracted content — so they reach the same ceiling from the same inputs.
+    That equality is the point of the restructure: A and B differ by the card's
+    CONTENT and by nothing else, including how many calls each can make."""
+    assert EXPECTED_PROMPTS["a"] == EXPECTED_PROMPTS["b"]
+    assert EXPECTED_PROMPTS["a"] == EXPECTED_CARDS * EXPECTED_TASKS
+    assert set(CORPUS_CONDITIONS) == {"a", "b"}
+
+
+def test_more_cards_still_does_not_lift_d():
+    """Chunk 29's condition-neutrality rule, restated for the new structure.
+
+    A new card lifts A and B together and leaves D exactly where it was, so the
+    corpus is no longer a lever that moves one arm alone — which is what made
+    chunk 29's Option 3 a confound. It is still not neutral with respect to D,
+    and D's ceiling is now the binding one for G1."""
     assert EXPECTED_PROMPTS["b"] == EXPECTED_CARDS * EXPECTED_TASKS
-    assert EXPECTED_PROMPTS["a"] == EXPECTED_PROMPTS["d"]  # no card term at all
+    assert EXPECTED_PROMPTS["d"] == EXPECTED_TASKS      # no card term at all
+    assert "d" not in CORPUS_CONDITIONS
 
 
 def test_no_two_inputs_collide_on_one_prompt(store):
@@ -82,10 +122,10 @@ def test_no_two_inputs_collide_on_one_prompt(store):
     would overwrite the other in staging and nobody would see it happen."""
     seen = {}
     for condition in sorted(EXPECTED_PROMPTS):
-        cards = list(store) if condition == "b" else [None]
+        cards = list(store) if condition in CORPUS_CONDITIONS else [None]
         for task in TASKS:
             for card in cards:
-                h = backends.prompt_hash(render(condition, task, card))
+                h = plan_hash(condition, task, card)
                 key = (condition, task, card.id if card else None)
                 assert h not in seen, f"{key} collides with {seen[h]}"
                 seen[h] = key
