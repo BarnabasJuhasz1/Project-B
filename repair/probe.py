@@ -211,8 +211,16 @@ def candidates(axes, tier="maze", seeds=None, ladder=DRIFT_LADDER):
     seeds = list(seeds if seeds is not None else PROBE_SEEDS)
     out = []
     if "drift" in axes:
-        for sigma in ladder:
-            for seed in seeds:
+        # ⚠️ SEED-MAJOR, AND THAT IS THE WHOLE POINT. This was `for sigma: for
+        # seed:` over PROBE_SEEDS, which is 500 wide — so rung 0.10 sat at
+        # index 500 and rung 0.20 at index 1000, and NO budget anyone would
+        # run reached either. A live PROBE_ENVIRONMENT round at the loop's
+        # default budget of 6 spent all six trials on rung 0.05 (seeds
+        # 4000-4005) and returned UNTESTABLE having never tested the
+        # corridor-width and doorway-scale errors the ladder exists for.
+        # Seed-major puts the whole ladder inside the first THREE trials.
+        for seed in seeds:
+            for sigma in ladder:
                 out.append(Candidate(tier, seed, drift=sigma))
     if "goal_known" in axes:
         for seed in seeds:

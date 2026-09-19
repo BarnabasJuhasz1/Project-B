@@ -89,6 +89,23 @@ def _parse_args(argv=None):
                         "default. It carries its own node_id in its record, so "
                         "the directory is all that is needed. Nothing is "
                         "copied and no admission is re-decided.")
+    p.add_argument("--drift", type=float, default=None, metavar="SIGMA",
+                   help="put the DRIFT hazard on the suite, sigma_xy in "
+                        "m/sqrt(s) (sigma_yaw is half). ⚠️ core.worldgen."
+                        "to_scenario() never sets drift, so every growth table "
+                        "ever measured handed the controller a PERFECT POSE "
+                        "ESTIMATE — while 6 of the 16 committed cards open "
+                        "their prediction with \"On scenarios where "
+                        "pose_estimate drifts\". Those nodes have never been "
+                        "judged on the condition their own card names. "
+                        "0.05/0.10/0.20 are repair.probe.DRIFT_LADDER's rungs: "
+                        "a body length, a corridor width, a doorway over 120 s")
+    p.add_argument("--goal-hidden", action="store_true",
+                   help="do NOT disclose the goal (obs.goal is None until it "
+                        "is seen). ⚠️ The same gap as --drift: to_scenario() "
+                        "defaults goal_known=True, and four more cards "
+                        "predicate their prediction on the goal being "
+                        "undisclosed")
     p.add_argument("--metrics", action="store_true",
                    help="also score the FULL metric set — collisions, "
                         "min_clearance, time_to_goal, spl, ... — not just "
@@ -226,6 +243,16 @@ def _report_metrics(csv, tier, node_id, arm, base_scores, pair_scores, claimed):
                       f"{rp:.6f},{rp - rb:+.6f},{direction},False,{nb},{np_}\n")
 
 
+def _axis_suffix(args):
+    """The axis, as a filename fragment. Mirrors `probe.Candidate.label`."""
+    out = ""
+    if args.drift:
+        out += f"+drift{args.drift:.2f}"
+    if args.goal_hidden:
+        out += "+hidden"
+    return out
+
+
 def _build(specialist_cls, specialist_meta, base):
     """Layer[ContractPorts, BASE, node] — the growth tree.
 
@@ -322,8 +349,27 @@ def main(argv=None):
         # on the world and the per-world rows carry it, so a row can be read as
         # "this node fails on THAT geometry" without regenerating anything.
         generated = [generate(tier, s) for s in seeds]
-        scenarios = [to_scenario(g, time_limit=args.time_limit)
-                     for g in generated]
+        # ⚠️ THE AXIS IS BUILT BY `repair.probe.Candidate`, NEVER HERE. It
+        # already owns both halves — the rename (`+drift0.10`, `+hidden`, the
+        # discipline `--goal-hidden` and `+cap60s` follow, so an axis world can
+        # never share an id with its clean twin) and the DriftSpec, where
+        # sigma_yaw is held at half sigma_xy so the ladder has ONE knob. A
+        # second definition of "a drifted world" is the defect that already let
+        # `fire` and `changed` mean two different things in one loop.
+        #
+        # The no-axis path is left EXACTLY as it was: the committed growth
+        # tables must stay comparable with anything measured after today.
+        if args.drift or args.goal_hidden:
+            import dataclasses
+            from repair.probe import Candidate
+            scenarios = [dataclasses.replace(
+                Candidate(tier, int(g.seed), drift=args.drift,
+                          goal_known=not args.goal_hidden).scenario(),
+                time_limit=args.time_limit)
+                for g in generated]
+        else:
+            scenarios = [to_scenario(g, time_limit=args.time_limit)
+                         for g in generated]
         difficulty = {sc.id: g.difficulty
                       for g, sc in zip(generated, scenarios)}
 
@@ -348,7 +394,13 @@ def main(argv=None):
                 print(f"[growth]   {sc.id:28} optimal={d:6.2f} m  "
                       f"({time.time() - t0:5.0f}s elapsed)", flush=True)
 
-        csv_path = Path(args.out) if args.out else out_dir / f"{tier}.csv"
+        # ⚠️ AN AXIS RENAMES THE TABLE, for the reason it renames the
+        # scenario: `out/growth/maze.csv` is the CLEAN suite, it is what every
+        # committed claim about this library was read off, and a drifted run
+        # that overwrote it would silently replace the denominator of every one
+        # of them.
+        csv_path = (Path(args.out) if args.out
+                    else out_dir / f"{tier}{_axis_suffix(args)}.csv")
         csv = csv_path.open("w", encoding="utf-8", buffering=1)   # line-buffered
         csv.write("tier,node_id,arm,rate,delta,fixed,broke,fire,changed,n\n")
 

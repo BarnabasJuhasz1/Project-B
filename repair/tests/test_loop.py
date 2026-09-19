@@ -411,7 +411,7 @@ def test_a_finished_round_resumes_without_a_model_call(tmp_path, monkeypatch):
     assert staged == out
 
 
-def test_the_resolver_returns_the_REPAIR_not_the_port_shim():
+def test_the_resolver_returns_the_REPAIR_not_the_port_shim(staged_round):
     """⚠️ THE FIFTH LIVE FAILURE, AND THE ONLY ONE THAT NEVER RAISED.
 
     `ContractPorts` is always in a loaded library — the harness's own port
@@ -428,7 +428,7 @@ def test_the_resolver_returns_the_REPAIR_not_the_port_shim():
     from compose.library import CONTRACT_PORTS_ID
     from repair.evidence import entry_for
 
-    e = entry_for(NODE + "__r01")
+    e = entry_for(staged_round)
     assert e.node_cls.__name__ != "ContractPorts"
     assert getattr(e, "node_id", None) != CONTRACT_PORTS_ID
     # the repair is a real node with a precondition of its own
@@ -673,3 +673,25 @@ def test_a_re_entered_lineage_records_where_it_picked_up():
     assert LoopResult("n", None, "", continues_from=None).continues_from is None
     r = LoopResult("gen_b_abc__r01", None, "", continues_from="gen_b_abc__r01")
     assert r.continues_from == "gen_b_abc__r01"
+
+
+def test_a_probe_round_writes_its_whole_search_down(tmp_path, monkeypatch):
+    """⚠️ `UNTESTABLE` IS DEFINED AS "the search is recorded". The first real
+    one recorded `note[:80]`, which truncated mid-word and lost all six trials
+    — leaving a terminal verdict with nothing to check it against, in an epic
+    that has already shipped two verdicts that were measurement artefacts."""
+    from repair import loop as L
+    from repair import probe as P
+
+    monkeypatch.setattr(L, "WORK", tmp_path)
+    t = P.Trial(P.Candidate("maze", 4000, drift=0.05), False,
+                "base cannot solve this world even without the axis",
+                0.9, 0.9, False, False, 1.0)
+    result = P.ProbeResult("n__r01", None, (t,), ("drift",), 1.0, "UNTESTABLE.")
+
+    path = L._write_probe_log("n__r01", 2, result)
+
+    assert path.name == "probe-round-02.log"
+    body = path.read_text(encoding="utf-8")
+    assert "gen-maze-04000+drift0.05" in body, "the world that was tried"
+    assert "even without the axis" in body, "and WHY it was passed over"

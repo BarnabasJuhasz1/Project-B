@@ -215,6 +215,22 @@ def _terminal_for(label):
     return {"HELPED": Exit.HELPED}.get(label)
 
 
+def _write_probe_log(node_id, number, result):
+    """The probe's whole search, beside the lineage it belongs to.
+
+    Named for the ROUND, not the node: every round of a lineage reuses the
+    parent's stem (`plan_hash` is a pure function of (condition, task, card)),
+    so a file named after the node would be overwritten by the next probe.
+    """
+    path = WORK / lineage_root(node_id) / f"probe-round-{number:02d}.log"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    head = (f"node: {node_id}\nround: {number}\n"
+            f"found: {result.found.label if result.found else '(none)'}\n")
+    path.write_text(f"{head}\n{result.log()}\n\n{result.note}\n",
+                    encoding="utf-8")
+    return path
+
+
 def run_round(node_id, number, budget, tier="maze", backend=None,
               case_seed=None, seen=None, dry_run=False, drift=None):
     """Measure, classify, and — if it is not terminal — diagnose and act.
@@ -300,11 +316,23 @@ def run_round(node_id, number, budget, tier="maze", backend=None,
     if d.action is Action.PROBE_ENVIRONMENT:
         from repair.probe import probe
         result = probe(node_id, tier=tier, budget=budget)
+        # ⚠️ THE SEARCH IS WRITTEN DOWN, WHICH IS WHAT `UNTESTABLE` MEANS.
+        # REPAIR-LOOP.md defines the exit as "No reachable world discriminates
+        # it. The search is recorded" — and the first real UNTESTABLE recorded
+        # `result.note[:80]`, which truncated mid-word and threw away all six
+        # trials. Which worlds were tried, which rung, and WHY each was passed
+        # over is the entire evidential content of that exit: without it the
+        # verdict is unfalsifiable, and this epic has already shipped two
+        # plausible verdicts that were measurement artefacts.
+        log_path = _write_probe_log(node_id, number, result)
         if result.found is None:
-            rec.outcome = f"no discriminating world found: {result.note[:80]}"
+            rec.outcome = (f"no discriminating world found in "
+                           f"{len(result.trials)} trial(s); search recorded in "
+                           f"{log_path.name}")
             rec.seconds = time.time() - started
             return rec, Exit.UNTESTABLE, node_id
-        rec.outcome = f"discriminating world: {result.found.label}"
+        rec.outcome = (f"discriminating world: {result.found.label}"
+                       f"; search recorded in {log_path.name}")
         rec.seconds = time.time() - started
         return rec, None, node_id
 

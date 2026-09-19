@@ -219,7 +219,7 @@ def test_a_legacy_cache_entry_still_answers_the_probes_question():
 # resolution — a REPAIRED node is not in the live library
 
 
-def test_a_repair_round_resolves_and_is_not_a_keyerror():
+def test_a_repair_round_resolves_and_is_not_a_keyerror(staged_round):
     """⚠️ THE ONE THAT KILLED A LIVE RUN. `probe()` resolved its node through
     `load_library().get`, which only knows `generate/staging/`. Repair rounds
     stage under `out/repair/<lineage>/round-NN/`, so the first round that ever
@@ -229,7 +229,7 @@ def test_a_repair_round_resolves_and_is_not_a_keyerror():
     `budget=0` resolves the node and plans the search without rolling anything
     out, which is the whole of what regressed.
     """
-    r = P.probe("gen_b_44d12df4d25b437f__r01", budget=0)
+    r = P.probe(staged_round, budget=0)
     assert "could not be resolved" not in r.note
     assert r.axes == ("drift",), "the parent's card still supplies the axes"
 
@@ -242,3 +242,17 @@ def test_an_unresolvable_node_is_a_RECORDED_outcome_not_a_traceback():
     r = P.probe("gen_b_44d12df4d25b437f__r99", budget=0)
     assert r.untestable and r.trials == ()
     assert "could not be resolved" in r.note
+
+
+def test_the_ladder_is_reachable_at_a_real_budget():
+    """⚠️ THE LADDER USED TO BE UNREACHABLE PAST ITS FIRST RUNG. `candidates`
+    was sigma-major over PROBE_SEEDS, which is 500 wide, so rung 0.10 sat at
+    index 500 and rung 0.20 at index 1000. A live probe at the loop's default
+    budget of 6 tested nothing but a body-length error and reported UNTESTABLE.
+
+    The ladder's own comment says the rungs are a body length, a corridor width
+    and a doorway; a search that cannot reach two of them is not a search."""
+    plan = P.candidates(("drift",))
+    reached = {c.drift for c in plan[:len(P.DRIFT_LADDER)]}
+    assert reached == set(P.DRIFT_LADDER), (
+        f"a budget of {len(P.DRIFT_LADDER)} must reach every rung, got {reached}")
