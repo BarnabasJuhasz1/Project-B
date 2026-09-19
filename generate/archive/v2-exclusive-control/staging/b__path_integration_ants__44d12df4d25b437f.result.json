@@ -1,0 +1,63 @@
+{
+  "admitted": true,
+  "detail": "valid; goal_reached effect 0.000 against a reported floor of 0.500",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "path_integration_ants",
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "9883acb935a57d2b",
+    "card_row_key": "44d12df4d25b437f",
+    "citation_id": null,
+    "citation_substituted": false,
+    "condition": "b",
+    "confidence": "medium",
+    "contribution": {
+      "baseline": 1.0,
+      "candidate": 1.0,
+      "cleared_floor": false,
+      "effect": 0.0,
+      "measured": true,
+      "metric": "goal_reached",
+      "reason": "MALFORMED: the fixed baseline already succeeds on this micro-world, so the scenario cannot distinguish the node from doing nothing. Make the world harder, not the bar lower.",
+      "required": 0.5
+    },
+    "emitted_code": true,
+    "generated_card_id": "ant_path_integration_goal_vector",
+    "generated_node_name": "SteerByPathIntegratedGoalVector",
+    "is_traceable": false,
+    "mechanism_family": "MaintainHomingVector",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_44d12df4d25b437f",
+    "origin": "card",
+    "paper_sha256": "e9f40cbbd48ac1a9bdfa95b00f5faae737c0b0a32ffc443d665d8222a8ad5da6",
+    "pipeline_version": "v2-card-first",
+    "precondition_fired": {
+      "drove": 600,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prediction_restated_faithfully": true,
+    "prompt_hash": "d10962addcf9226f",
+    "ref_id": "path_integration_ants",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": "Results, \"Two-Leg Trajectories\": Eq. 2 (p. 5288, col. 2) and Eq. 3 (spanning p. 5288 col. 2 - p. 5289 col. 1), together with the paragraph immediately after Eq. 3 on p. 5289 col. 1 that states the fitted constant k = 4.009 x 10^-5 deg^-1 and the 90-degree normalisation; curve 2 of Fig. 2B is the same model plotted. Error-cancellation claim: Discussion, p. 5289 col. 2.\n",
+    "span_verified": false,
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "treatment": "paper",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_44d12df4d25b437f",
+  "reason": "admitted",
+  "unit": {
+    "baseline": 1.0,
+    "candidate": 1.0,
+    "effect": 0.0,
+    "metric": "goal_reached",
+    "required": 0.5
+  }
+}

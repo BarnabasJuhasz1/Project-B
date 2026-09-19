@@ -46,20 +46,39 @@ never is — and it is not claimed to be one. It is a defence against a model
 confidently doing something careless, which is the failure mode that actually
 occurs. Stated here rather than discovered later.
 
-WHAT THIS CHUNK CANNOT ADMIT YET, AND WHY THAT IS A FINDING
-------------------------------------------------------------
-Only **Actions** can be judged today, and a Condition or Decorator candidate is
-rejected with `KIND_NOT_TESTABLE_ALONE` rather than quietly passed.
+WHAT ADMISSION ASKS, AND WHAT IT STOPPED ASKING
+------------------------------------------------
+⚠️ **This section replaces the `KIND_NOT_TESTABLE_ALONE` note that stood here
+until chunk 37.** That rejection was correct about efficacy and wrong as a gate:
+only an Action moves a navigation metric alone, so gating on a moved metric made
+two of the description's three leaf kinds unreachable and left every published
+port orphaned. It is gone.
 
-The reason is structural, not lazy. A unit scenario measures a navigation metric
-over a rollout, and a metric can only move if something emits a Twist. An Action
-does. A Condition publishes a Flag and a Decorator governs a child — neither
-moves the robot, so neither can move `goal_reached` or `collisions` on its own.
-Testing one means pairing it with a fixed consumer and comparing against the
-same tree with the candidate replaced by a stand-in, which is a composition, and
-composition is chunk 16. All five pilot cards produce Actions, so nothing is
-blocked today; the rejection reason is what hands chunk 16 the problem stated
-precisely instead of leaving it to be rediscovered.
+Admission now asks **one question: does this node RUN?** It builds, its ports
+are satisfied, and it survives a rollout in a world `harness.micro` owns. That
+is a VALIDITY gate, it is stated as one in non-negotiable #5, and it is not
+evidence the node does anything.
+
+**Whether it HELPS is measured somewhere else, on a tree, against the shared
+base**, by `scripts/measure_growth.py` over `core.worldgen`'s suite — chunk 44,
+promoted to non-negotiable #9. The candidate's own micro-world used to carry
+that job and no longer does: the generator writes both the mechanism and the
+world that judges it, and of seven measured contributions none cleared the floor
+while three worlds came back malformed.
+
+CHUNK 52: A MODIFIER IS ADMITTED IN THE TREE IT WILL LIVE IN
+-------------------------------------------------------------
+A candidate is now usually a **modifier** — an `Action` whose `WRITES` is
+narrowed to the Twist fields it may revise. It cannot drive; it adjusts a
+command a driver proposed. Alone it has nothing to revise and `PortView` raises,
+so `build_tree` puts it where it belongs:
+
+    Layer[ ContractPorts, BASE, modifier ]
+
+The base is the shared, frozen substrate, identical in every arm, so it cancels
+from B-A here exactly as it does in the growth loop. `PortView`'s field scope
+does the rest: a candidate that declared `("vx",)` and writes `wz` is rejected
+by the contract rather than by a reviewer noticing.
 """
 
 import ast
@@ -74,7 +93,7 @@ from nodes.contract import (Action, Condition, Confidence, Decorator,
                             Direction, Kind, NodeMetadata, Origin, Port,
                             PortType, Status)
 from nodes.toys import toy_metadata
-from nodes.tree import Sequence, Tree, WiringError
+from nodes.tree import Layer, Sequence, Tree, WiringError
 
 from generate.generator import PIPELINE_VERSION, STAGING
 
@@ -253,10 +272,26 @@ def load_candidate(source, module_name="candidate"):
             "falsifiable claim cannot be admitted or rejected automatically, "
             "which is the one thing §4 requires of this step.")
 
+    # ⚠️ OPTIONAL SINCE CHUNK 52, AND THAT IS A DELIBERATE WEAKENING.
+    #
+    # A micro-world was the place a node's claimed effect was measured. Two
+    # findings retired it. Chunk 37 measured that the generator writes both the
+    # mechanism AND the world that judges it, so 3 of 7 measured contributions
+    # came back MALFORMED and none cleared the floor. Chunk 44 then moved
+    # contribution to the TREE, on a shared suite nobody generating a node has
+    # seen — which is #9 promoted to the admission criterion.
+    #
+    # Under the layered pipeline a modifier cannot drive alone anyway: its
+    # micro-world would have to contain the shared base to mean anything, and a
+    # world the model wrote around a base it was never shown is not evidence.
+    # So the modifier prompt does not ask for one, `contribution` records
+    # `measured: False` with a reason, and `scripts/measure_growth.py` is where
+    # the number now comes from. A candidate that supplies a micro() anyway is
+    # still measured on it — nothing is thrown away.
     micro_fn = namespace.get("micro")
-    if not callable(micro_fn):
+    if micro_fn is not None and not callable(micro_fn):
         raise Rejected("NO_MICRO",
-                       "micro() is missing — there is no world to test on")
+                       f"micro is a {type(micro_fn).__name__}, not a callable")
 
     return node_cls, prediction, micro_fn, namespace
 
@@ -411,12 +446,50 @@ def build_tree(node_cls, metadata):
     # a decorator has something real to govern while being ticked, and it can
     # never reach a benchmark condition (#3), the same standing rule
     # `ContractPorts` above is under.
+    #
+    # CHUNK 52: A MODIFIER IS VALIDATED IN A LAYER, ON THE SHARED BASE.
+    #
+    # A modifier declares a narrowed `WRITES` and revises a command someone else
+    # proposed. Alone it has nothing to revise, `PortView.cap` raises, and the
+    # node would be rejected for the shape that makes it a modifier. So it is
+    # wrapped in the tree it is actually going to live in:
+    #
+    #     Layer[ ContractPorts, BASE, modifier ]
+    #
+    # Using the real base rather than a toy driver is the point: it is the same
+    # substrate in every arm, so it cancels from B-A exactly as it does in the
+    # growth loop, and admission asks "does this run in the context it will run
+    # in" rather than "does it run beside a fixture". The base is frozen
+    # (`generate/base.py`), so this coupling cannot move underneath a recorded
+    # admission.
+    #
+    # ⚠️ EVERY candidate gets the base, not just the ones a narrowed `WRITES`
+    # identifies as modifiers. Gating on `is_modifier` was tried first and was
+    # wrong within the hour: two generated nodes declared all three fields (a
+    # dynamic window over vx/wz that also pins vy to zero) and then revised the
+    # pending command with `cap`/`adjust` like any modifier. They got the
+    # baseless tree, read a command nobody had proposed, and were rejected for
+    # the harness's shape rather than their own. Whether a node drives or
+    # revises is a fact about its `tick`, not about its declaration, and the
+    # layered tree is correct for both: a driver placed after the base simply
+    # overwrites the whole command, which is exactly what it does in the growth
+    # tree that measures it.
+    #
+    # The base itself is the one exception — it IS the base, and nesting it
+    # inside a tree with itself would tick it twice.
+    with_base = metadata.origin is not Origin.SUBSTRATE
     try:
         if node_cls.KIND is Kind.DECORATOR:
             from nodes.toys import DriveToGoal
             leaf = node_cls(metadata, DriveToGoal(toy_metadata("unit_child")))
         else:
             leaf = node_cls(metadata)
+        if with_base:
+            return Tree(Layer(toy_metadata("unit_layer"), [
+                ContractPorts(toy_metadata("unit_ports")),
+                _base_leaf(),
+                leaf,
+            ]))
         return Tree(Sequence(toy_metadata("unit_scaffold"), [
             ContractPorts(toy_metadata("unit_ports")),
             leaf,
@@ -425,6 +498,19 @@ def build_tree(node_cls, metadata):
         raise Rejected("UNSATISFIED_PORT", str(exc)) from exc
     except ValueError as exc:
         raise Rejected("CONTRACT_VIOLATION", str(exc)) from exc
+
+
+def _base_leaf():
+    """The shared base node, as a leaf. Imported lazily and on purpose.
+
+    `generate.base` imports `ContractPorts`, `build_tree` and `check_source`
+    from this module, so a module-level import here is a cycle. It is also
+    genuinely a runtime dependency rather than a structural one: admission only
+    needs the base when the candidate turns out to be a modifier.
+    """
+    from generate import base as basemod
+    loaded = basemod.load()
+    return loaded.node_cls(loaded.metadata)
 
 
 # --- the prediction --------------------------------------------------------
@@ -488,6 +574,13 @@ def _measure_contribution(prediction, micro_fn, card, seeds, node_id,
     line**, not a threshold — `harness/unit.py`'s docstring says why it stopped
     being one.
     """
+    if micro_fn is None:
+        return None, {
+            "measured": False,
+            "reason": "no micro() — the modifier prompt does not ask for one. "
+                      "Contribution is measured on the shared growth suite by "
+                      "scripts/measure_growth.py, against the same base, which "
+                      "is chunk 44's decision and non-negotiable #9."}
     try:
         micro = micro_fn()
     except Exception as exc:                     # noqa: BLE001

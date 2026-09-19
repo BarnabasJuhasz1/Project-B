@@ -1,0 +1,63 @@
+{
+  "admitted": true,
+  "detail": "valid; goal_reached effect 0.000 against a reported floor of 0.500",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "reorient_geometry",
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "a311b5689f8b3cf8",
+    "card_row_key": "dc50c33027c308a3",
+    "citation_id": null,
+    "citation_substituted": false,
+    "condition": "b",
+    "confidence": "medium",
+    "contribution": {
+      "baseline": 0.0,
+      "candidate": 0.0,
+      "cleared_floor": false,
+      "effect": 0.0,
+      "measured": true,
+      "metric": "goal_reached",
+      "reason": "effect 0.000 below the required 0.500",
+      "required": 0.5
+    },
+    "emitted_code": true,
+    "generated_card_id": "geometric_shape_revisit_reroute",
+    "generated_node_name": "RerouteAtShapeRecognisedPlace",
+    "is_traceable": false,
+    "mechanism_family": "ReorientToGeometry",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_dc50c33027c308a3",
+    "origin": "card",
+    "paper_sha256": "ff51f04ec7e6c1740db32895933207302084b3177ef980e62b0c2e863c07769d",
+    "pipeline_version": "v2-card-first",
+    "precondition_fired": {
+      "drove": 0,
+      "fraction": 0.0,
+      "passed": 0,
+      "ticks": 600
+    },
+    "prediction_restated_faithfully": true,
+    "prompt_hash": "16ec85e62da1eb0a",
+    "ref_id": "reorient_geometry",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": "General Discussion, pp. 171-172 (the displacement-properties argument and the \"A geometric module\" section, which opens on p. 172): \"the rat must have recorded the metric relations of distances and angles between target and shape, and kept track of left-right relations, or sense... That rats do not systematically make affine or reflection errors at quadrants adjacent to the correct one, but do make rotational errors, indicates that they encode and use both metric relations and sense\". Quantitative anchors: Exp. 1A Discussion, p. 158 (\"The 3 : 2 ratio of correct digs to rotational errors means, however, that the animals were only 20% above chance at distinguishing the correct location from the rotational error\"); Exp. 1A Apparatus p. 153 (\"a wooden box (120 X 60 cm)\") and Results p. 157 (\"If a dig was within 15 cm of the centre of the food dish, it was correct... A circle of 15 cm radius covers 10% of the surface area\"); Exp. 3 Discussion p. 170 (transposition of features costs nothing, affine/reflection of geometry costs performance).\n",
+    "span_verified": false,
+    "task": "search_for_goal",
+    "temperature": null,
+    "treatment": "paper",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_dc50c33027c308a3",
+  "reason": "admitted",
+  "unit": {
+    "baseline": 0.0,
+    "candidate": 0.0,
+    "effect": 0.0,
+    "metric": "goal_reached",
+    "required": 0.5
+  }
+}

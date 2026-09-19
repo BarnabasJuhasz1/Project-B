@@ -1,0 +1,23 @@
+{
+  "backend": "claude-cli",
+  "card_id": null,
+  "card_model_id": "claude-opus-5",
+  "card_prompt_hash": "c4bc4dc7bae95a2e",
+  "card_row_key": "c4bc4dc7bae95a2e",
+  "citation_id": "path_integration_mammals",
+  "citation_substituted": false,
+  "condition": "a",
+  "emitted_code": true,
+  "generated_card_id": "pi_terminal_uncertainty_search",
+  "generated_node_name": "SpiralSearchGoalUncertaintyDisc",
+  "model_id": "claude-opus-5",
+  "node_id": "gen_a_c4bc4dc7bae95a2e",
+  "paper_sha256": null,
+  "pipeline_version": "v2-card-first",
+  "prompt_hash": "89ad07260b9a3c62",
+  "ref_id": "path_integration_mammals",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "navigate_to_goal",
+  "temperature": null,
+  "treatment": "citation"
+}

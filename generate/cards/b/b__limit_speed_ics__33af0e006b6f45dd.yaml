@@ -1,0 +1,109 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition B's card call (given the source document in full).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: brake_within_seen_free_space
+node_name: LimitSpeedToStoppableSeenDistance
+source:
+  citation: 'T. Fraichard and H. Asama, "Inevitable Collision States. A Step Towards
+    Safer Robots?", Proc. IEEE/RSJ Int. Conf. on Intelligent Robots and Systems (IROS),
+    Las Vegas, NV, Oct. 2003, pp. 388-393. HAL inria-00182082.
+
+    '
+  span: 'Def. 3 (Safe State) in Sec. V-A "Statement of the Problem", together with
+    the braking-distance argument of Sec. I and Fig. 1 ("Collision states vs inevitable
+    collision states"); the two corner strategies quoted are in Sec. V-D.
+
+    '
+  verified: unverified
+mechanism: 'A state can be collision-free and still doomed: Sec. I, Fig. 1 argues
+  that for a system that needs "a certain distance d to slow down and stop", every
+  state within d of the wall is one from which "no matter what it does in the future,
+  a collision will occur". These are inevitable collision states (ICS). Safety is
+  therefore a property of state, not of position, and it is decided by comparing braking
+  distance against free distance. The paper''s second, sharper move (Def. 3, Sec.
+  V-A) is what makes this usable without a map: at planning time an unexpected obstacle
+  cannot be modelled, but it is known that it can only first appear on the boundary
+  of the field of view. So the sensing-horizon part of that boundary (the paper''s
+  FoV_B, the dashed arc in Fig. 8-right, as opposed to the part explained by known
+  obstacles) is itself treated as an obstacle, and a state is safe iff it is not an
+  ICS with respect to the known obstacles AND not an ICS with respect to FoV_B. Consequence:
+  a robot is only allowed to travel as fast as it can stop inside the region it has
+  actually seen to be empty. Sec. V-D states the two ways to pass an occluding corner
+  - "graze the corner while slowing down so that when you pass the corner, your speed
+  is slow enough for you to stop before hitting a possible unexpected obstacle", or
+  stay wide for a better view. This card is the first one: a speed cap, not a detour.
+  It helps because the failure mode of an unmapped indoor run is exactly the paper''s:
+  the obstruction "is detected so late that avoiding it is impossible".
+
+  '
+trigger: 'Every control step in which the parent has produced a non-zero linear velocity
+  command and a lidar scan for this step exists. The cap is computed always and binds
+  (returns a strictly reduced command) only when the stoppable distance in the direction
+  of travel is short; in open space it passes the parent''s command through unchanged.
+  It requires no map, no goal and no pose, so it is unaffected by pose_estimate drift
+  and remains valid while goal is None.
+
+  '
+derivation: 'Mapping. The paper''s car-like vehicle A becomes the Go2 whose only actuation
+  is the Twist (vx, vy, wz); its "dynamics" are whatever the frozen locomotion policy
+  does when the commanded velocity steps to zero. The paper''s known obstacles become
+  the finite lidar returns; the paper''s FoV_B becomes two things in a 181-beam planar
+  scan: (a) beams reading inf, whose unseen space begins at range_max = 6.0 m, and
+  (b) occlusion shadows behind depth discontinuities, whose unseen space begins at
+  the near side of the jump. Item (b) is my extension - the paper''s FoV_B is only
+  the sensing- range arc, because its vehicle''s shadows were computed against a known
+  map; with no map here, the shadow edge is the honest boundary of what has been seen
+  to be free. Rule. Let (vx_c, vy_c) be the parent''s commanded linear velocity, v_c
+  = hypot(vx_c, vy_c), theta_c = atan2(vy_c, vx_c) in the robot frame. Build a point
+  set P from the scan: for each beam i, r_i = ranges[i] if finite else range_max (6.0
+  m); additionally, for each adjacent pair with |r_{i+1} - r_i| > D_JUMP = 0.5 m,
+  insert one virtual point at the bearing of the farther beam and the range of the
+  nearer beam (the shadow mouth). Project each point of P into the travel frame: s
+  = r*cos(a - theta_c), l = r*sin(a - theta_c). Keep points with s > 0 and |l| <=
+  W = 0.25 m (Go2 body half-width ~0.16 m plus 0.09 m for yaw wobble and the frozen
+  policy''s lateral slop), and set d_free = min s over that corridor, or range_max
+  if the corridor is empty. Required stopping room from the base origin is d_stop(v)
+  = L_FRONT + v*TAU + v^2/(2*A_BRAKE), so invert it: v_cap = clip(-A_BRAKE*TAU + sqrt((A_BRAKE*TAU)^2
+  + 2*A_BRAKE*max(0, d_free - L_FRONT)), 0.0, 0.8). If v_c > v_cap, scale both components
+  by v_cap/v_c, preserving commanded direction; leave wz untouched. Numbers, all mine:
+  L_FRONT = 0.35 m (base origin to the front of the body plus a 0.05 m skin), TAU
+  = 0.20 m (two 10 Hz control steps of command-to-deceleration lag through the frozen
+  policy), A_BRAKE = 1.0 m/s^2 (a deliberately pessimistic effective deceleration
+  for a trotting quadruped commanded to zero; if the true value is larger the cap
+  is merely conservative, which is the direction Property 4''s "conservative approximation"
+  of ICS also errs in). These give full 0.8 m/s only beyond d_free = 0.83 m, ~0.55
+  m/s at d_free = 0.55 m, and 0 m/s at d_free <= 0.35 m. Where the paper''s ICS is
+  exact, mine is a one-control-input approximation in the sense of its Property 4:
+  I check only the braking control input, i.e. I ask whether stopping in a straight
+  line is still possible. This is legitimate here for a reason the paper''s forward-only
+  point mass (Sec. IV-A, "North, North-East") did not have: the Go2 can hold a stand,
+  so a zero-velocity non-contact state is never an ICS with respect to fixed obstacles,
+  and "can I still stop" is therefore a sufficient safety test, not just a necessary
+  one. Nothing here reads pose_estimate, so pose_error_estimate is irrelevant to it.
+
+  '
+prediction:
+  statement: 'Wrapping the linear velocity command with this cap reduces the mean
+    number of collisions per episode by at least 30% relative to the unwrapped baseline,
+    over the same set of seeds and scenarios, because late-detected obstructions are
+    met at a speed from which a stop still fits inside the seen-free corridor.
+
+    '
+  metric: collisions
+  baseline: goal_seeker
+  min_effect: 0.3
+  cost_metric: time_to_goal
+confidence: medium
+generated:
+  condition: b
+  task: navigate_to_goal
+  treatment: paper
+  card_prompt_hash: 5cee03fa20d28a74
+  card_row_key: 33af0e006b6f45dd
+  card_model_id: claude-opus-5
+  ref_id: limit_speed_ics
+  paper_sha256: 32a1b5f27a7fd3e9e9ef55402358b06e803dc99c3ca4adda874a41ece7365bb5
+  generated_card_id: brake_within_seen_free_space
+  generated_node_name: LimitSpeedToStoppableSeenDistance
+  citation_substituted: false

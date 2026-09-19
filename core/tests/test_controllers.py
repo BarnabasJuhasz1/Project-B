@@ -348,3 +348,142 @@ def test_a_node_outside_the_live_library_is_refused(node_id):
     today cannot be run today."""
     with pytest.raises(KeyError):
         controllers.make(controllers.NODE_PREFIX + node_id)
+
+
+# ---------------------------------------------------------------------------
+# chunk 53 — the growth pairing, resolvable under physics
+
+
+def test_layer_prefix_returns_the_growth_pairing():
+    """`layer:<id>` IS `measure_growth._build`, leaf for leaf, in tick order.
+
+    The whole value of a physics run on the growth pairing is that the thing
+    under physics is the thing the growth row measured. A second construction
+    would drift and only a wiring failure would say so.
+    """
+    import importlib.util
+    import os
+
+    import controllers
+    from compose.compose import RECONSTRUCTION_STAGING
+    from compose.library import CONTRACT_PORTS_ID, load_library
+    from generate.base import load as load_base
+
+    node_id = next(
+        e.node_id for e in load_library(staging=RECONSTRUCTION_STAGING).all()
+        if e.node_id != CONTRACT_PORTS_ID)
+
+    spec = importlib.util.spec_from_file_location(
+        "_mg_for_test",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__)))), "scripts", "measure_growth.py"))
+    growth = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(growth)
+
+    entry = load_library(staging=RECONSTRUCTION_STAGING,
+                         only=[node_id]).get(node_id)
+    expected = growth._build(entry.node_cls, entry.metadata, load_base())
+    actual = controllers.make(controllers.LAYER_PREFIX + node_id)
+
+    assert ([type(c).__name__ for c in actual.root.children]
+            == [type(c).__name__ for c in expected.root.children])
+    # Order is priority: ports publish, the base proposes, the node revises.
+    assert type(actual.root.children[-1]).__name__ != "BaseNavigator"
+
+
+def test_layer_prefix_refuses_what_node_prefix_refuses():
+    """One definition of "in the library", shared by both prefixes."""
+    import controllers
+    from compose.library import CONTRACT_PORTS_ID
+
+    for bad in ("definitely_not_a_node", CONTRACT_PORTS_ID):
+        with pytest.raises(KeyError):
+            controllers.make(controllers.LAYER_PREFIX + bad)
+        with pytest.raises(KeyError):
+            controllers.make(controllers.NODE_PREFIX + bad)
+
+
+def test_layer_prefix_is_not_listed_as_a_condition():
+    """#3: it is the substrate plus one leaf, so it stays out of available()."""
+    import controllers
+
+    assert not any(n.startswith(controllers.LAYER_PREFIX)
+                   for n in controllers.available())
+
+
+# ---------------------------------------------------------------------------
+# a REPAIR ROUND, resolvable under physics — the confirmation path
+
+
+def _a_repair_round():
+    """The first `<lineage>/round-NN` on disk, as (node_id, round_dir), or None.
+
+    Skips rather than fails when nothing has been repaired yet: a repair round
+    is a RUN OUTPUT under out/, not a committed record, so it is present on a
+    machine that has run the loop and absent on one that has not.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2] / "out" / "repair"
+    for lineage in sorted(p for p in root.glob("*") if p.is_dir()):
+        if lineage.name == "archive":
+            continue
+        for rd in sorted(lineage.glob("round-*")):
+            m = re.fullmatch(r"round-(\d+)", rd.name)
+            if m and any(rd.glob("*.result.json")):
+                return f"{lineage.name}__r{int(m.group(1)):02d}", rd
+    return None
+
+
+def test_a_repair_round_resolves_to_the_repair_and_never_to_the_shim():
+    """⚠️ THE BUG THIS EXISTS FOR TOOK A WHOLE LOOP RUN DOWN SILENTLY.
+
+    `ContractPorts` is always in a loaded library and sorts first, so a
+    resolver that takes `entries[0]` returns the harness's own port shim for
+    every repaired node. The shim does nothing, which reads as INERT, which
+    reads as a plausible verdict — three rounds of it looked entirely green.
+    See `repair/evidence.py:entry_for`.
+
+    `layer:<id>__rNN` is the only way to put a repaired node under physics, so
+    a confirmation run is worth exactly as much as this resolution is.
+    """
+    import controllers
+
+    found = _a_repair_round()
+    if found is None:
+        pytest.skip("no repair round on this machine; run scripts/repair_node.py")
+    node_id, _ = found
+
+    tree = controllers.make(controllers.LAYER_PREFIX + node_id)
+    names = [type(c).__name__ for c in tree.root.children]
+    assert names[0] == "ContractPorts"          # the shim publishes, first
+    assert names[-1] != "ContractPorts"         # and is never the thing measured
+    assert len(names) == 3                      # ports, base, the repair
+
+
+def test_a_repair_round_id_that_names_no_round_raises():
+    """A resolver that GUESSES which entry was meant will guess wrong silently
+    — the whole lesson of the shim bug. An unreachable round fails loudly, and
+    fails the same way an unknown registry name does."""
+    import controllers
+
+    for bad in ("gen_b_44d12df4d25b437f__r99",   # lineage exists, round does not
+                "no_such_lineage__r01",          # lineage does not exist
+                "gen_b_44d12df4d25b437f__rXX"):  # not a round id at all
+        with pytest.raises(KeyError):
+            controllers.make(controllers.LAYER_PREFIX + bad)
+
+
+def test_a_repair_round_is_not_listed_as_a_library_node():
+    """It is a run output, not an admitted library member. `library_nodes()` is
+    the safe listing and naming one is the explicit act — the same split
+    `available()` already makes for `layer:`."""
+    import controllers
+
+    found = _a_repair_round()
+    if found is None:
+        pytest.skip("no repair round on this machine; run scripts/repair_node.py")
+    node_id, _ = found
+
+    assert controllers.NODE_PREFIX + node_id not in controllers.library_nodes()

@@ -175,7 +175,7 @@ def run_table(label, poses, base_scenario, rates, sigma):
         # additions of 0.02 reach 0.19999999999999998 and a 5 Hz request slips
         # to every 11th step. Both are deterministic; both mean the scan rate a
         # pre-registration names is not the one the apparatus ran at. Printed
-        # rather than corrected -- see plans/doing/24a-slam-cost-model.md for
+        # rather than corrected -- see plans/done/24a-slam-cost-model.md for
         # why the fix belongs to chunk 25.
         effective = cost["scans"] / sim_seconds
         print(f"  {'slam @ %g Hz' % rate:>14s} {cost['total_seconds']:7.2f} "
@@ -239,7 +239,7 @@ def scaling(rate, sigma, laps, scenario_id):
         # that can mean no closures at all -- which looks like "the rate is too
         # slow" when it is really "the episode is too short". The `closed`
         # column is what tells those two apart, and the whole rate decision
-        # turns on it: see plans/doing/24a-slam-cost-model.md.
+        # turns on it: see plans/done/24a-slam-cost-model.md.
         print(f"  {n:5d} {sim_seconds:7.1f} {subs:8d} "
               f"{d['closure_edges']:7d} "
               f"{c['match_seconds']:7.2f} "

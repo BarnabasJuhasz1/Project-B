@@ -302,8 +302,17 @@ def geodesic_distance(start_xy, goal_xy, grid=None, world=None):
     core.scenario refuses to load. The visibility graph answers one query and
     cannot make that guarantee as cheaply.
     """
-    grid = grid or occupancy_grid()
-    field = geodesic_field(goal_xy, grid)
+    # ⚠️ `world` MUST be forwarded on both lines. This read
+    #     grid = grid or occupancy_grid()
+    #     field = geodesic_field(goal_xy, grid)
+    # which silently dropped `world`, so `geodesic_distance(a, b, world=W)` with
+    # no explicit grid answered about LAB42 instead of W — the exact failure the
+    # world-keyed caches above exist to prevent, reintroduced by an argument
+    # that was simply not passed on. Found 2026-09-13 by core/worldgen.py, the
+    # first caller ever to pass `world=` without a `grid=`; no committed result
+    # is affected, because every other caller uses the lab42 default.
+    grid = grid if grid is not None else occupancy_grid(world=world)
+    field = geodesic_field(goal_xy, grid, world=world)
     ix, iy = grid.world_to_cell(start_xy)
     return float(field[iy, ix])
 

@@ -1,0 +1,137 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition B's card call (given the source document in full).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: shape_anchored_goal_address
+node_name: ReanchorGoalToVisibleShape
+source:
+  citation: 'Cheng, K. (1986). A purely geometric module in the rat''s spatial representation.
+    Cognition, 23, 149-178.
+
+    '
+  span: 'Experiment 1B, Discussion, p. 161 ("the retention and use of both featural
+    and inertial information are subsidiary to the use of the geometric relations
+    between the target and the shape of the environment"); General Discussion, p.
+    171 ("the rat must have recorded the metric relations of distances and angles
+    between target and shape, and kept track of left-right relations, or sense. Metric
+    relations and sense together are known as displacement properties"); Table 1,
+    p. 158 (Exp. 1A: 47% correct digs vs 31% rotational errors, average over three
+    rats).
+
+    '
+  verified: unverified
+mechanism: 'A place is specified as an address on a metric frame built from the arrangement
+  of surfaces as surfaces - the shape of the environment - and that address is couched
+  in displacement properties: the metric distances and angles from the target to those
+  surfaces, plus sense (which surface is to the left and which to the right). Cheng
+  shows this frame outranks the two obvious alternatives. It outranks featural identity:
+  in Experiment 3 a diagonal transposition, which scrambles the distances, angles
+  and handedness of the feature arrangement but leaves the target''s relations to
+  the surfaces intact, produced no decrement in any rat, whereas an affine transformation
+  or a reflection, which leaves the local feature on the target but moves the target
+  to a geometrically different corner, produced a significant decrement in every rat
+  (p < .05, .01, .001). And it outranks dead reckoning: rats kept a vestibular record
+  of how far the box had been rotated during the delay, yet "the retention and use
+  of both featural and inertial information are subsidiary to the use of the geometric
+  relations between the target and the shape of the environment" (p. 161) - when the
+  two disagreed the rats went to the geometrically correct place. This helps because
+  the surface arrangement is re-measured directly at recall time, so an address expressed
+  in it does not accumulate the error that an address expressed in an integrated-motion
+  frame does. Its one failure mode is the price of the same property: when the shape
+  admits two congruences with itself, the address names two places, and the animal
+  takes the wrong one about as often as the right one (47% correct vs 31% rotational,
+  Table 1).
+
+  '
+trigger: 'The goal position is disclosed, the belief about our own pose is no longer
+  trustworthy, and enough surface is currently visible to define a metric frame whose
+  sense is decidable. Concretely: goal is not None, pose_error_estimate exceeds the
+  trust threshold, a shape frame was latched earlier while the belief was still trustworthy,
+  and the currently visible surface arrangement is still recognisably the one that
+  was latched. If any of these fails - goal undisclosed, belief still good, too few
+  returns, shape near-symmetric so sense is undecidable, or the visible arrangement
+  has changed - the leaf returns FAILURE and the tree falls through to steering by
+  pose_estimate.
+
+  '
+derivation: 'Mapping. Cheng''s "arrangement of surfaces as surfaces" becomes the set
+  of finite lidar returns: 181 beams, anything with r < range_max is a surface point,
+  inf is no surface. His "inertial/vestibular record" becomes pose_estimate, which
+  is the drifting integrated-motion belief, with pose_error_estimate as the robot''s
+  own confession of how far it has drifted. His "featural information" (brightness,
+  texture, odour of a panel) has no counterpart on a planar lidar and is dropped -
+  this card claims nothing about features. The paper''s target-to-shape address becomes
+  the goal''s coordinates in a frame computed from the scan. All of this mapping is
+  mine; Cheng never discusses range sensors, partial visibility or a moving observer.
+
+  Building the frame (each control step). Take the finite returns and convert to robot-frame
+  points p_i = (r_i*cos(theta_i), r_i*sin(theta_i)) using range_angles. Require N
+  >= 40 of the 181 beams finite, else abstain - fewer than that is not an arrangement
+  of surfaces, it is a corridor mouth. Centroid c = mean(p_i). Second-moment matrix
+  M = sum (p_i - c)(p_i - c)^T / N, with eigenvalues lam1 >= lam2 and unit eigenvectors.
+  Let e1 be the major eigenvector and set e2 = rot90(e1) so the pair is always right-handed;
+  that right-handedness is how sense is carried, which Cheng (p. 171) says the rat
+  carries too, and which is why the frame must never be built by an operation that
+  is blind to reflection.
+
+  Resolving the rotational ambiguity. e1 is defined only up to sign, and the two signs
+  are exactly Cheng''s target and its rotational equivalent. Break the tie with a
+  statistic that a 180-degree-symmetric shape cannot supply: the third moment along
+  the axis, m3 = sum ((p_i - c).e1)^3 / N. Choose the sign of e1 that makes m3 >=
+  0. If the normalised skew |m3| / lam1^1.5 < 0.05, the visible shape is too close
+  to 180-degree symmetric for sense to be decided, and the leaf abstains rather than
+  committing. The rat commits and is wrong 31 times in 100 (Table 1, p. 158); a robot
+  that abstains keeps the drifting belief, which is bad, instead of a confidently
+  mirrored address, which is worse. The 40-beam minimum and the 0.05 skew threshold
+  are mine; the paper states no threshold of either kind.
+
+  Latching the address. While pose_error_estimate <= 0.30 m the belief is treated
+  as trustworthy. On any such step, express the goal offset in the shape frame: d
+  = R(-yaw) * (goal - (x,y)) from pose_estimate, then u = (d - c).e1, v = (d - c).e2.
+  Store (u, v) together with a shape signature (lam1, lam2, N). The 0.30 m trust threshold
+  is mine, chosen as roughly half the Go2''s body length, on the reasoning that a
+  belief wrong by less than half a body is not yet what is making the robot miss.
+
+  Using the address. Once pose_error_estimate > 0.30 m, recompute c, e1, e2 and the
+  signature from the live scan. Accept the frame only if |lam1/lam1_latched - 1| <=
+  0.25 and |lam2/lam2_latched - 1| <= 0.25 - the same arrangement of surfaces, seen
+  from somewhere else, not a different room. Then reconstruct the goal in the robot
+  frame as g = c + u*e1 + v*e2 and steer to that instead of to the pose-derived offset.
+  Twist: psi = atan2(g_y, g_x), wz = clip(2.0*psi, -1.0, 1.0), vx = 0.8*cos(psi) if
+  |psi| <= 1.0 rad else 0.0, vy = 0.0. The 0.25 signature tolerance and the steering
+  gains are mine. When the signature test fails, the leaf abstains and re-latches
+  at the next step where pose_error_estimate <= 0.30 m.
+
+  Where the mapping breaks, plainly. Cheng''s box is fully visible from every point
+  inside it, so his metric frame is global and permanent. A 6 m lidar in an indoor
+  space sees one room''s worth of surface, so this frame is local and temporary: it
+  corrects drift accumulated since the latch, while the same surfaces stay in view,
+  and it cannot correct drift accumulated before the latch or survive a doorway. That
+  limitation is a property of the sensor, not of the paper, and it is the main reason
+  this card''s confidence is not high.
+
+  '
+prediction:
+  statement: 'On runs where pose_estimate drifts, steering the final approach by the
+    goal''s address in the shape frame rather than by the pose belief raises the fraction
+    of episodes that reach the goal, because the address is re-measured against visible
+    surfaces every step instead of inheriting accumulated belief error.
+
+    '
+  metric: goal_reached
+  baseline: goal_seeker
+  min_effect: 0.1
+  cost_metric: path_length
+confidence: medium
+generated:
+  condition: b
+  task: navigate_to_goal
+  treatment: paper
+  card_prompt_hash: 568331945c5eb42c
+  card_row_key: 8fec33b617453c97
+  card_model_id: claude-opus-5
+  ref_id: reorient_geometry
+  paper_sha256: ff51f04ec7e6c1740db32895933207302084b3177ef980e62b0c2e863c07769d
+  generated_card_id: shape_anchored_goal_address
+  generated_node_name: ReanchorGoalToVisibleShape
+  citation_substituted: false

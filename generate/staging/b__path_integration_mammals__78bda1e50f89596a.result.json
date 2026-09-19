@@ -1,0 +1,49 @@
+{
+  "admitted": true,
+  "detail": "valid; contribution not measured (no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9.)",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "path_integration_mammals",
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "ef76accf91939dc4",
+    "card_row_key": "78bda1e50f89596a",
+    "citation_id": null,
+    "citation_substituted": false,
+    "condition": "b",
+    "confidence": "low",
+    "contribution": {
+      "measured": false,
+      "reason": "no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9."
+    },
+    "emitted_code": true,
+    "generated_card_id": "pi_terminal_spiral_search",
+    "generated_node_name": "SpiralSearchAtBelievedGoal",
+    "is_traceable": false,
+    "mechanism_family": "MaintainHomingVector",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_78bda1e50f89596a",
+    "origin": "card",
+    "paper_sha256": "fef30a6310c32f30c7c234e0e1a2a5cc1b986e83d6410ce571e9d3535245792c",
+    "pipeline_version": "v3-layered",
+    "precondition_fired": {
+      "drove": 0,
+      "fraction": 0.0,
+      "passed": 0,
+      "ticks": 600
+    },
+    "prompt_hash": "30aff56b7214c61c",
+    "ref_id": "path_integration_mammals",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": "Section \"Binding of Landmark Information and Self-Motion Cues\", p. 186, left column, second paragraph: \"In conditions in which navigation has to be very precise, such as during the final approach to a goal, PI is too error-prone to be wholly relied upon ... During homing, when their path integrator indicates proximity to the nest, both species switch from a fairly linear homeward progression to circular movements in search of familiar cues near the nest entrance (Seguinot et al., 1993; Muller and Wehner, 1994).\" Supporting statement on error growth: section \"Computation of Position Vectors and Goal Vectors\", p. 184, right column: \"PI being an incremental recursive process, in which changes in the current estimate of the position are added to the position vector of the previous step, these errors are necessarily cumulative\".\n",
+    "span_verified": false,
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "treatment": "paper",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_78bda1e50f89596a",
+  "reason": "admitted"
+}

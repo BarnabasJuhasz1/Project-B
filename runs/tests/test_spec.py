@@ -94,3 +94,27 @@ def test_a_bare_node_binding_is_refused_as_a_condition(tmp_path):
         {"label": "A", "controller": node_name}]})
     with pytest.raises(ValueError, match="ONE LEAF"):
         load_spec(path)
+
+
+def test_a_layer_binding_is_refused_as_a_condition(tmp_path):
+    """#3, one step on from the `node:` refusal.
+
+    The base is exempt from #3 as a declared SUBSTRATE, which is exactly what
+    makes it part of every arm and an arm by itself in none. `layer:<id>` is the
+    substrate plus one leaf: a probe for measure_growth.py, never a condition.
+    """
+    import json
+
+    import controllers
+    from runs.spec import load_spec
+
+    with open("runs/specs/rehearsal.json", encoding="utf-8") as handle:
+        spec = json.load(handle)
+    node_id = controllers.library_nodes()[0][len(controllers.NODE_PREFIX):]
+    spec["conditions"][0] = dict(spec["conditions"][0],
+                                 controller=f"layer:{node_id}")
+    path = tmp_path / "layer.json"
+    path.write_text(json.dumps(spec), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="GROWTH PAIRING"):
+        load_spec(path)

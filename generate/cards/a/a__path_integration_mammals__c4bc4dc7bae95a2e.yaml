@@ -1,0 +1,85 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition A's card call (given the reference alone).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: pi_terminal_uncertainty_search
+node_name: SpiralSearchGoalUncertaintyDisc
+source:
+  citation: Etienne, A. S. & Jeffery, K. J. (2004). "Path integration in mammals."
+    Hippocampus 14(2), 180-192.
+  span: ''
+  verified: unverified
+mechanism: 'A dead-reckoned goal vector is computed by continuously integrating self-motion,
+  and its error accumulates monotonically along the path with no internal signal that
+  says how wrong it now is. The review''s central consequence is that the vector''s
+  usefulness is not absolute but relative: what matters is the ratio of accumulated
+  positional error to the distance still to be covered. Far from the goal, a large
+  positional error still leaves the *bearing* nearly correct, so vector-guided approach
+  is efficient. Close to the goal, the same error subtends a large angle, the bearing
+  becomes dominated by noise, and continued servoing on it drives the animal confidently
+  to a place that is not the goal. Mammals relying on path integration therefore do
+  not converge asymptotically on the computed endpoint; they abandon vector guidance
+  at that crossover and switch to a systematic search over the region the accumulated
+  error makes plausible, scaling the searched area to how far they have travelled.
+  The search converts an unobservable directional error into a covered area, which
+  is the only operation available to an agent that cannot measure its own drift.'
+trigger: 'The goal position has been disclosed (goal is not None), the pose belief
+  is known to be untrustworthy at the scale of the goal tolerance (pose_error_estimate
+  > r_tol), and the believed remaining distance has fallen to within the believed
+  positional error: d_belief = ||goal - pose_estimate[:2]|| <= max(r_tol, k * pose_error_estimate),
+  with k = 1.0 and r_tol = 0.5 m. The leaf holds until it exits by arrival or by exhausting
+  its search radius/time budget. When pose_error_estimate <= r_tol the precondition
+  is false and the leaf never runs, so on non-drifting scenarios it costs nothing.'
+derivation: 'All numbers below are mine; the source supplies the ratio argument, not
+  the constants. Bearing uncertainty induced by a positional error e at remaining
+  distance d is approximately atan(e/d): at d = 4e it is 14 deg and the vector is
+  a good heading; at d = 2e it is 27 deg; at d = e it is 45 deg, i.e. the commanded
+  heading carries under one bit of information about where the goal actually is. That
+  crossover fixes k = 1.0 in the trigger. r_tol = 0.5 m is the assumed arrival tolerance
+  and should be overridden if the scorer''s radius is known; it also floors the trigger
+  so the leaf still fires when the drift estimate is small but nonzero. On entry,
+  latch the spiral centre as the current goal coordinate expressed in the belief frame
+  (goal and pose_estimate share that frame), and latch e0 = pose_error_estimate. Drive
+  an Archimedean spiral outward from that centre, integrating the spiral phase from
+  the COMMANDED twist and dt rather than from pose_estimate deltas - the search is
+  itself dead-reckoned, which keeps it immune to further drift in the belief during
+  the sweep. Spiral law: r(phi) = r0 + (p / 2*pi) * phi with r0 = 0.5 m and radial
+  pitch p = 2 * r_tol = 1.0 m, so successive loops are separated by 1.0 m and the
+  swept band of half-width r_tol tiles the disc with no gaps. Command vx = 0.5 m/s
+  (below the 0.8 m/s cap, leaving control margin for a higher-priority avoidance leaf)
+  and wz = clamp(vx / r(phi), -1.0, 1.0); at r0 = 0.5 m this is exactly 1.0 rad/s,
+  which is why r0 is 0.5 m and not smaller - any tighter start would saturate wz and
+  distort the spiral. vy = 0 throughout. Terminate when r(phi) > R_max = min(2.5 *
+  e0, 4.0 m). For a 2-D random-walk drift whose 1-sigma radius is e0, a disc of radius
+  2.5*e0 contains roughly 95% of the true-position distribution; the 4.0 m cap keeps
+  the swept region inside range_max = 6.0 m so the lidar always sees the whole search
+  area, and bounds the cost. Sweep time is about pi*R_max^2 / (p*vx): 39 s at R_max
+  = 2.5 m, 100 s at the 4.0 m cap. Apply a hard time budget of 60 s as a second exit.
+  On exit without arrival, re-latch the centre on the current belief and allow one
+  re-entry; further re-entries are suppressed to avoid an unbounded search loop. The
+  leaf yields to any higher-priority obstacle-avoidance or contact-recovery leaf and
+  resumes at the stored spiral phase, so avoidance detours consume search time but
+  do not corrupt the swept geometry.'
+prediction:
+  statement: On scenarios where pose_estimate drifts, replacing terminal vector-servoing
+    with an uncertainty-scaled spiral search over the disc around the believed goal
+    raises the fraction of seeds on which the goal is reached, because the robot's
+    body physically sweeps the region containing the true goal instead of converging
+    on a biased point estimate.
+  metric: goal_reached
+  baseline: goal_seeker
+  min_effect: 0.15
+  cost_metric: time_to_goal
+confidence: medium
+generated:
+  condition: a
+  task: navigate_to_goal
+  treatment: citation
+  card_prompt_hash: c4bc4dc7bae95a2e
+  card_row_key: c4bc4dc7bae95a2e
+  card_model_id: claude-opus-5
+  ref_id: path_integration_mammals
+  paper_sha256: null
+  generated_card_id: pi_terminal_uncertainty_search
+  generated_node_name: SpiralSearchGoalUncertaintyDisc
+  citation_substituted: false

@@ -1,0 +1,23 @@
+{
+  "backend": "claude-cli",
+  "card_id": "limit_speed_ics",
+  "card_model_id": "claude-opus-5",
+  "card_prompt_hash": "19215297ee7633ea",
+  "card_row_key": "c380e7a8cfb32b78",
+  "citation_id": null,
+  "citation_substituted": false,
+  "condition": "b",
+  "emitted_code": true,
+  "generated_card_id": "brake_within_visible_free_space",
+  "generated_node_name": "CapSpeedToBrakingHorizon",
+  "model_id": "claude-opus-5",
+  "node_id": "gen_b_c380e7a8cfb32b78",
+  "paper_sha256": "32a1b5f27a7fd3e9e9ef55402358b06e803dc99c3ca4adda874a41ece7365bb5",
+  "pipeline_version": "v2-card-first",
+  "prompt_hash": "02273ffe201ca5db",
+  "ref_id": "limit_speed_ics",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "search_for_goal",
+  "temperature": null,
+  "treatment": "paper"
+}

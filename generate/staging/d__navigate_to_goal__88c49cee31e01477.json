@@ -1,0 +1,23 @@
+{
+  "backend": "claude-cli",
+  "card_id": null,
+  "card_model_id": "claude-opus-5",
+  "card_prompt_hash": "88c49cee31e01477",
+  "card_row_key": "88c49cee31e01477",
+  "citation_id": null,
+  "citation_substituted": false,
+  "condition": "d",
+  "emitted_code": true,
+  "generated_card_id": "gap_clipped_goal_bearing",
+  "generated_node_name": "SteerThroughWidestAdmissibleGap",
+  "model_id": "claude-opus-5",
+  "node_id": "gen_d_88c49cee31e01477",
+  "paper_sha256": null,
+  "pipeline_version": "v3-layered",
+  "prompt_hash": "8e63ba5662515dc8",
+  "ref_id": null,
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "navigate_to_goal",
+  "temperature": null,
+  "treatment": "none"
+}

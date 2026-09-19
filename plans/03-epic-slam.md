@@ -176,14 +176,14 @@ localisation contribution. Chunk 25 makes reporting it mandatory rather than opt
 
 | # | Chunk | Depends on | Needs Isaac Sim |
 |---|---|---|---|
-| 19 | [The localisation contract](doing/19-localisation-contract.md) | — | no |
-| 20 | [The sensor noise model](doing/20-sensor-noise.md) | 19 | no |
-| 21 | [Scan matching: the front end](doing/21-scan-matching.md) | 19, 20 | no |
-| 22 | [Submaps and loop closure](doing/22-loop-closure.md) | 21 | no |
-| 23 | [Pose graph: the back end](doing/23-pose-graph.md) | 22 | no |
-| 22a | [The closure travel gate](doing/22a-closure-travel-gate.md) | 22 | no |
-| 24a | [The cost model and the scan rate](doing/24a-slam-cost-model.md) | 23 | no |
-| 24b | [Seeing the SLAM run](doing/24b-slam-visualisation.md) | 23, 24a | no |
+| 19 | [The localisation contract](done/19-localisation-contract.md) | — | no |
+| 20 | [The sensor noise model](done/20-sensor-noise.md) | 19 | no |
+| 21 | [Scan matching: the front end](done/21-scan-matching.md) | 19, 20 | no |
+| 22 | [Submaps and loop closure](done/22-loop-closure.md) | 21 | no |
+| 23 | [Pose graph: the back end](done/23-pose-graph.md) | 22 | no |
+| 22a | [The closure travel gate](done/22a-closure-travel-gate.md) | 22 | no |
+| 24a | [The cost model and the scan rate](done/24a-slam-cost-model.md) | 23 | no |
+| 24b | [Seeing the SLAM run](done/24b-slam-visualisation.md) | 23, 24a | no |
 | 24 | [Determinism and cost gate](todo/24-slam-determinism.md) | 23, 24a | **yes** |
 | 25 | [Recalibration: what moves](todo/25-slam-recalibration.md) | 24 | no |
 | 26 | [The cards SLAM unlocks](todo/26-slam-cards.md) | 25 | no |

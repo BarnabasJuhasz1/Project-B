@@ -1,0 +1,49 @@
+{
+  "admitted": true,
+  "detail": "valid; contribution not measured (the candidate's own micro-world is malformed: micro 'spiral_search_goal_uncertainty_disc': goal (8.5, 8.5) is unreachable from (1.5, 1.5))",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": null,
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "c4bc4dc7bae95a2e",
+    "card_row_key": "c4bc4dc7bae95a2e",
+    "citation_id": "path_integration_mammals",
+    "citation_substituted": false,
+    "condition": "a",
+    "confidence": "medium",
+    "contribution": {
+      "measured": false,
+      "reason": "the candidate's own micro-world is malformed: micro 'spiral_search_goal_uncertainty_disc': goal (8.5, 8.5) is unreachable from (1.5, 1.5)"
+    },
+    "emitted_code": true,
+    "generated_card_id": "pi_terminal_uncertainty_search",
+    "generated_node_name": "SpiralSearchGoalUncertaintyDisc",
+    "is_traceable": false,
+    "mechanism_family": null,
+    "model_id": "claude-opus-5",
+    "node_id": "gen_a_c4bc4dc7bae95a2e",
+    "origin": "citation",
+    "paper_sha256": null,
+    "pipeline_version": "v2-card-first",
+    "precondition_fired": {
+      "drove": 0,
+      "fraction": 0.0,
+      "passed": 0,
+      "ticks": 600
+    },
+    "prompt_hash": "89ad07260b9a3c62",
+    "ref_id": "path_integration_mammals",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": null,
+    "span_verified": false,
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "treatment": "citation",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_a_c4bc4dc7bae95a2e",
+  "reason": "admitted"
+}

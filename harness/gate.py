@@ -25,6 +25,28 @@ would first have caught something.
 The gate is also where the library and the unit scenarios stay in step. A node
 in the library with no unit scenario is a node G1 cannot report a pass rate for,
 so `promote()` is the only way in.
+
+⚠️ **DORMANT SINCE 2026-09-14 (CHUNK 52), AND SAYING SO RATHER THAN LOOKING
+ALIVE.** This file is the one that claims to implement non-negotiable #9, and #9
+moved out from under it in two steps:
+
+- **Chunk 44** promoted "beats the incumbent on a frozen suite" from a secondary
+  check to THE admission criterion, and moved the measurement from a generated
+  micro-world to a TREE on a shared suite.
+- **Chunk 52** stopped asking the generator for a micro-world at all. A modifier
+  revises the base's command and cannot drive alone, so a world it wrote around
+  a base it was never shown is evidence about nothing.
+
+So no node the current pipeline produces has a `UnitScenario`, and nothing in
+the live path calls `promote()`. **`scripts/measure_growth.py` is what #9 means
+now**: add one node to `Layer[ports, BASE, ...]`, re-run the same generated
+worlds, and read `fixed` and `broke`.
+
+This file is **not deleted** — the regression idea is right and the rewrite is
+its own chunk (see `DELETION-CANDIDATES.md`, tier 3). What has to change is the
+suite: "every admitted node's unit scenario" becomes "the growth suite, at the
+incumbent tree's score". Its tests supply their own units and still pass, which
+is why the dormancy is easy to miss and is written down here.
 """
 
 from dataclasses import dataclass, field

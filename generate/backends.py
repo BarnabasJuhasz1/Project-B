@@ -94,6 +94,19 @@ DEFAULT_MODEL = "claude-opus-5"
 # than a constant nobody re-examines.
 CLI_TIMEOUT_S = 600
 
+# Dollar ceiling for ONE generation call, enforced by the CLI itself
+# (`--max-budget-usd`, which only applies under `--print`). A wall-clock timeout
+# is the wrong instrument for a runaway: it kills the call AFTER the thinking has
+# been paid for. Condition D's `navigate_to_goal` node call spent $4.69 and
+# 157,894 thinking tokens across 35 minutes and returned no fenced code, twice.
+#
+# Set well ABOVE every call that has ever succeeded — the most expensive was an
+# A node at $1.36 — so this can only ever fire on a runaway, never on a node that
+# is merely long. It is a backstop, not a budget: rows are not meant to hit it,
+# and a row that does is a finding about the generation step, recorded by
+# `generator.write_call_failure`.
+CLI_BUDGET_USD = 2.50
+
 # Models that still accept a sampling temperature. Everything else rejects the
 # parameter outright — see the module docstring.
 TEMPERATURE_MODELS = frozenset({
@@ -191,10 +204,23 @@ class ClaudeCliBackend(Backend):
     name = "claude-cli"
 
     def __init__(self, model_id=DEFAULT_MODEL, timeout=CLI_TIMEOUT_S,
-                 executable="claude"):
+                 executable="claude", budget_usd=CLI_BUDGET_USD,
+                 system_prompt=None):
         self.model_id = model_id
         self.timeout = timeout
         self.executable = executable
+        self.budget_usd = budget_usd
+        # ⚠️ Defaults to SYSTEM_PROMPT, so every existing caller is unchanged.
+        # It exists for `repair/diagnose.py` (chunk 57), whose call returns a
+        # structured JSON verdict rather than code — the default prompt ends
+        # "Return the code in a single fenced python block", which is an
+        # instruction to do the wrong thing on a diagnosis call.
+        #
+        # ⚠️ It is a per-BACKEND setting, never a per-CONDITION one. Varying it
+        # between arms would be a second place for the ablation to differ, and
+        # invisible in a diff — the same hazard the module docstring raises
+        # about SYSTEM_PROMPT itself.
+        self.system_prompt = system_prompt
 
     def complete(self, prompt):
         # A scratch cwd, thrown away after the call: CLAUDE.md discovery walks
@@ -209,9 +235,13 @@ class ClaudeCliBackend(Backend):
                 self.executable, "-p",
                 "--model", self.model_id,
                 "--setting-sources", "",
-                "--system-prompt", SYSTEM_PROMPT,
+                "--system-prompt", self.system_prompt or SYSTEM_PROMPT,
                 "--output-format", "json",
             ]
+            # The runaway backstop. None disables it, which is what a
+            # deliberately unbounded call looks like on the command line.
+            if self.budget_usd is not None:
+                argv += ["--max-budget-usd", str(self.budget_usd)]
             try:
                 proc = subprocess.run(argv, cwd=clean, input=prompt,
                                       capture_output=True, text=True,

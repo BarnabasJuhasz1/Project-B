@@ -1,0 +1,23 @@
+{
+  "backend": "claude-cli",
+  "card_id": "path_integration_mammals",
+  "card_model_id": "claude-opus-5",
+  "card_prompt_hash": "15f9c43d58b804d1",
+  "card_row_key": "b561d9c7f6356028",
+  "citation_id": null,
+  "citation_substituted": false,
+  "condition": "b",
+  "emitted_code": true,
+  "generated_card_id": "home_base_anchored_excursions",
+  "generated_node_name": "ExploreByAnchoredExcursions",
+  "model_id": "claude-opus-5",
+  "node_id": "gen_b_b561d9c7f6356028",
+  "paper_sha256": "fef30a6310c32f30c7c234e0e1a2a5cc1b986e83d6410ce571e9d3535245792c",
+  "pipeline_version": "v2-card-first",
+  "prompt_hash": "7bd22cc62566bc31",
+  "ref_id": "path_integration_mammals",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "search_for_goal",
+  "temperature": null,
+  "treatment": "paper"
+}

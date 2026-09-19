@@ -1,0 +1,49 @@
+{
+  "admitted": true,
+  "detail": "valid; contribution not measured (no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9.)",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "path_integration_ants",
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "9883acb935a57d2b",
+    "card_row_key": "44d12df4d25b437f",
+    "citation_id": null,
+    "citation_substituted": false,
+    "condition": "b",
+    "confidence": "medium",
+    "contribution": {
+      "measured": false,
+      "reason": "no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9."
+    },
+    "emitted_code": true,
+    "generated_card_id": "ant_path_integration_goal_vector",
+    "generated_node_name": "SteerByPathIntegratedGoalVector",
+    "is_traceable": false,
+    "mechanism_family": "MaintainHomingVector",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_44d12df4d25b437f",
+    "origin": "card",
+    "paper_sha256": "e9f40cbbd48ac1a9bdfa95b00f5faae737c0b0a32ffc443d665d8222a8ad5da6",
+    "pipeline_version": "v3-layered",
+    "precondition_fired": {
+      "drove": 511,
+      "fraction": 0.8516666666666667,
+      "passed": 511,
+      "ticks": 600
+    },
+    "prompt_hash": "983162572e0beafb",
+    "ref_id": "path_integration_ants",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": "Results, \"Two-Leg Trajectories\": Eq. 2 (p. 5288, col. 2) and Eq. 3 (spanning p. 5288 col. 2 - p. 5289 col. 1), together with the paragraph immediately after Eq. 3 on p. 5289 col. 1 that states the fitted constant k = 4.009 x 10^-5 deg^-1 and the 90-degree normalisation; curve 2 of Fig. 2B is the same model plotted. Error-cancellation claim: Discussion, p. 5289 col. 2.\n",
+    "span_verified": false,
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "treatment": "paper",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_44d12df4d25b437f",
+  "reason": "admitted"
+}

@@ -1,0 +1,23 @@
+{
+  "backend": "claude-cli",
+  "card_id": "path_integration_ants",
+  "card_model_id": "claude-opus-5",
+  "card_prompt_hash": "fb42864f768eaf30",
+  "card_row_key": "56349a5b3270ba5f",
+  "citation_id": null,
+  "citation_substituted": false,
+  "condition": "b",
+  "emitted_code": true,
+  "generated_card_id": "ant_path_integration_outbound_bearing",
+  "generated_node_name": "SteerAlongAntOutboundVector",
+  "model_id": "claude-opus-5",
+  "node_id": "gen_b_56349a5b3270ba5f",
+  "paper_sha256": "e9f40cbbd48ac1a9bdfa95b00f5faae737c0b0a32ffc443d665d8222a8ad5da6",
+  "pipeline_version": "v2-card-first",
+  "prompt_hash": "950e3bac2ce00a0f",
+  "ref_id": "path_integration_ants",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "search_for_goal",
+  "temperature": null,
+  "treatment": "paper"
+}

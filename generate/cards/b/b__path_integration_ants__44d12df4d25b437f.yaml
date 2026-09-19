@@ -1,0 +1,130 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition B's card call (given the source document in full).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: ant_path_integration_goal_vector
+node_name: SteerByPathIntegratedGoalVector
+source:
+  citation: 'Müller, M. & Wehner, R. (1988) "Path integration in desert ants, Cataglyphis
+    fortis." Proc. Natl. Acad. Sci. USA 85, 5287-5290.
+
+    '
+  span: 'Results, "Two-Leg Trajectories": Eq. 2 (p. 5288, col. 2) and Eq. 3 (spanning
+    p. 5288 col. 2 - p. 5289 col. 1), together with the paragraph immediately after
+    Eq. 3 on p. 5289 col. 1 that states the fitted constant k = 4.009 x 10^-5 deg^-1
+    and the 90-degree normalisation; curve 2 of Fig. 2B is the same model plotted.
+    Error-cancellation claim: Discussion, p. 5289 col. 2.
+
+    '
+  verified: unverified
+mechanism: "A Cataglyphis fortis forager continuously maintains a single running estimate\
+  \ of the direction back to its start point, and it does NOT do this by true vector\
+  \ summation (the paper's central negative result). It carries two scalars: phi_n,\
+  \ the mean direction in which it has so far travelled, and l_n, the distance so\
+  \ far travelled counted in unit lengths (strides). Each unit step, having turned\
+  \ by delta relative to phi_n, it rotates its stored direction by an increment that\
+  \ is (a) proportional to a saturating odd function of delta and (b) inversely proportional\
+  \ to l_n. The paper's approximate form is Eq. 2, phi_{n+1} = phi_n + delta / l_n,\
+  \ and the form that fits all their data is Eq. 3:\n\n    phi_{n+1} = phi_n + k *\
+  \ (180deg + delta) * (180deg - delta) * delta / l_n,\n    with k = 4.009 x 10^-5\
+  \ deg^-1\n\nk is exactly the normaliser that makes the numerator peak at 90 degrees\
+  \ (the product is maximal at delta ~= 103.9deg, where it evaluates to 89.99deg),\
+  \ as the paper states. The home direction at any moment is phi_n + 180deg. Why it\
+  \ helps: the 1/l_n term makes the stored direction progressively stiffer the further\
+  \ the animal has walked, so late perturbations - a detour, a stride miscount, a\
+  \ momentary heading wobble - move the home vector by an amount that shrinks as 1/l.\
+  \ It is a one-pole low-pass on bearing whose time constant is distance travelled,\
+  \ and it needs no position variable at all: only turns and step counts. Its price\
+  \ is a known, signed, systematic error (Fig. 2B), largest for near-reversals, and\
+  \ zero at delta = 180deg where the increment vanishes identically. The paper argues\
+  \ this is affordable because left and right turns are equally frequent in nature\
+  \ and their opposite-signed errors cancel (Discussion, p. 5289).\n"
+trigger: 'Fires when the goal has been disclosed (goal is not None) AND at least 1.0
+  m of commanded translation has accumulated since the integrator''s anchor was set,
+  so that l_n >= ~7 unit steps and the 1/l_n damping is actually doing something.
+  Below that threshold the port is false and the tree should fall through to whatever
+  computes goal bearing directly from pose_estimate. The leaf is a bearing source
+  only: it reads no lidar and claims no obstacle competence, so it must sit at lower
+  priority than an avoidance leaf.
+
+  '
+derivation: "What maps onto what. (i) The ant's drift-free celestial compass maps\
+  \ onto pose_estimate yaw plus the commanded Twist direction. The paper shows the\
+  \ result is unchanged whether the sun or the polarization compass is used (p. 5288),\
+  \ so heading is treated here as the trusted channel and translation as the untrusted\
+  \ one - which is also the split this robot has, since a random walk added to (x,\
+  \ y, yaw) corrupts accumulated displacement far faster than it corrupts instantaneous\
+  \ heading. This split is my reading, not the paper's. (ii) The ant's stride counter\
+  \ (proprioception, not position) maps onto the integral of the Twist this node itself\
+  \ commands: d = sqrt(vx^2 + vy^2) * dt. It deliberately does NOT map onto ||delta\
+  \ pose_estimate||, which would reinject exactly the drift the mechanism is meant\
+  \ to survive. Mine. (iii) The ant's unit length (one stride) maps onto u = 0.15\
+  \ m. Mine: a Go2 body is ~0.7 m and a comfortable trot stride is roughly a fifth\
+  \ of that, and at the 0.8 m/s speed cap this emits ~5 unit steps per second, which\
+  \ is dense enough for the 1/l_n filter to behave like the continuous Eq. 2 limit\
+  \ the paper takes (\"As l_n is much larger than the unit length, Eq. 1a can be transformed\
+  \ (for l -> inf) to Eq. 2\"). (iv) The ant integrates toward the nest, i.e. toward\
+  \ the origin of its own path. This robot's goal is a fixed known point that is generally\
+  \ not the path origin, so I extend the scheme: the integrator estimates displacement\
+  \ from an anchor, and the anchor-to-goal offset is carried as a constant. This extension\
+  \ is mine.\nState and update, exactly.\n  - Anchor: at episode start if goal is\
+  \ not None, else at the first step where\n    goal latches from None to known. Store\
+  \ A = (ax, ay) = pose_estimate xy at\n    that instant, and the constant offset\
+  \ G = goal - A. Never re-anchor\n    afterwards; re-anchoring from a later pose_estimate\
+  \ would import the drift\n    accumulated up to that moment. Anchor early: drift\
+  \ is a random walk from\n    near zero, so G is least corrupted at the earliest\
+  \ possible anchor.\n  - Initialise phi = current world travel direction = wrap(yaw\
+  \ + atan2(vy, vx))\n    in degrees (use yaw if commanded speed is zero); l = 1.0\
+  \ (never let l fall\n    below 1.0 - it is the divisor).\n  - Each control step\
+  \ accumulate s += sqrt(vx^2 + vy^2) * dt using the Twist\n    this node commanded\
+  \ on the previous step. While s >= u = 0.15:\n      s -= u\n      theta = wrap(yaw\
+  \ + atan2(vy, vx)) in degrees   # direction of this unit step\n      delta = wrap_to_(-180,\
+  \ 180](theta - phi)\n      dphi  = 4.009e-5 * (180.0 + delta) * (180.0 - delta)\
+  \ * delta / l   # Eq. 3\n      dphi  = clip(dphi, -90.0/l, +90.0/l)            #\
+  \ the paper's 90deg cap\n      phi   = wrap(phi + dphi)\n      l    += 1.0\n   \
+  \ Eq. 3 is used verbatim in DEGREES, because k is quoted in deg^-1; convert\n  \
+  \  only at the end. Note the built-in behaviour that delta = 180deg gives\n    dphi\
+  \ = 0 - a perfect reversal writes nothing into phi. That is the paper's\n    own\
+  \ failure mode, not a bug to patch out.\n    (The paper also gives a step-length\
+  \ update, Eq. 1b, but that line is not\n    legibly reproduced in the text I was\
+  \ given, so I use the unambiguous\n    l_{n+1} = l_n + 1 and flag that this differs\
+  \ from the paper if Eq. 1b\n    contains a turn-dependent term.)\n  - Position estimate,\
+  \ replacing pose_estimate translation entirely:\n      p_hat = A + l * u * (cos\
+  \ phi, sin phi)          # phi in radians here\n    and the reciprocal home direction\
+  \ phi + 180deg is what the ant would use\n    to return to A.\n  - Goal bearing:\
+  \ b = wrap_to_(-pi, pi]( atan2(A.y + G.y - p_hat.y,\n                          \
+  \                     A.x + G.x - p_hat.x) - yaw ).\n  - Output Twist: wz = clip(1.5\
+  \ * b, -1.0, 1.0) rad/s;\n    vx = 0.8 * max(0.0, cos b) m/s; vy = 0.0.\n    The\
+  \ gain 1.5 s^-1 is mine, chosen so a 40-degree bearing error saturates\n    wz and\
+  \ the turn completes in under a second at the 1.0 rad/s cap.\n  - Terminate (SUCCESS)\
+  \ when ||A + G - p_hat|| < 0.5 m; RUNNING otherwise;\n    FAILURE if goal is None.\n\
+  All numbers above except k = 4.009e-5 deg^-1, the 90-degree cap and the 1/l_n and\
+  \ (180+delta)(180-delta)delta structure are mine.\n"
+prediction:
+  statement: 'On scenarios where pose_estimate drifts, a robot steering to a goal
+    bearing reconstructed from this Eq.-3 integrator (translation from commanded Twist,
+    heading from yaw, anchored once) reaches the goal on a strictly larger fraction
+    of seeds than the same robot steering to the bearing recomputed each step from
+    pose_estimate directly, because a 1/l_n-damped accumulator fed by proprioception
+    does not inherit the position random walk. It will simultaneously travel further
+    to get there, since Eq. 3 under-rotates phi on near-reversals and near-reversals
+    are common in cluttered indoor space.
+
+    '
+  metric: goal_reached
+  baseline: goal_seeker
+  min_effect: 0.1
+  cost_metric: path_length
+confidence: medium
+generated:
+  condition: b
+  task: navigate_to_goal
+  treatment: paper
+  card_prompt_hash: 9883acb935a57d2b
+  card_row_key: 44d12df4d25b437f
+  card_model_id: claude-opus-5
+  ref_id: path_integration_ants
+  paper_sha256: e9f40cbbd48ac1a9bdfa95b00f5faae737c0b0a32ffc443d665d8222a8ad5da6
+  generated_card_id: ant_path_integration_goal_vector
+  generated_node_name: SteerByPathIntegratedGoalVector
+  citation_substituted: false

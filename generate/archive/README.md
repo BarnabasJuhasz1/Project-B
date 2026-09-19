@@ -48,3 +48,54 @@ pass_rate(V1_STAGING, pipeline_version="v1-single-call")   # a 5/5, b 5/5, d 4/4
 `pass_rate` still refuses to pool pipelines even when pointed here, which is
 belt and braces: the directory separation and the version stamp say the same
 thing twice.
+
+## `v2-exclusive-control/`
+
+The **card-first, exclusive-control** pipeline, retired by chunk 52 on
+2026-09-14. Two calls — the arm writes a card, then one shared node prompt
+(`generate/prompts/node.md`) implements it — but the node it asked for was a
+leaf that **drives**: it won the tick outright and everything below it in the
+`Fallback` went silent.
+
+```
+v2-exclusive-control/staging/       15 candidates + their verdicts
+v2-exclusive-control/transcripts/   15 NODE calls, keyed by prompt hash
+```
+
+⚠️ **The CARD calls are NOT here.** They are still live, in
+`generate/transcripts/`, and so are the cards themselves in `generate/cards/`.
+The card call did not change: v3 reuses every committed card byte for byte and
+regenerates only the node. What was retired is the second call, and only the
+second call's records moved.
+
+### Why it was retired — the measurement, not a preference
+
+Growth round 1, 2026-09-14: each admitted node placed in
+`Fallback[specialist, BASE]` and scored against the base alone on 20 identical
+`maze` worlds.
+
+- Not one of eleven nodes improved the tree. **`fixed` was 0 in every row.**
+- Fire rate inside the tree was bimodal with nothing between: five nodes never
+  fired, six fired on 87.6-100% of ticks. At 100% the base is never ticked at
+  all, so the tree scores exactly what the specialist scores alone.
+- **B−A was exactly zero on every column.**
+
+The prompt `generate/prompts/node.md` that produced them is **kept and never
+edited**, for the same reason `condition_{a,b,d}.md` are: the transcript hash is
+over the rendered prompt. `generator.V2_NODE_PROMPT` is how to reach it.
+
+### What still depends on these
+
+Address them with `generator.V2_STAGING` / `generator.V2_TRANSCRIPTS`:
+
+| consumer | why it needs v2 |
+|---|---|
+| `compose/compose.py` | `RECONSTRUCTION_STAGING` walks live → v2 → v1 |
+| `generate/FINDINGS.md`, growth round 1 | the findings are *about* these records |
+| `out/growth/*.csv` | the round-1 table names these node ids |
+
+```python
+from generate.admit import pass_rate
+from generate.generator import V2_STAGING
+pass_rate(V2_STAGING, pipeline_version="v2-card-first")   # a 4/5, b 7/10
+```

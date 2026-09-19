@@ -21,7 +21,7 @@ denominator**, and the pass rate is what G1 reports.
 The ceiling this enumerates is not a budget. `plan_hash()` is a pure function of
 `(condition, task, card)` and the node id is derived from it, so the reachable
 library is |cards| x |TASKS| for A and B and |TASKS| for D — asserted in
-`generate/tests/test_ceiling.py`, and the reason plans/todo/29 exists.
+`generate/tests/test_ceiling.py`, and the reason plans/done/29 exists.
 
 ⚠️ **THE ROW KEY IS THE CARD PROMPT'S HASH, NOT THE NODE PROMPT'S** — chunk 42.
 The node prompt depends on a card that does not exist until the model writes

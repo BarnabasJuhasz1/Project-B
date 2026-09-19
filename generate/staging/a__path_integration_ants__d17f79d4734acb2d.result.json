@@ -1,0 +1,49 @@
+{
+  "admitted": true,
+  "detail": "valid; contribution not measured (no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9.)",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": null,
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "d17f79d4734acb2d",
+    "card_row_key": "d17f79d4734acb2d",
+    "citation_id": "path_integration_ants",
+    "citation_substituted": false,
+    "condition": "a",
+    "confidence": "medium",
+    "contribution": {
+      "measured": false,
+      "reason": "no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9."
+    },
+    "emitted_code": true,
+    "generated_card_id": "path_integrated_goal_vector",
+    "generated_node_name": "SteerByPathIntegratedGoalVector",
+    "is_traceable": false,
+    "mechanism_family": null,
+    "model_id": "claude-opus-5",
+    "node_id": "gen_a_d17f79d4734acb2d",
+    "origin": "citation",
+    "paper_sha256": null,
+    "pipeline_version": "v3-layered",
+    "precondition_fired": {
+      "drove": 600,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prompt_hash": "d3ea1c6e628006bf",
+    "ref_id": "path_integration_ants",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": null,
+    "span_verified": false,
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "treatment": "citation",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_a_d17f79d4734acb2d",
+  "reason": "admitted"
+}

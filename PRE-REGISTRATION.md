@@ -811,3 +811,152 @@ and what they mean, and the two-corpus split of the 2026-09-06 amendment. The ca
 change to *how each arm's treatment is administered*, not to what the treatments are: A is still
 pointed at a reference and denied its content, B is still the arm with the literature, D still has
 no corpus.
+
+### 2026-09-13 — the benchmark environment is replaced: lab42 gives way to a randomised suite
+
+**What changed, and on whose authority.** The user decided on 2026-09-13 that a new, larger,
+randomised environment suite **replaces lab42 as the benchmark**. Planned in
+`plans/05-epic-environment-suite.md`; nothing is built yet, and this amendment records the
+decision, not a result.
+
+**Non-negotiable #10 is not weakened.** "One unmodified benchmark, one environment" still holds:
+there is still exactly one benchmark and every condition runs on it with identical episode
+counts. It is a different one.
+
+**Why.** Two reasons, and the second is the one that matters for this document:
+
+1. Chunk 44 moves a node's contribution test from a generated micro-world to a tree measured on
+   a shared suite. Three dev scenarios, all solved by `reactive_avoid`, cannot drive that loop.
+2. ⚠️ **It is the only available fix for the power problem this document already declares.**
+   §3 records that `Scenario.seed` reaches only `rng()` and `drift_rng()`, so on an undrifted
+   scenario every replicate seed is the *same episode*; that is why the bootstrap resamples
+   scenarios, why the effective N is 12 rather than 36, and why `scripts/power_analysis.py` puts
+   the rule at ~0.16 power against a true 30-point gap. Procedural randomisation makes replicate
+   seeds genuine samples. No increase in episode count on lab42 achieves this.
+
+**What this amendment DOES settle.**
+
+- The benchmark environment is the new suite. lab42 is retired *as a scoring environment*.
+- lab42 is **not deleted**. It remains the development and debugging scene, the world the
+  sim-free fast loop (`core/tests/kinematic.py`, `harness/ablate.py`,
+  `scripts/plot_kinematic.py`) runs in, and the only way to reproduce historical results.
+- **The 20 committed `results/*.json` are historical**, produced on a superseded benchmark.
+  They are kept and never deleted, per repo convention, and **must not be pooled with any
+  number produced on the new suite.**
+- **lab42's sealed split is retired for benchmarking and is NEVER re-sealed.**
+  `core/scenarios_held_out.py`, `git tag split-v1` and the `00b3312b…` seal stand exactly as
+  they are. The new suite requires a **new** held-out split, authored and sealed separately
+  under chunk 11's procedural rule — in a session that has never had the held-out file in
+  context and has not generated. This session has generated and therefore may not seal it.
+
+**What this amendment does NOT settle, and what may NOT be reported until it does.**
+
+- **G2's X = 0.30 and the entire power analysis were derived against lab42's twelve scenarios
+  and do not transfer.** Both must be re-derived on the new suite, in a further dated
+  amendment, **before the first evaluation run on it**. Until then there is no decision rule
+  for the new benchmark and no G2 number may be reported from it.
+- **The resampling unit is reopened.** `core/stats.py` resamples scenarios *because* seeds are
+  degenerate. If randomisation makes them non-degenerate, that justification lapses and the
+  bootstrap's unit must be re-derived rather than carried over by default.
+- The scenario count, the episode count, the seed offsets, the new split's composition, and
+  SPL's denominator under moving obstacles are all open. SPL is a named secondary in §5; with
+  moving obstacles "the optimal path" is not well defined, and that is a declared open question
+  rather than an implementation detail.
+- `core/preregistration.py`'s frozen-constant registry will fail `verify()` once the scene
+  constants move. That is the registry working as designed. The updated constants are part of
+  the amendment that closes the items above, not a workaround applied ahead of it.
+
+**Threat introduced, declared here in advance.** Replacing the benchmark after the pipeline has
+been built on the old one creates an obvious researcher degree of freedom: the new environment
+could be shaped, consciously or not, to suit the nodes that already exist. Two commitments
+against it — the suite is generated **procedurally from a seed** rather than hand-authored
+scenario by scenario, and the held-out split is sealed **before** any node is generated against
+the new suite, under the same procedural rule that governed the first one.
+
+---
+
+### 2026-09-14 — the arbitration rule: how a tree combines what its nodes propose
+
+**Why this is in this document at all.** Chunk 52 replaced exclusive control with a **layered
+command pipeline**: every node in a `Layer` ticks, the shared base proposes a whole Twist, and
+later nodes revise individual fields of it. That introduces something this project did not have
+before — **a rule for combining proposals that came from neither arm's corpus.** Whoever writes
+that rule is injecting design into every tree in every condition, and B−A would then partly
+measure *our* arbiter rather than the corpus. It is declared here, in advance, for the same
+reason X and the seed set are.
+
+**The rule, in full. There is no more of it than this.**
+
+| combinator | semantics |
+|---|---|
+| `ports.adjust(field=value)` | per-field **last writer wins** |
+| `ports.cap(field=value)` | per-field **`min(|pending|, |value|)`, sign preserved** |
+
+- **Priority is position in the `Layer`, later is higher.** Nothing else orders anything.
+- A node declares `WRITES`, a subset of `(vx, vy, wz)`, and writing outside it **raises**.
+  It is enforced by `nodes/contract.py:PortView`, not by review.
+- A node whose precondition fails leaves the pending command **byte-identical** — asserted by
+  `nodes/tests/test_layer.py`, by object identity rather than by float comparison.
+- **No weights, no scores, no blending, no tuning, and no per-arm anything.** The rule is
+  identical in A, B, C and D, and it is stated in the write-up rather than left implicit.
+
+**Frozen as of this amendment.** Changing either combinator, or the ordering rule, is a further
+dated append. It is not a tuning knob and must never be treated as one.
+
+⚠️ **Layer ORDER is the same hazard and gets the same treatment.** With priority by position,
+the composition's ordering decision is load-bearing. It is produced by the LLM composer under a
+prompt **identical across arms** (`compose/prompts/compose.md`, non-negotiable #6 — port
+contracts and a task spec, never the papers) and is **never hand-tuned per arm**. A tree whose
+node order was adjusted by a human is not reportable.
+
+**What this amendment does NOT settle.**
+
+- Whether the base itself should be decomposed into smaller nodes. Considered and deferred:
+  changing the execution model and splitting a 538-line node in one step leaves no way to
+  attribute a result to either. Revisit as its own chunk.
+- The arbitration rule for a field that two nodes cap *and* adjust in the same tick. Today the
+  answer falls out of position (the later call wins, whichever it was) and no committed node
+  does it. If one ever does, that is a case to declare rather than to resolve silently.
+
+**Threat introduced, declared in advance.** The v3 library is regenerated against a **new node
+prompt** (`generate/prompts/modifier.md`), so v2 and v3 nodes are not comparable and
+`admit.pass_rate` refuses to pool them — the same discipline chunk 42 applied to v1. The
+**card** call is unchanged and every committed card is reused byte for byte, which is
+deliberate: the independent variable must not move at the same time as the execution model, or
+any difference is attributable to neither. The eleven v2 candidates keep their pass-rate
+denominators and are kept intact under `generate/archive/v2-exclusive-control/`.
+
+---
+
+### 2026-09-15 — a question raised against §5's named secondaries, and deliberately NOT settled
+
+**This append settles nothing. It records a problem found in the secondaries before the first
+evaluation run, so that whoever settles it cannot do so after seeing the numbers.**
+
+§5 names `collisions` and `near_misses` among the secondary metrics. Both are
+**lower-is-better counts**, and a count of that shape has a failure mode that showed up the
+first time it was actually measured across controllers:
+
+> **A robot that does not move scores perfectly.**
+
+Measured 2026-09-15, growth suite, 20 `maze` worlds, kinematic. One generated node took
+`collisions` from 0.40 to 0.30 and read as an improvement. It had walked **6.2 m instead of
+30.0 m** and reached the goal in **0 of 20 worlds**. Per metre travelled it collides
+**0.0481 against the base's 0.0133 — 3.6x worse.** The raw count and the normalised count have
+**opposite signs**, and the raw count is the one §5 currently names.
+
+`scripts/measure_growth.py --metrics` now reports both, and flags a disagreement. That is a
+diagnostic tool and it binds nothing.
+
+**What must be decided, in a further dated amendment, BEFORE the first evaluation run:**
+
+- Whether §5's `collisions` and `near_misses` are reported raw, per metre, per episode-second,
+  or conditioned on `goal_reached`.
+- Whether `stuck_events`, `time_stuck` and `recovery_time` — the same shape — take the same
+  treatment.
+- Whether a secondary may be reported at all for a condition whose goal-reach rate differs
+  materially from the comparator's, given that every one of these counts is confounded by how
+  far the robot got.
+
+⚠️ **None of this touches G2.** The primary metric is `goal_reached`, a rate over scenarios, and
+it has none of this problem. X = 0.30 and `core/stats.py:decide()` are untouched by this append.

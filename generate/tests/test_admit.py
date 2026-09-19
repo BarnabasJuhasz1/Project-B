@@ -211,9 +211,32 @@ def test_a_missing_prediction_is_a_rejection():
     assert exc.value.reason == "NO_PREDICTION"
 
 
-def test_a_missing_micro_is_a_rejection():
+def test_a_missing_micro_is_no_longer_a_rejection():
+    """⚠️ INVERTED BY CHUNK 52, deliberately, and this test is kept rather than
+    deleted so the inversion is visible in the diff.
+
+    A micro-world was where a node's claimed effect was measured. Chunk 37
+    measured that the generator writes both the mechanism and the world that
+    judges it — 3 of 7 contributions came back MALFORMED and none cleared the
+    floor — and chunk 44 moved contribution to the tree, on a shared suite. A
+    modifier cannot drive alone anyway, so a micro-world it wrote around a base
+    it was never shown would be evidence about nothing.
+
+    The candidate is still loadable, and a candidate that DOES supply a micro()
+    is still measured on it.
+    """
+    node_cls, prediction, micro_fn, _ = load_candidate(
+        _swap(GOOD, "def micro(seed=0):", "def not_micro(seed=0):"))
+    assert micro_fn is None
+    assert prediction["metric"]
+
+
+def test_a_micro_that_is_not_callable_is_still_a_rejection():
+    """Absent and wrong are different facts. `micro = 3` is a candidate that
+    tried and failed, not a candidate that was not asked."""
     with pytest.raises(Rejected) as exc:
-        load_candidate(_swap(GOOD, "def micro(seed=0):", "def not_micro(seed=0):"))
+        load_candidate(_swap(GOOD, "def micro(seed=0):",
+                             "micro = 3\n\n\ndef not_micro(seed=0):"))
     assert exc.value.reason == "NO_MICRO"
 
 
@@ -607,3 +630,88 @@ def test_the_firing_rate_separates_never_fired_from_did_not_help():
     assert fired["passed"] == 0
     assert fired["fraction"] == 0.0
     assert fired["drove"] == 0
+
+
+# --- chunk 52: a modifier is admitted in the tree it will live in -----------
+
+MODIFIER = '''
+import math
+
+import numpy as np
+
+from nodes.contract import Action, Direction, Port, PortType, Status
+
+
+class CapSpeedToStoppingDistance(Action):
+    """Bounds forward speed to what can be braked within the visible range."""
+
+    WRITES = ("vx",)
+    PORTS = (Port("safe_speed", PortType.SPEED, Direction.OUT),)
+    PRECONDITION = "the forward scan returns something finite"
+    EFFECT = "bounds vx"
+    TAGS = ("speed",)
+
+    def _ahead(self, obs):
+        near = np.abs(obs.range_angles) < 0.4
+        r = obs.ranges[near]
+        r = r[np.isfinite(r)]
+        return float(np.min(r)) if r.size else None
+
+    def precondition(self, obs, ports):
+        return self._ahead(obs) is not None
+
+    def tick(self, obs, ports):
+        safe = math.sqrt(2.0 * 1.0 * max(0.0, self._ahead(obs) - 0.3))
+        ports["safe_speed"] = safe
+        ports.cap(vx=safe)
+        return Status.RUNNING
+
+
+PREDICTION = {"metric": "min_clearance", "baseline": "reactive_avoid",
+              "min_effect": 0.1, "cost_metric": "time_to_goal"}
+'''
+
+OVERREACHING_MODIFIER = MODIFIER.replace("ports.cap(vx=safe)",
+                                         "ports.adjust(wz=1.0)")
+
+
+def test_a_modifier_is_admitted_and_is_built_on_the_shared_base():
+    """A modifier cannot drive, so alone it has nothing to revise and PortView
+    raises. `build_tree` puts it where it will actually live."""
+    from generate.admit import build_tree, load_candidate, _node_metadata
+    from nodes.contract import Kind
+    from nodes.tree import Layer
+
+    result = admit(META, MODIFIER)
+    assert result.admitted, result.detail
+
+    node_cls, _, micro_fn, _ = load_candidate(MODIFIER, "mod")
+    assert micro_fn is None, "the modifier prompt does not ask for a micro()"
+    tree = build_tree(node_cls, _node_metadata(META, META["node_id"]))
+    assert isinstance(tree.root, Layer)
+    # base first, candidate last: the base proposes, the modifier revises.
+    kinds = [type(n).__name__ for n in tree.root.children]
+    assert kinds[0] == "ContractPorts" and kinds[-1] == node_cls.__name__
+    assert any(n.KIND is Kind.ACTION and not n.is_modifier
+               for n in tree.root.children), "no driver in the layer"
+
+
+def test_a_modifier_that_writes_a_field_it_did_not_declare_is_rejected():
+    """The field scope is what makes 'supports the base rather than replacing
+    it' enforced. A node that breaks it is rejected by the contract, not by a
+    reviewer noticing."""
+    result = admit(META, OVERREACHING_MODIFIER)
+    assert not result.admitted
+    assert result.reason == "INVALID_NODE"
+    assert "does not declare in WRITES" in result.detail
+
+
+def test_the_fire_rate_separates_never_ran_from_ran_and_did_nothing():
+    """`drove` is 'the command changed while this node ticked'. For a modifier
+    that means its adjustment BIT — a cap already satisfied leaves the command
+    untouched and is correctly counted as having done nothing, which round 1
+    could not distinguish from never firing."""
+    result = admit(META, MODIFIER)
+    fired = result.metadata["precondition_fired"]
+    assert fired["ticks"] > 0
+    assert set(fired) == {"ticks", "passed", "drove", "fraction"}

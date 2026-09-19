@@ -1,0 +1,23 @@
+{
+  "backend": "claude-cli",
+  "card_id": "limit_speed_dwa",
+  "card_model_id": "claude-opus-5",
+  "card_prompt_hash": "a5034b32b2b86e4f",
+  "card_row_key": "511949acd4ca4c0f",
+  "citation_id": null,
+  "citation_substituted": false,
+  "condition": "b",
+  "emitted_code": true,
+  "generated_card_id": "braking_admissible_velocity_filter",
+  "generated_node_name": "ClampTwistToBrakingAdmissible",
+  "model_id": "claude-opus-5",
+  "node_id": "gen_b_511949acd4ca4c0f",
+  "paper_sha256": "7b398d18448ca622a4011957a57dd32714cc97c8e8f981a98722baafa7f68ff1",
+  "pipeline_version": "v2-card-first",
+  "prompt_hash": "5ba4ae4d22282f0f",
+  "ref_id": "limit_speed_dwa",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "search_for_goal",
+  "temperature": null,
+  "treatment": "paper"
+}

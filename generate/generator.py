@@ -62,7 +62,26 @@ from generate.cardgen import (CITATION_CONDITIONS,  # noqa: F401
 
 PROMPTS = Path(__file__).resolve().parent / "prompts"
 STAGING = Path(__file__).resolve().parent / "staging"
-NODE_PROMPT = PROMPTS / "node.md"
+
+# THE NODE CALL'S PROMPT — `modifier.md` since chunk 52.
+#
+# `node.md` asked for a leaf that DRIVES, and every node it produced seized the
+# whole Twist. Growth round 1 measured what that costs: of eleven admitted
+# nodes, none improved the tree, six fired on 87.6-100% of ticks and silenced
+# the base entirely, and `fixed` was 0 in every row. `modifier.md` asks for a
+# node that REVISES the base's command — see nodes/contract.py, chunk 52.
+#
+# Still ONE FILE FOR EVERY ARM, which is the property that matters: the
+# independent variable lives entirely in the card call, and `render_node` has no
+# condition parameter.
+NODE_PROMPT = PROMPTS / "modifier.md"
+
+# SUPERSEDED, KEPT, NEVER EDITED — same discipline as `condition_{a,b,d}.md`.
+# Every v2 transcript was rendered from this file and the hash is over the
+# rendered prompt, so editing it would orphan its own record. `generate/base.py`
+# also splices its contract section, deliberately: the base was written against
+# THIS text and is frozen, so it must keep being describable by it.
+V2_NODE_PROMPT = PROMPTS / "node.md"
 
 # THE v1 RECORDS, MOVED ASIDE 2026-09-08 — not deleted.
 #
@@ -80,6 +99,22 @@ ARCHIVE = Path(__file__).resolve().parent / "archive"
 V1_STAGING = ARCHIVE / "v1-single-call" / "staging"
 V1_TRANSCRIPTS = ARCHIVE / "v1-single-call" / "transcripts"
 
+# THE v2 RECORDS, MOVED ASIDE 2026-09-14 by chunk 52 — again, not deleted.
+#
+# ⚠️ THIS IS A DEVIATION FROM CHUNK 52 AS WRITTEN, and the reason is mechanical.
+# The chunk said the eleven v2 candidates would "remain in generate/staging/",
+# and they cannot: `plan_hash` is a pure function of (condition, task, card),
+# the cards are NOT regenerated, so a v3 candidate lands on the identical stem.
+# `batch.plan()` would see a rejection already recorded for that stem and skip
+# the row forever — and "a rejection is never retried" is the rule G1's
+# denominator depends on. Two experiments cannot share a key.
+#
+# Nothing is lost: the records are intact, `pass_rate(pipeline_version=...)`
+# still reads them, and they still back growth round 1 and the findings drawn
+# from it. See generate/archive/README.md.
+V2_STAGING = ARCHIVE / "v2-exclusive-control" / "staging"
+V2_TRANSCRIPTS = ARCHIVE / "v2-exclusive-control" / "transcripts"
+
 # ---------------------------------------------------------------------------
 # Everything below this line is data, not code.
 # ---------------------------------------------------------------------------
@@ -93,7 +128,13 @@ CONDITIONS = ("a", "b", "d")
 # pass rate over two different treatments and label it with the condition's
 # letter. `admit.pass_rate` buckets on this and refuses to pool. Nothing is
 # deleted and nothing is rewritten.
-PIPELINE_VERSION = "v2-card-first"
+# ⚠️ BUMPED BY CHUNK 52 (2026-09-14). v2 and v3 share the card call byte for
+# byte — the cards are not regenerated — and differ in the NODE call: v2 asked
+# for a leaf that drives and wins the tick, v3 asks for a modifier that revises
+# the base's command inside a `Layer`. Those are different treatments of the
+# same card, so a pass rate pooled over both would be one number over two
+# experiments wearing one condition's letter. `pass_rate` buckets on this.
+PIPELINE_VERSION = "v3-layered"
 
 # The capability-driven retrieval query, per §5: "the task specification is the
 # retrieval query, the corpus is asked what mechanisms are known for this class
@@ -570,6 +611,34 @@ def generate(condition, task, backend, card=None, node_id=None,
         candidate.write(staging)
         return candidate
 
+    return node_call(condition, task, generated, backend, card_id=card_id,
+                     citation_id=citation_id, key=key, node_id=node_id,
+                     staging=staging, transcripts=transcripts, record=record)
+
+
+def node_call(condition, task, generated, backend, card_id=None,
+              citation_id=None, key=None, node_id=None, staging=None,
+              transcripts=None, record=True):
+    """THE SECOND CALL, on its own: one committed card -> one staged candidate.
+
+    Split out of `generate()` by chunk 52 so that the node call can be re-made
+    WITHOUT re-making the card call. That is not a convenience — it is what makes
+    the regeneration honest. The layered pipeline changed the second call and
+    nothing else, so A's and B's cards must be reused byte for byte; writing new
+    ones would change the independent variable at the same time as the execution
+    model and leave the comparison attributable to neither.
+
+    `scripts/regenerate_modifiers.py` is the caller that does that.
+    """
+    # ⚠️ `generated.key` FIRST, and the bug that put this comment here: for the
+    # arm handed a document, the card prompt carries 50k characters of PDF, so
+    # its `prompt_hash` is NOT the grid row key — `plan_hash` hashes a stand-in
+    # instead. Defaulting to `prompt_hash` staged six B candidates under stems
+    # their own cards did not share, so `load_generated_card` could not find the
+    # card the node was built from and `admit_staged` failed on a missing file.
+    # `GeneratedCard.stem` uses `key or prompt_hash`; so does this, or the two
+    # disagree for exactly one arm.
+    key = key or generated.key or generated.prompt_hash
     node_prompt = render_node(generated.card, task)
     try:
         node_response = backend.complete(node_prompt)

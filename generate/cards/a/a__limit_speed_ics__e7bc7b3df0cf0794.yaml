@@ -1,0 +1,102 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition A's card call (given the reference alone).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: inevitable_collision_state_filter
+node_name: FilterInevitableCollisionStates
+source:
+  citation: 'Fraichard, T. & Asama, H. (2004). "Inevitable Collision States: a step
+    towards safer robots." Advanced Robotics 18(10), 1001-1024.
+
+    '
+  span: ''
+  verified: unverified
+mechanism: 'A state is an Inevitable Collision State (ICS) if there exists NO admissible
+  future control trajectory from it that avoids collision — the collision is already
+  committed, whatever the robot does next. The paper''s central claim is that avoiding
+  collision at the current instant, or over any fixed finite look- ahead, is not a
+  safety property: a robot with inertia and finite deceleration can be collision-free
+  right now and still be doomed. Safety is therefore a property of the state plus
+  the system''s own dynamics, and the correct test is "does at least one evasive manoeuvre
+  from this state terminate in a safe (stopped, collision-free) state?" The paper''s
+  second result is what makes this computable: evaluating only a SUBSET of the possible
+  evasive manoeuvres yields a conservative over-approximation of the ICS set — a subset
+  can only ever declare a state unsafe when the full set would have found an escape,
+  never the reverse. So a small, fixed repertoire of braking manoeuvres is a sound
+  safety filter, not a heuristic one. It helps here because in an unmapped indoor
+  space the obstruction is typically revealed late; a purely instantaneous avoidance
+  rule accepts commands that carry the robot past the last point at which it could
+  still have stopped.
+
+  '
+trigger: 'Applies on every control step, as a veto on the Twist that some other node
+  has already chosen, whenever the robot is commanded to move (commanded speed magnitude
+  > 0.05 m/s) AND at least one finite lidar return lies within 2.0 m of the robot.
+  Outside that condition the proposed command passes through unmodified. It is a filter,
+  not a planner: it never proposes a direction, it only refuses one and substitutes
+  braking.
+
+  '
+derivation: "Numbers below are mine; the paper fixes the structure of the test, not\
+  \ the constants for a Go2.\n(1) Braking model. Nothing above the frozen policy controls\
+  \ the joints, so the only evasive manoeuvre available is to command the Twist toward\
+  \ zero and let the policy decelerate. Treat that as a lag plus a constant deceleration:\
+  \ tau_lag = 0.4 s (roughly two gait cycles before the commanded change is realised\
+  \ in body velocity) and a_brake = 1.0 m/s^2. Robot inflation radius r_body = 0.35\
+  \ m (Go2 body ~0.70 m x 0.31 m; use the circumscribed radius so the check is orientation-free).\
+  \ Stopping distance for a commanded planar speed v = hypot(vx, vy):\n    d_stop(v)\
+  \ = v * tau_lag + v^2 / (2 * a_brake) + r_body\nAt the saturation limit v = 0.8\
+  \ m/s this is 0.32 + 0.32 + 0.35 = 0.99 m, so the whole test lives well inside range_max\
+  \ = 6.0 m and is never limited by sensor horizon. This is the quantity the paper\
+  \ says a purely instantaneous check ignores.\n(2) The evasive-manoeuvre subset B.\
+  \ Three manoeuvres, each = hold the proposed command for one control step dt, then\
+  \ ramp to zero over tau_lag + v/a_brake:\n    B0: brake with wz held at the proposed\
+  \ value (straight-ish stop)\n    B+: brake with wz = +1.0 rad/s (turn-away-left\
+  \ stop)\n    B-: brake with wz = -1.0 rad/s (turn-away-right stop)\nIntegrate each\
+  \ as a unicycle in the ROBOT frame at 20 Hz, producing a swept polyline of body\
+  \ centres. The proposed command is ICS-free if ANY of the three swept paths keeps\
+  \ every point at least r_body from every finite lidar return; it is ICS if all three\
+  \ fail. Because B is a strict subset of the true control set, this over-approximates\
+  \ the ICS set exactly as the paper's conservative property guarantees.\n(3) Obstacle\
+  \ set. Build the check from the current scan alone: each finite range r_i at bearing\
+  \ theta_i is a point (r_i*cos, r_i*sin) in the robot frame. Beams returning inf\
+  \ carry no information beyond range_max and are treated as free — sound here because\
+  \ d_stop_max = 0.99 m << 6.0 m, so every braking path terminates deep inside sensed\
+  \ space. Doing the whole test in the robot frame from raw beams is deliberate: it\
+  \ never touches pose_estimate, so it is exactly as valid on drifting-odometry scenarios\
+  \ as on clean ones, and pose_error_estimate does not enter.\n(4) Substitution. If\
+  \ the proposed command is ICS, do not pass it and do not pass zero blindly: emit\
+  \ the manoeuvre from B with the largest minimum clearance over its swept path, scaled\
+  \ to the largest speed for which that manoeuvre is still ICS-free (bisect on a speed\
+  \ scale factor in {1.0, 0.75, 0.5, 0.25, 0.0}, take the largest that passes). If\
+  \ none passes, emit (0, 0, 0). This keeps the robot at the boundary of the safe\
+  \ set rather than deep inside it, which is what keeps the cost in path efficiency\
+  \ bounded.\n(5) Hysteresis. Re-evaluate every step; add no latch. A one-step veto\
+  \ that clears next step is correct behaviour, because the ICS property is a property\
+  \ of the current state and the current scan.\n"
+prediction:
+  statement: 'Wrapping the motion command in the ICS braking-feasibility filter reduces
+    the number of collisions per episode, averaged over seeds, by at least 50% relative
+    to the reactive_avoid baseline, which avoids currently-occupied space but does
+    not check that a stop remains feasible. The effect should be concentrated in exactly
+    the cases the mechanism predicts: obstacles first sensed at less than d_stop(v)
+    ahead while the robot is near saturation speed.
+
+    '
+  metric: collisions
+  baseline: reactive_avoid
+  min_effect: 0.5
+  cost_metric: spl
+confidence: medium
+generated:
+  condition: a
+  task: navigate_to_goal
+  treatment: citation
+  card_prompt_hash: e7bc7b3df0cf0794
+  card_row_key: e7bc7b3df0cf0794
+  card_model_id: claude-opus-5
+  ref_id: limit_speed_ics
+  paper_sha256: null
+  generated_card_id: inevitable_collision_state_filter
+  generated_node_name: FilterInevitableCollisionStates
+  citation_substituted: false

@@ -1,0 +1,49 @@
+{
+  "admitted": true,
+  "detail": "valid; contribution not measured (no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9.)",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "limit_speed_dwa",
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "a5034b32b2b86e4f",
+    "card_row_key": "511949acd4ca4c0f",
+    "citation_id": null,
+    "citation_substituted": false,
+    "condition": "b",
+    "confidence": "medium",
+    "contribution": {
+      "measured": false,
+      "reason": "no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9."
+    },
+    "emitted_code": true,
+    "generated_card_id": "braking_admissible_velocity_filter",
+    "generated_node_name": "ClampTwistToBrakingAdmissible",
+    "is_traceable": false,
+    "mechanism_family": "LimitSpeedToVisibleRange",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_511949acd4ca4c0f",
+    "origin": "card",
+    "paper_sha256": "7b398d18448ca622a4011957a57dd32714cc97c8e8f981a98722baafa7f68ff1",
+    "pipeline_version": "v3-layered",
+    "precondition_fired": {
+      "drove": 475,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prompt_hash": "4ceccbd050c723b1",
+    "ref_id": "limit_speed_dwa",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": "Section 4.1, subsection \"Admissible Velocities\", Eq. (14) \u2014 the set Va = {(v,w) | v <= sqrt(2 * dist(v,w) * vb_dot) AND w <= sqrt(2 * dist(v,w) * wb_dot)}; with the arc-clearance definition dist = gamma * r from Section 5.2 (\"The Obstacle Line Field\") and Figure 19. Example 1 in Section 4.1 gives RHINO's braking accelerations vb_dot = 50 cm/sec^2, wb_dot = 60 deg/sec^2.\n",
+    "span_verified": false,
+    "task": "search_for_goal",
+    "temperature": null,
+    "treatment": "paper",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_511949acd4ca4c0f",
+  "reason": "admitted"
+}

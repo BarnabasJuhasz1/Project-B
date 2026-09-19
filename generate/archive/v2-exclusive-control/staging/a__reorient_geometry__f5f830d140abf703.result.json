@@ -1,0 +1,63 @@
+{
+  "admitted": true,
+  "detail": "valid; goal_reached effect 0.000 against a reported floor of 0.500",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": null,
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "f5f830d140abf703",
+    "card_row_key": "f5f830d140abf703",
+    "citation_id": "reorient_geometry",
+    "citation_substituted": false,
+    "condition": "a",
+    "confidence": "medium",
+    "contribution": {
+      "baseline": 0.0,
+      "candidate": 0.0,
+      "cleared_floor": false,
+      "effect": 0.0,
+      "measured": true,
+      "metric": "goal_reached",
+      "reason": "effect 0.000 below the required 0.500",
+      "required": 0.5
+    },
+    "emitted_code": true,
+    "generated_card_id": "geometric_boundary_reorientation",
+    "generated_node_name": "ReorientToBoundaryGeometry",
+    "is_traceable": false,
+    "mechanism_family": null,
+    "model_id": "claude-opus-5",
+    "node_id": "gen_a_f5f830d140abf703",
+    "origin": "citation",
+    "paper_sha256": null,
+    "pipeline_version": "v2-card-first",
+    "precondition_fired": {
+      "drove": 0,
+      "fraction": 0.0,
+      "passed": 0,
+      "ticks": 600
+    },
+    "prediction_restated_faithfully": true,
+    "prompt_hash": "72b2dcaeb8c2428b",
+    "ref_id": "reorient_geometry",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": null,
+    "span_verified": false,
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "treatment": "citation",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_a_f5f830d140abf703",
+  "reason": "admitted",
+  "unit": {
+    "baseline": 0.0,
+    "candidate": 0.0,
+    "effect": 0.0,
+    "metric": "goal_reached",
+    "required": 0.5
+  }
+}

@@ -76,3 +76,8 @@ out/
 # cannot work, because git never descends into an excluded directory.
 # Anchored with a leading slash so out/runs/ stays ignored (out/ covers it).
 !/runs/
+
+# Generated-world USDs: ~19 MB each and a pure function of (tier, seed), so
+# rebuildable with scripts/export_world.py rather than committed. scenes/lab42_v1.usd
+# IS committed — it is hand-authored and there is no generator for it.
+scenes/generated/

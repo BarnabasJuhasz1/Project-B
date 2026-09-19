@@ -1,0 +1,23 @@
+{
+  "backend": "claude-cli",
+  "card_id": null,
+  "card_model_id": "claude-opus-5",
+  "card_prompt_hash": "d17f79d4734acb2d",
+  "card_row_key": "d17f79d4734acb2d",
+  "citation_id": "path_integration_ants",
+  "citation_substituted": false,
+  "condition": "a",
+  "emitted_code": true,
+  "generated_card_id": "path_integrated_goal_vector",
+  "generated_node_name": "SteerByPathIntegratedGoalVector",
+  "model_id": "claude-opus-5",
+  "node_id": "gen_a_d17f79d4734acb2d",
+  "paper_sha256": null,
+  "pipeline_version": "v2-card-first",
+  "prompt_hash": "d6402fec311ac036",
+  "ref_id": "path_integration_ants",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "navigate_to_goal",
+  "temperature": null,
+  "treatment": "citation"
+}

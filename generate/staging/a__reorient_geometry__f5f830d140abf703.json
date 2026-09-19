@@ -1,0 +1,23 @@
+{
+  "backend": "claude-cli",
+  "card_id": null,
+  "card_model_id": "claude-opus-5",
+  "card_prompt_hash": "f5f830d140abf703",
+  "card_row_key": "f5f830d140abf703",
+  "citation_id": "reorient_geometry",
+  "citation_substituted": false,
+  "condition": "a",
+  "emitted_code": true,
+  "generated_card_id": "geometric_boundary_reorientation",
+  "generated_node_name": "ReorientToBoundaryGeometry",
+  "model_id": "claude-opus-5",
+  "node_id": "gen_a_f5f830d140abf703",
+  "paper_sha256": null,
+  "pipeline_version": "v3-layered",
+  "prompt_hash": "722c083d6ed117d4",
+  "ref_id": "reorient_geometry",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "navigate_to_goal",
+  "temperature": null,
+  "treatment": "citation"
+}

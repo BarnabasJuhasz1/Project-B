@@ -1,0 +1,23 @@
+{
+  "backend": "claude-cli",
+  "card_id": "path_integration_mammals",
+  "card_model_id": "claude-opus-5",
+  "card_prompt_hash": "ef76accf91939dc4",
+  "card_row_key": "78bda1e50f89596a",
+  "citation_id": null,
+  "citation_substituted": false,
+  "condition": "b",
+  "emitted_code": true,
+  "generated_card_id": "pi_terminal_spiral_search",
+  "generated_node_name": "SpiralSearchAtBelievedGoal",
+  "model_id": "claude-opus-5",
+  "node_id": "gen_b_78bda1e50f89596a",
+  "paper_sha256": "fef30a6310c32f30c7c234e0e1a2a5cc1b986e83d6410ce571e9d3535245792c",
+  "pipeline_version": "v3-layered",
+  "prompt_hash": "30aff56b7214c61c",
+  "ref_id": "path_integration_mammals",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "navigate_to_goal",
+  "temperature": null,
+  "treatment": "paper"
+}

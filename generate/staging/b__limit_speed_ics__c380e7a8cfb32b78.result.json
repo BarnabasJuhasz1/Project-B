@@ -1,0 +1,49 @@
+{
+  "admitted": true,
+  "detail": "valid; contribution not measured (no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9.)",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "limit_speed_ics",
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "19215297ee7633ea",
+    "card_row_key": "c380e7a8cfb32b78",
+    "citation_id": null,
+    "citation_substituted": false,
+    "condition": "b",
+    "confidence": "medium",
+    "contribution": {
+      "measured": false,
+      "reason": "no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9."
+    },
+    "emitted_code": true,
+    "generated_card_id": "brake_within_visible_free_space",
+    "generated_node_name": "CapSpeedToBrakingHorizon",
+    "is_traceable": false,
+    "mechanism_family": "LimitSpeedToVisibleRange",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_c380e7a8cfb32b78",
+    "origin": "card",
+    "paper_sha256": "32a1b5f27a7fd3e9e9ef55402358b06e803dc99c3ca4adda874a41ece7365bb5",
+    "pipeline_version": "v3-layered",
+    "precondition_fired": {
+      "drove": 0,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prompt_hash": "052dfaf72dab1d9e",
+    "ref_id": "limit_speed_ics",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": "\u00a7I with Fig. 1 (braking-distance ICS: \"assuming that it takes a certain distance d to slow down and stop, the states corresponding to the wall and the states located at a distance less than d to the left of the wall are such that, when A is in such a state, no matter what it does in the future, a collision will occur\"); Property 1, \u00a7III (\"ICS(B) = \u2229_\u0169 ICS(B,\u0169)\"); and Def. 3 (Safe State), stated in \u00a7V immediately before \u00a7V-B with Fig. 8: \"s is safe state iff s \u2209 ICS(FoV_\u03b4) and s \u2209 ICS(B_i) for every known obstacle B_i\", where FoV_\u03b4 is the part of the field-of-view boundary corresponding to the sensing range.\n",
+    "span_verified": false,
+    "task": "search_for_goal",
+    "temperature": null,
+    "treatment": "paper",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_c380e7a8cfb32b78",
+  "reason": "admitted"
+}

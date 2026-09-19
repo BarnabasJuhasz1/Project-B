@@ -42,7 +42,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from nodes.contract import Kind, NodeMetadata, Origin
-from nodes.tree import Fallback, Sequence, Tree, WiringError
+from nodes.tree import Fallback, Layer, Sequence, Tree, WiringError
 
 from compose import retrieve as retrieve_mod
 from compose.library import LibraryReconstructionError, load_library
@@ -52,18 +52,43 @@ PROMPTS = Path(__file__).resolve().parent / "prompts"
 RECORDS = Path(__file__).resolve().parent / "compositions"
 
 # Where a HISTORICAL reconstruction looks for the nodes a record names: the live
-# staging first, then the archived one-call records. Live-only is what
+# staging first, then each archived pipeline, newest first. Live-only is what
 # `load_library()` still defaults to, so the current library stays a clean slate;
 # this wider path is used only when rebuilding something already recorded.
-from generate.generator import STAGING as _LIVE_STAGING, V1_STAGING as _V1_STAGING
-RECONSTRUCTION_STAGING = (_LIVE_STAGING, _V1_STAGING)
+# Chunk 52 added the v2 leg when the exclusive-control candidates were moved
+# aside — without it every record naming one becomes UNRECONSTRUCTABLE_LIBRARY.
+from generate.generator import (STAGING as _LIVE_STAGING,
+                                V1_STAGING as _V1_STAGING,
+                                V2_STAGING as _V2_STAGING)
+RECONSTRUCTION_STAGING = (_LIVE_STAGING, _V2_STAGING, _V1_STAGING)
 
 # One fenced json block, the same shape as the generator's code fence and for
 # the same reason: two blocks means the output contract was not followed, and
 # picking one would be the harness choosing the composition.
 JSON_FENCE = re.compile(r"```(?:json)?\n(?P<body>.*?)```", re.S)
 
-COMPOSITES = {"sequence": Sequence, "fallback": Fallback}
+# ⚠️ `layer` ADDED BY CHUNK 52, and it is the important one now. A generated
+# node revises the base's command rather than seizing it, and neither of the
+# other two can express that: Sequence stops on anything that is not SUCCESS and
+# Fallback on anything that is not FAILURE, so a driver returning RUNNING
+# starves everything after it.
+#
+# ⚠️ Layer ORDER is a researcher degree of freedom — with priority by position
+# the composer's ordering decision changes what the tree does. It is produced by
+# the model under a prompt IDENTICAL ACROSS ARMS and is never hand-tuned per arm;
+# see compose/FINDINGS.md and the 2026-09-14 PRE-REGISTRATION amendment.
+COMPOSITES = {"sequence": Sequence, "fallback": Fallback, "layer": Layer}
+
+# THE COMPOSITION PROMPT — `compose_layered.md` since chunk 52.
+#
+# `compose.md` is SUPERSEDED, KEPT and NEVER EDITED, the same discipline
+# `generate/prompts/node.md` and `condition_{a,b,d}.md` live under: the
+# transcript hash is over the RENDERED prompt, so editing it orphans the eight
+# committed compositions and the replay tests that reproduce them. Editing it in
+# place is exactly what was tried first, and it broke two of them within the
+# minute.
+COMPOSE_PROMPT = PROMPTS / "compose_layered.md"
+V1_COMPOSE_PROMPT = PROMPTS / "compose.md"
 
 
 class CompositionError(Exception):
@@ -98,9 +123,16 @@ def render_node(entry):
     ])
 
 
-def render(spec, retrieval):
-    """The exact text sent to the model. Hashed, recorded, replayable."""
-    text = (PROMPTS / "compose.md").read_text(encoding="utf-8")
+def render(spec, retrieval, prompt=None):
+    """The exact text sent to the model. Hashed, recorded, replayable.
+
+    `prompt` exists only so a COMMITTED composition can still be checked against
+    the prompt it was actually taken against — pass `V1_COMPOSE_PROMPT`. It is
+    the same role `generator.render_v1` plays for the v1 node transcripts, and
+    it is not a knob: a live composition renders `COMPOSE_PROMPT` or the
+    comparison is between two different prompts.
+    """
+    text = (prompt or COMPOSE_PROMPT).read_text(encoding="utf-8")
     nodes = "\n\n".join(render_node(e) for e in retrieval.entries)
     if not nodes:
         raise CompositionError(
@@ -318,7 +350,8 @@ class Composition:
 
 def compose(spec, library, backend, retrieval=None, snapshot=None,
             include_toys=False, kind="initial", repair_of=None,
-            record=True, records=None, transcripts=None, conditions=None):
+            record=True, records=None, transcripts=None, conditions=None,
+            prompt_file=None):
     """One composition call: spec -> retrieval -> model -> tree.
 
     Never raises for a plan's own faults; a bad plan is a recorded failure with
@@ -328,7 +361,7 @@ def compose(spec, library, backend, retrieval=None, snapshot=None,
 
     retrieval = retrieval or retrieve_mod.retrieve(library, spec)
     snapshot = snapshot or library.snapshot()
-    prompt = render(spec, retrieval)
+    prompt = render(spec, retrieval, prompt=prompt_file)
     response = backend.complete(prompt)
 
     if record:

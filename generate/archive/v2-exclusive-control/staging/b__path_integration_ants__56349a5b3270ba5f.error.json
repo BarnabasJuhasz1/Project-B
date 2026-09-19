@@ -1,0 +1,15 @@
+{
+  "condition": "b",
+  "duration_api_ms": null,
+  "error": "generation timed out after 600s",
+  "key": "56349a5b3270ba5f",
+  "kind": "node",
+  "pipeline_version": "v2-card-first",
+  "prompt_chars": 17984,
+  "prompt_hash": "950e3bac2ce00a0f",
+  "stem": "b__path_integration_ants__56349a5b3270ba5f",
+  "stop_reason": null,
+  "task": "search_for_goal",
+  "total_cost_usd": null,
+  "usage": {}
+}

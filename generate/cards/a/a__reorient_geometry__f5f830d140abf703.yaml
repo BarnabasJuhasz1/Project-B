@@ -1,0 +1,108 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition A's card call (given the reference alone).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: geometric_boundary_reorientation
+node_name: ReorientToBoundaryGeometry
+source:
+  citation: 'Cheng, K. (1986). "A purely geometric module in the rat''s spatial representation."
+    Cognition 23(2), 149-178.
+
+    '
+  span: ''
+  verified: unverified
+mechanism: 'Cheng found that a disoriented rat re-establishes its spatial frame from
+  the metric shape of the extended surface layout — the relative lengths and arrangement
+  of the bounding walls — and not from featural cues attached to places, even when
+  those features are salient and would fully disambiguate the location. The signature
+  of this is the rotational error: in a rectangular arena the animal searched at the
+  correct corner and at the corner related to it by a 180-degree rotation at approximately
+  equal rates, because those two corners are indistinguishable to a purely geometric
+  representation. Two things follow that matter for a robot. First, the boundary shape
+  is a heading reference that does not accumulate error: unlike dead reckoning, the
+  walls do not drift, so re-anchoring belief to them cancels accumulated odometric
+  error rather than compounding it. Second, that reference is only ever determined
+  up to the symmetry group of the shape, so a reorientation system built on it must
+  refuse any correction large enough to be a symmetry-induced misassignment instead
+  of committing to it. The mechanism is therefore: when the pose belief is suspect,
+  freeze translation, extract the principal axis of the surrounding surface layout,
+  and rotate the believed yaw onto the axis frame that was recorded while the belief
+  was still trustworthy — accepting only corrections small enough to be unambiguous
+  under that symmetry.
+
+  '
+trigger: 'Fires when the robot''s own confidence in its pose belief has degraded past
+  a threshold while a usable boundary is visible: pose_error_estimate exceeds 0.5
+  m, AND the current scan defines an axis (see derivation: enough finite returns,
+  sufficiently elongated return cloud), AND at least 5.0 s of sim time has elapsed
+  since this node last completed. It does not fire when the belief is trusted, when
+  the visible surroundings are too open or too rotationally symmetric to define an
+  axis, or when the required correction turns out to exceed the unambiguous range.
+
+  '
+derivation: 'All numbers here are mine; Cheng''s arena and metric do not transfer
+  directly. (1) Axis extraction. Take the beams with finite range below range_max
+  = 6.0 m, convert to robot-frame points p_i = r_i * (cos a_i, sin a_i), subtract
+  their centroid, and form the 2x2 second-moment matrix. Its eigenvectors give the
+  principal axis of the visible surface layout; the axis is an undirected line, so
+  it is defined modulo 180 degrees. This is the sensor analogue of "shape of the extended
+  surfaces": it is dominated by walls, which subtend many beams, and is insensitive
+  to any single feature, which subtends few — the encapsulation from features is preserved
+  by construction. (2) Admissibility. Require at least 40 of the 181 beams finite
+  (about 22% of the circle; below that the cloud is a fragment and the moment matrix
+  is dominated by one wall segment), and require eigenvalue ratio lambda_min/lambda_max
+  < 0.6, i.e. the cloud is at least modestly elongated. A ratio near 1.0 means a rotationally
+  symmetric view — an open floor or a square room centre — where Cheng''s module has
+  nothing to lock onto and the correction would be arbitrary. If either test fails,
+  the node returns FAILURE and changes nothing. (3) Reference frame. Whenever pose_error_estimate
+  <= 0.25 m (half the trigger threshold, so the reference is only ever laid down while
+  the belief is clearly trusted), store the axis in world coordinates: theta_ref =
+  yaw_belief + axis_angle_robot, wrapped into [0, 90) degrees, i.e. reduced modulo
+  the 90-degree rectilinear symmetry of an indoor layout, together with an exponential
+  average over the last 2.0 s to smooth gait-induced body sway. (4) Correction. On
+  fire, command vx = vy = wz = 0 for 0.5 s while averaging the axis over the scans
+  in that window — the frozen locomotion policy sways the body, and standing still
+  is cheaper than modelling the sway. Then compute d = wrap_to_pm45(theta_ref - (yaw_belief
+  + axis_angle_robot)), where wrap_to_pm45 reduces modulo 90 degrees into [-45, +45).
+  Apply yaw_belief += d, leave x and y untouched, and reduce pose_error_estimate by
+  the component of it that heading error explains — conservatively, multiply it by
+  0.7 rather than zeroing it, since the position belief is not corrected. (5) The
+  refusal, which is the part that comes straight from the rotational error. |d| is
+  capped at 45 degrees by construction, and if the pre-wrap residual lands within
+  5 degrees of the +/-45-degree boundary the assignment between adjacent symmetry
+  copies is a coin flip; in that case apply nothing and return FAILURE. Cheng''s rats
+  committed the rotational error; a robot that commits it injects a 90- or 180-degree
+  heading error into a belief that was merely noisy, which is strictly worse than
+  doing nothing. (6) Scale justification for the 0.5 m trigger: the Go2 is about 0.70
+  m long and 0.31 m wide, and indoor free passages are commonly 0.8-0.9 m; a positional
+  or heading-induced belief error above roughly 0.5 m is enough to aim the robot at
+  a door jamb instead of the opening, so that is where re-anchoring starts to pay
+  for the time it costs.
+
+  '
+prediction:
+  statement: 'On scenarios where pose_estimate drifts, a controller that periodically
+    re-anchors its believed yaw to the principal axis of the visible surface layout
+    reaches the goal on a higher fraction of seeds than a goal_seeker that integrates
+    its drifting belief unchecked, because heading error is the component of belief
+    error that grows without bound into cross-track error over a long route, and the
+    boundary is a non-drifting reference for it.
+
+    '
+  metric: goal_reached
+  baseline: goal_seeker
+  min_effect: 0.15
+  cost_metric: time_to_goal
+confidence: medium
+generated:
+  condition: a
+  task: navigate_to_goal
+  treatment: citation
+  card_prompt_hash: f5f830d140abf703
+  card_row_key: f5f830d140abf703
+  card_model_id: claude-opus-5
+  ref_id: reorient_geometry
+  paper_sha256: null
+  generated_card_id: geometric_boundary_reorientation
+  generated_node_name: ReorientToBoundaryGeometry
+  citation_substituted: false

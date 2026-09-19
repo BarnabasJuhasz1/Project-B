@@ -1,0 +1,50 @@
+{
+  "admitted": true,
+  "detail": "valid; contribution not measured (run_unit raised AttributeError: 'float' object has no attribute 'sigma_xy'\n\nTraceback (most recent call last):\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/generate/admit.py\", line 535, in _measure_contribution\n    result = run_unit(tree_factory, unit)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/harness/unit.py\", line 258, in run_unit\n    base = _aggregate(baseline_factory, unit)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/harness/unit.py\", line 202, in _aggregate\n    result = score(rollout(micro, controller_factory()), micro)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/tests/kinematic.py\", line 50, in rollout\n    localiser = make_localiser(scenario)\n                ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/localisation.py\", line 245, in make_localiser\n    return DriftLocaliser(make_drift(scenario))\n                          ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/drift.py\", line 167, in make_drift\n    return DriftModel(scenario.drift, scenario.drift_rng())\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/drift.py\", line 55, in __init__\n    if spec.sigma_xy < 0 or spec.sigma_yaw < 0:\n       ^^^^^^^^^^^^^\nAttributeError: 'float' object has no attribute 'sigma_xy'\n)",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": null,
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "d17f79d4734acb2d",
+    "card_row_key": "d17f79d4734acb2d",
+    "citation_id": "path_integration_ants",
+    "citation_substituted": false,
+    "condition": "a",
+    "confidence": "medium",
+    "contribution": {
+      "measured": false,
+      "reason": "run_unit raised AttributeError: 'float' object has no attribute 'sigma_xy'\n\nTraceback (most recent call last):\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/generate/admit.py\", line 535, in _measure_contribution\n    result = run_unit(tree_factory, unit)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/harness/unit.py\", line 258, in run_unit\n    base = _aggregate(baseline_factory, unit)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/harness/unit.py\", line 202, in _aggregate\n    result = score(rollout(micro, controller_factory()), micro)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/tests/kinematic.py\", line 50, in rollout\n    localiser = make_localiser(scenario)\n                ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/localisation.py\", line 245, in make_localiser\n    return DriftLocaliser(make_drift(scenario))\n                          ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/drift.py\", line 167, in make_drift\n    return DriftModel(scenario.drift, scenario.drift_rng())\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/juhasz/Desktop/Projects/Project_B/Repo/core/drift.py\", line 55, in __init__\n    if spec.sigma_xy < 0 or spec.sigma_yaw < 0:\n       ^^^^^^^^^^^^^\nAttributeError: 'float' object has no attribute 'sigma_xy'\n"
+    },
+    "emitted_code": true,
+    "generated_card_id": "path_integrated_goal_vector",
+    "generated_node_name": "SteerByPathIntegratedGoalVector",
+    "is_traceable": false,
+    "mechanism_family": null,
+    "model_id": "claude-opus-5",
+    "node_id": "gen_a_d17f79d4734acb2d",
+    "origin": "citation",
+    "paper_sha256": null,
+    "pipeline_version": "v2-card-first",
+    "precondition_fired": {
+      "drove": 600,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prediction_restated_faithfully": true,
+    "prompt_hash": "d6402fec311ac036",
+    "ref_id": "path_integration_ants",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": null,
+    "span_verified": false,
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "treatment": "citation",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_a_d17f79d4734acb2d",
+  "reason": "admitted"
+}

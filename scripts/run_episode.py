@@ -424,8 +424,20 @@ def observe(t, pose, angles, goal_known, localiser, dt, sensor):
     geometry the robot cannot see, and it exists only to be scored.
     """
     x, y, z, yaw = pose
-    gap = float(clearance((x, y))) - ROBOT_RADIUS
-    ranges = sensor.scan((x, y), yaw, angles, scenario.range_max)
+    # ⚠️ `scenario.world` IS PASSED, ALWAYS. `core.geometry`'s world argument
+    # defaults to LAB42, so omitting it silently measures a DIFFERENT ROOM than
+    # the one the robot is walking in. On a committed scenario the two are the
+    # same object and this changes nothing — asserted by
+    # test_runner_uses_the_scenario_world. On a generated world (chunk 53) it is
+    # the difference between a scan of the real obstacles and a scan of lab42's
+    # divider: the robot senses a room it is not in, `contact` and `clearance`
+    # are computed against that room, and `collisions`, `near_misses` and
+    # `min_clearance` are all derived from them. `core/tests/kinematic.py` has
+    # always threaded the world through; this call site had not, and the defect
+    # was unreachable until a generated world could be run under physics.
+    world = scenario.world
+    gap = float(clearance((x, y), world)) - ROBOT_RADIUS
+    ranges = sensor.scan((x, y), yaw, angles, scenario.range_max, world)
     localiser.update(dt, (x, y, yaw), ranges, angles)
     obs = Observation(
         t=t,

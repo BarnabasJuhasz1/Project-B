@@ -1,0 +1,35 @@
+{
+  "condition": "b",
+  "duration_api_ms": 0,
+  "error": "claude exited 1\n  stderr: (empty)\n  stdout: {\"duration_api_ms\":0,\"stop_reason\":\"stop_sequence\",\"session_id\":\"066a1689-99f3-4afb-89e0-89b946c4be88\",\"total_cost_usd\":0,\"usage\":{\"output_tokens_details\":{\"thinking_tokens\":0},\"input_tokens\":0,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":0,\"server_tool_use\":{\"web_search_requests\":0,\"web_fetch_requests\":0},\"service_tier\":\"standard\",\"cache_creation\":{\"ephemeral_1h_input_tokens\":0,\"ephemeral_5m_input_tokens\":0},\"inference_geo\":\"\",\"iterations\":[],\"speed\":\"standard\"},\"modelUsage\":{},\"permission_denials\":[],\"terminal_reason\":\"api_error\",\"fast_mode_state\":\"off\",\"fast_m",
+  "key": "a311b5689f8b3cf8",
+  "kind": "node",
+  "pipeline_version": "v3-layered",
+  "prompt_chars": 20171,
+  "prompt_hash": "3dd8db088ff981d3",
+  "stem": "b__reorient_geometry__dc50c33027c308a3",
+  "stop_reason": "stop_sequence",
+  "task": "search_for_goal",
+  "total_cost_usd": 0,
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "",
+    "input_tokens": 0,
+    "iterations": [],
+    "output_tokens": 0,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_fetch_requests": 0,
+      "web_search_requests": 0
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  }
+}

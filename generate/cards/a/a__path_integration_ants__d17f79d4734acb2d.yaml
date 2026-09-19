@@ -1,0 +1,96 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition A's card call (given the reference alone).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: path_integrated_goal_vector
+node_name: SteerByPathIntegratedGoalVector
+source:
+  citation: Mueller, M. & Wehner, R. (1988). Path integration in desert ants, Cataglyphis
+    fortis. PNAS 85(14), 5287-5290.
+  span: ''
+  verified: unverified
+mechanism: 'The animal maintains a single vector to its target that is updated continuously
+  from its own course-and-distance increments, never from an absolute position fix.
+  Because the vector is carried rather than recomputed, the animal can head straight
+  for the target from anywhere along an arbitrarily convoluted outbound path, including
+  across ground it has never crossed, and it never has to retrace its detours. The
+  paper''s second and sharper finding is that this integration is approximate: the
+  accumulated vector''s directional error is systematic and grows with how much the
+  path turned, not merely with how far it went. The mechanism is therefore the pair
+  "carry the vector, and discount it in proportion to accumulated turning" - the carried
+  vector is what buys the shortcut, and the turn-weighted error budget is what stops
+  the shortcut from being taken on evidence that has decayed.
+
+  '
+trigger: 'The goal has been disclosed (goal is not None; it latches once seen) and
+  the robot is further from it than the arrival radius. The node runs every control
+  step from that moment on, including while a higher-priority avoidance sibling holds
+  the Twist - it keeps integrating whether or not it is the one driving, so that when
+  control returns it aims at the current vector rather than at the heading it held
+  before the detour. It does not require the goal to be visible and does not require
+  the pose belief to be trustworthy.
+
+  '
+derivation: "State carried across steps: p = (px, py), the goal expressed in the CURRENT\
+  \ robot frame, metres; sigma_beta, accumulated bearing error, radians; sigma_r,\
+  \ accumulated range error, metres; e_min, the running minimum of pose_error_estimate\
+  \ seen this episode; and the previous step's pose_estimate (x_prev, y_prev, yaw_prev).\n\
+  Seeding. On the first step where goal is not None, set p = R(-yaw) * (goal - (x,\
+  \ y)), sigma_beta = 0, sigma_r = 0, e_min = pose_error_estimate, where R(a) is the\
+  \ 2x2 rotation by a.\nPer-step update, using increments only. Let dp = (x, y) -\
+  \ (x_prev, y_prev) in world coordinates, ds = ||dp||, and dpsi = wrap_to_pi(yaw\
+  \ - yaw_prev). Express the translation in the frame the robot was in when it made\
+  \ it, d = R(-yaw_prev) * dp, then carry the vector:\n  p <- R(-dpsi) * (p - d)\n\
+  This is the ant's operation: the absolute pose belief is used only as a source of\
+  \ increments and is never read as a position. A drift random walk added to pose_estimate\
+  \ enters here as a bounded per-step perturbation instead of as a standing offset\
+  \ on the steering target.\nError budget, weighted toward turning as the source requires:\n\
+  \  sigma_beta <- sigma_beta + 0.03 * |dpsi| + 0.01 * ds / max(||p||, 0.5)\n  sigma_r\
+  \    <- sigma_r    + 0.02 * ds\nThe 0.03 rad-per-rad term says three percent of\
+  \ every radian turned is lost; the 0.02 says two percent of distance travelled is\
+  \ lost. Both are my numbers, chosen as order-of-magnitude leg-odometry errors for\
+  \ a quadruped that saturates at |vx| <= 0.8 m/s and |wz| <= 1.0 rad/s, and both\
+  \ are per-increment, so the rule is independent of the control rate. Only their\
+  \ ratio matters for the claim: turning must cost more per unit of motion than translating.\n\
+  Re-anchoring. Whenever pose_error_estimate <= e_min + 0.05 m, the belief is at or\
+  \ near its best-ever quality: re-seed p from the absolute expression above, reset\
+  \ sigma_beta and sigma_r to zero, and set e_min = min(e_min, pose_error_estimate).\
+  \ At all other times the vector runs open-loop on increments. On scenarios without\
+  \ drift, pose_error_estimate stays flat and this fires most steps, so the node degenerates\
+  \ to ordinary goal seeking; on drifting scenarios it fires rarely and the carried\
+  \ vector takes over.\nOutput. beta = atan2(py, px), r = ||p||.\n  wz = clip(1.5\
+  \ * beta, -1.0, 1.0)\n  vx = 0.8 * max(0, cos(beta)) * min(1, r / 1.0)\n  vy = 0\n\
+  The cos(beta) factor stops the robot driving forward while badly misaimed; the r/1.0\
+  \ factor brakes inside the last metre.\nTrust gate. If sigma_beta > 0.35 rad the\
+  \ vector is treated as bearing-only: the node may still steer on beta but must not\
+  \ declare arrival, and must not report r as a usable distance to any sibling. 0.35\
+  \ rad is derived from the given sensor: at range_max = 6.0 m a bearing error of\
+  \ 0.35 rad is a lateral error of 6.0 * sin(0.35) = 2.06 m, which exceeds a typical\
+  \ indoor gap width by more than a factor of two, so past that point the vector can\
+  \ no longer discriminate which opening leads to the goal. Arrival is declared only\
+  \ on r < 0.5 m, and never on the accumulator alone while the gate is open.\n"
+prediction:
+  statement: 'On scenarios where pose_estimate drifts, a leaf that steers on an increment-accumulated
+    egocentric goal vector, re-seeded from absolute pose only at the running minimum
+    of pose_error_estimate, reaches the goal on a larger fraction of seeds than a
+    baseline that steers on the instantaneous absolute pose belief each step. On non-drifting
+    scenarios the two are statistically indistinguishable.
+
+    '
+  metric: goal_reached
+  baseline: goal_seeker
+  min_effect: 0.1
+  cost_metric: path_length
+confidence: medium
+generated:
+  condition: a
+  task: navigate_to_goal
+  treatment: citation
+  card_prompt_hash: d17f79d4734acb2d
+  card_row_key: d17f79d4734acb2d
+  card_model_id: claude-opus-5
+  ref_id: path_integration_ants
+  paper_sha256: null
+  generated_card_id: path_integrated_goal_vector
+  generated_node_name: SteerByPathIntegratedGoalVector
+  citation_substituted: false

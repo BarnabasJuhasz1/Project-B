@@ -254,3 +254,45 @@ costing less than it appeared to.
 
 Kinematic, dev scenarios only, not reportable, not a G2 number — the same
 standing caveats as everything else in this file.
+
+---
+
+## ⚠️ 2026-09-14 — a tree is now a LAYER, and the ordering decision is load-bearing
+
+Chunk 52 replaced exclusive control with a layered command pipeline, and two things follow for
+composition specifically.
+
+**1. `Layer` joins `Sequence` and `Fallback` in the plan vocabulary.** It ticks every child, in
+order, and position is priority: the base proposes a whole command and later children revise
+the Twist fields they declared. Neither existing composite could do this — `Sequence` stops on
+anything that is not SUCCESS and `Fallback` on anything that is not FAILURE, and the base
+returns RUNNING every tick by its prompt's one hard requirement.
+
+**2. ⚠️ LAYER ORDER IS A RESEARCHER DEGREE OF FREEDOM AND IS TREATED AS ONE.** With priority by
+position, the composer's ordering decision changes what the tree does. It is therefore produced
+**by the model, under a prompt identical across arms** — `prompts/compose.md`, which sees port
+contracts and a task spec and never the papers (#6) — and is **never hand-tuned per arm**. A
+tree whose node order a human adjusted is not reportable. The combination rule itself (per-field
+last-writer-wins, `min()` for caps) is fixed, minimal and declared in `PRE-REGISTRATION.md` in
+the 2026-09-14 amendment, for the same reason: it came from neither corpus, so B−A would
+otherwise partly measure our arbiter.
+
+**Finding 2 above is resolved structurally rather than by enforcement.** "An Action that drives
+may not also publish a port" was decided and left unenforced. A modifier does not drive: it
+revises declared fields and may publish an OUT port beside that, which is the shape the corpus
+actually wanted and the reason fourteen nodes had a navigator welded on. The old violation
+stands in the archived v2 records, reported and not hidden.
+
+**Reconstruction reaches three pipelines now.** `RECONSTRUCTION_STAGING` walks live → v2 archive
+→ v1 archive. `load_library()` with no argument is still live-only, so the current library stays
+one experiment.
+
+**⚠️ And `compose.md` is now SUPERSEDED, KEPT and NEVER EDITED**, joining
+`generate/prompts/node.md` and `condition_{a,b,d}.md` under the same rule. The live prompt is
+`compose_layered.md`; `compose.COMPOSE_PROMPT` points at it and `V1_COMPOSE_PROMPT` at the old
+one. Editing `compose.md` in place is what was tried first, and it orphaned two committed
+compositions within the minute — the transcript hash is over the RENDERED prompt, which is the
+whole point of it. `render()` and `compose()` take an optional `prompt_file` so a committed
+record can still be replayed against the prompt it was actually taken against, the same role
+`generator.render_v1` plays for v1 nodes. It is not a knob: a live composition renders
+`COMPOSE_PROMPT` or the comparison is between two different prompts.

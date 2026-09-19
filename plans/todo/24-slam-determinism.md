@@ -3,7 +3,7 @@
 **Epic:** [03](../03-epic-slam.md) · **Depends on:** 23, 24a · **Needs Isaac Sim:** **yes**
 
 > ⚠️ **This chunk is now the PHYSICS half only.** Chunk
-> [24a](../doing/24a-slam-cost-model.md) took everything here that did not need a GPU: the cost
+> [24a](../done/24a-slam-cost-model.md) took everything here that did not need a GPU: the cost
 > model, the phase breakdown, the scan-rate decision (**5 Hz**, measured), the sweep budget, the
 > threading question, and the `check_determinism.sh` extension. What remains is the part with no
 > CPU-side substitute — **bitwise determinism under physics, in the container** — plus re-running

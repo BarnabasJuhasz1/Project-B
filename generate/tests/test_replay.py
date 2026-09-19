@@ -38,6 +38,13 @@ from generate.tests.conftest import GOOD_PROMPT_HASH, VAGUE_PROMPT_HASH
 FIXTURE_TRANSCRIPTS = (Path(__file__).resolve().parent / "fixtures"
                        / "transcripts")
 
+# The class the fixture NODE transcript defines. One constant, because the
+# fixture response reuses a real committed module and that module changes when
+# the node prompt does — chunk 52 rebuilt it against `prompts/modifier.md`, and
+# three separate string literals had to be found and edited to say so. See
+# fixtures/transcripts/README.md for how to rebuild the pair.
+FIXTURE_NODE_CLASS = "class LimitSpeedToStoppableSeenDistance"
+
 
 def _v1_candidate(condition, task, card, replay):
     """One candidate the way the SUPERSEDED one-call pipeline built it.
@@ -254,7 +261,7 @@ def test_the_card_and_node_calls_replay_as_one_chain(chain, tmp_path):
                          transcripts=FIXTURE_TRANSCRIPTS, record=False)
     assert candidate.generated is not None
     assert candidate.generated.card.node_name == "LimitSpeedToVisibleRange"
-    assert candidate.source and "class LimitSpeedToVisibleRange" in candidate.source
+    assert candidate.source and FIXTURE_NODE_CLASS in candidate.source
     # The stem is the CARD prompt's row key, and the node id derives from it.
     assert candidate.node_id == f"gen_d_{candidate.key}"
     assert candidate.stem.endswith(candidate.key)
@@ -439,7 +446,7 @@ def test_resume_replays_a_call_that_already_has_a_transcript(chain, tmp_path):
     assert [what for what, _ in resume.log] == ["replayed", "replayed"]
     # And the result is the replayed chain's result, not a degraded one.
     assert candidate.generated.card.node_name == "LimitSpeedToVisibleRange"
-    assert "class LimitSpeedToVisibleRange" in candidate.source
+    assert FIXTURE_NODE_CLASS in candidate.source
 
 
 def test_resume_makes_only_the_call_that_is_missing(chain, tmp_path):
@@ -476,7 +483,7 @@ def test_resume_makes_only_the_call_that_is_missing(chain, tmp_path):
 
     assert len(live.calls) == 1, "only the missing call should reach the model"
     assert [what for what, _ in resume.log] == ["replayed", "called"]
-    assert "class LimitSpeedToVisibleRange" in candidate.source
+    assert FIXTURE_NODE_CLASS in candidate.source
 
 
 def test_resume_describes_itself_as_the_live_backend(chain):
@@ -534,6 +541,7 @@ PAYLOAD = {
 def test_a_failed_node_call_is_recorded_against_its_row(tmp_path):
     """2026-09-09: D's node call burned 136k output tokens, returned no code,
     and left NOTHING behind — indistinguishable from a row nobody ran."""
+    from generate.generator import PIPELINE_VERSION
     from generate.generator import generate as gen
     backend = _FailingNodeBackend(FIXTURE_TRANSCRIPTS, PAYLOAD)
     staging = tmp_path / "staging"
@@ -552,7 +560,10 @@ def test_a_failed_node_call_is_recorded_against_its_row(tmp_path):
     assert rec["usage"]["output_tokens"] == 136423
     assert rec["usage"]["output_tokens_details"]["thinking_tokens"] == 134242
     assert rec["total_cost_usd"] == PAYLOAD["total_cost_usd"]
-    assert rec["pipeline_version"] == "v2-card-first"
+    # The CURRENT pipeline's version, whatever it is: this test is about a
+    # failed call leaving a record, not about which pipeline was running. Pinned
+    # to the constant so a bump does not silently make it assert history.
+    assert rec["pipeline_version"] == PIPELINE_VERSION
 
 
 def test_an_error_record_is_not_a_staged_candidate(tmp_path):

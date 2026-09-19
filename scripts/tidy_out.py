@@ -60,6 +60,14 @@ PROTECTED = {
     "sweeps": "campaign logs and their scored episodes",
     "corpus": "source PDFs the cards cite; inputs, not outputs",
     "runs": "swept per-directory by the rule above, not as a whole",
+    # ⚠️ ADDED 2026-09-14. `out/growth/<tier>.csv` is the addition-based
+    # contribution measurement — what non-negotiable #9 now means — and
+    # `scripts/prune_obsolete.py` reads its `fixed` column as the gate on
+    # deleting the superseded structure. It is also ~80 minutes of CPU to
+    # regenerate. It was being swept as a "loose file at the top of out/",
+    # which is what that clause does to any directory added after it was
+    # written; caught before it fired.
+    "growth": "the growth-loop measurement; #9's number, and slow to remake",
     "README.md": "the map",
 }
 

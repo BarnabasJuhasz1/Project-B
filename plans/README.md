@@ -8,8 +8,51 @@ plans/
   00-epic-*.md   the umbrella document: context, rationale, full design
   todo/          not started
   doing/         in progress — keep this to one file at a time
+  hold/          paused, intact, resumable — NOT cancelled and NOT superseded
   done/          finished, with an Outcome section appended
 ```
+
+---
+
+## ⚠️ EVERYTHING IS ON HOLD EXCEPT EPIC 06 (2026-09-16, the user's instruction)
+
+**The current work is [epic 06 — the autonomous diagnose-and-repair loop](06-epic-repair-loop.md).**
+Read [`../REPAIR-LOOP.md`](../REPAIR-LOOP.md) first: it holds the verdict taxonomy, the repair
+action space, the arm-blindness decision and the traps, and every chunk in the epic references it
+rather than repeating it.
+
+| # | Chunk | Depends on | Model calls | Status |
+|---|---|---|---|---|
+| 54 | [The verdict taxonomy as code](done/54-verdict-taxonomy.md) | — | no | **done** |
+| 55 | [The arm-blind evidence bundle](done/55-evidence-bundle.md) | 54 | no | **done** |
+| 56 | [The discriminating-world probe](done/56-environment-probe.md) | 54 | no | **done** |
+| 57 | [The diagnosis call](done/57-diagnosis-call.md) | 55 | yes | **done** |
+| 58 | [The loop](done/58-repair-loop.md) | 54–57 | yes | **done** |
+
+**Why now.** `gen_b_44d12df4d25b437f` was admitted as valid, fired on 97.4% of ticks, and froze
+the robot in open space — 46 cm of clearance, zero contacts — for the last 52 s of a 120 s
+episode, on a world the base alone solves. Diagnosing it by hand took a session and turned up
+three defects at three different layers. **Hand-fixing it fixes one node, in one environment,
+once.** The deliverable of this project is a pipeline, so the pipeline has to be able to do what
+that session did.
+
+> ⚠️ **2026-09-18:** *"on a world the base alone solves"* is true **kinematically** and **false
+> under physics** — `results/gen-maze-02004__base__seed2004.json` records the base timing out at
+> 120 s having walked 30.1 m against a 16.2 m optimum. The growth pairing is kinematic and
+> internally consistent, so the verdicts stand for the suite they were measured on; the prose does
+> not. See the 2026-09-18 CORRECTION in [chunk 58's Outcome](done/58-repair-loop.md).
+
+
+A third finding fell out while planning and is the epic's motivating case: `to_scenario()` never
+sets `drift`, so **every world in the growth suite hands the controller a perfect pose estimate**
+— and that node's card predicts an effect *"on scenarios where pose_estimate drifts"*. It was
+measured, ranked and written up across twenty worlds, none of which contain the condition its
+card names in its first clause. There are fifteen other nodes and nobody has read their cards
+against the worlds they were scored on.
+
+**Four chunks are paused in [`hold/`](hold/)** — 33, 43, 52, 53. Each carries a dated banner, is
+intact, and resumes by being moved back to `doing/`. Everything in `todo/` below was already
+not-started and stays that way.
 
 Workflow: `git mv plans/todo/NN-x.md plans/doing/` to start, `git mv plans/doing/NN-x.md plans/done/`
 when the Done-when checks pass. Append an **Outcome** section before moving to `done/` recording
@@ -160,7 +203,7 @@ the epic rather than to one chunk live in [`04-epic-evaluation.md`](04-epic-eval
 | # | Chunk | Depends on | Needs Isaac Sim | Status |
 |---|---|---|---|---|
 | 28 | [The batch runner and aggregation](done/28-batch-runner.md) | 17 | no | **done** |
-| 29 | [Grow the libraries to a reportable size](doing/29-grow-libraries.md) | 15, 28 | no | **doing — machinery built; blocked on the scale decision and the corpus run** |
+| 29 | [Grow the libraries to a reportable size](done/29-grow-libraries.md) | 15, 28 | no | **done — moved 2026-09-15: machinery built here, Done-when closed by 42 and 52. ⚠ the scale decision was NEVER taken — common ceiling is 4 (D's), D stands at 1, so G1 would report **1** against a target of 20, and the arms are at incomparable counts (A 5, B 10, D 1). Growing the library is still open work, no longer blocked on machinery** |
 | 30 | Condition C — the Nav2 baseline | 28 | **yes** | not written |
 | 31 | The container run | 28, 29 | **yes** | not written |
 | 32 | G3 — composition over the held-out split | 16, 29, 31 | **yes** | not written |
@@ -168,12 +211,18 @@ the epic rather than to one chunk live in [`04-epic-evaluation.md`](04-epic-eval
 | 34 | [Condition C — failure context](todo/34-condition-c-failure-context.md) | 28 | no | specified, not built |
 | 35 | [The unseen post-cutoff corpus](todo/35-unseen-corpus.md) | 14 | no | specified, not built |
 | 36 | [A node under physics + the A/B video pair](done/36-node-physics-evidence.md) | 37 | **yes** | **done — every kinematic verdict survived; one failure MECHANISM did not** |
-| 37 | [Admission becomes a validity gate](doing/37-admission-becomes-validity.md) | 29 | no | **doing — code done; CLAUDE.md #5 and a PRE-REGISTRATION append AWAIT SIGN-OFF** |
-| 38 | [Node contribution: leave-one-out ablation](doing/38-node-contribution-ablation.md) | 37 | no | **doing — built and working; not yet useful on the real library, see 40** |
+| 37 | [Admission becomes a validity gate](done/37-admission-becomes-validity.md) | 29 | no | **done — code landed; CLAUDE.md #5 reworded 2026-09-12. The PRE-REGISTRATION append is still drafted-not-landed, which its own Done-when accepts** |
+| 38 | [Node contribution: leave-one-out ablation](done/38-node-contribution-ablation.md) | 37 | no | **done — built and working, but SUPERSEDED in use: removal-based ablation was retired 2026-09-13 for `measure_growth.py`. `harness/ablate.py` is Tier 1 in DELETION-CANDIDATES.md** |
 | 39 | [The first comparable A vs B numbers](done/39-ab-node-comparison.md) | 37, 38 | no | **done — A > B on 5/5 cards, and NEITHER arm beats a handwritten toy** |
-| 40 | [The contract cannot express a modifier](todo/40-modifier-kind.md) | 38, 39 | no | **NEXT — 39 measured the blocker: 14/14 nodes drive AND publish, 0 read a port** |
+| 40 | [The contract cannot express a modifier](todo/40-modifier-kind.md) | 38, 39 | no | **SUPERSEDED by 52 — measurement stands, recommendation refuted** |
+| 52 | [Nodes that support the base instead of replacing it](doing/52-layered-command-pipeline.md) | 47 | later | **BUILT 2026-09-14 — absorbs 40. `Layer` + field-scoped `WRITES` + `cap`/`adjust`, 17 tests. Library regenerated as modifiers (16/16 admitted, $7.17); v2 archived. `fixed` MOVED: 0 → 2, and replicated 4/20 on fresh seeds — 6 fixed, 0 broken over 40 paired worlds. ⚠️ but it is arm **D**, B−A is still exactly zero, and 14 of 16 nodes still do nothing or harm. Selectivity is the variable. Arbitration rule is in PRE-REGISTRATION** |
 | 41 | [The harness and the runner do not share a timebase](todo/41-timebase-mismatch.md) | — | one run | **written — a 3.78e-12 s difference silently disables a node's mechanism** |
-| 42 | [Card-first generation: every arm writes its own card](doing/42-card-first-generation.md) | — | none yet | **BUILT, unrun — two calls per row; B now reads the PAPER; one shared node prompt; v1 records no longer pooled** |
+| 42 | [Card-first generation: every arm writes its own card](done/42-card-first-generation.md) | — | none yet | **done — B's `navigate_to_goal` + `search_for_goal` families generated 2026-09-12: 7 admitted / 3 rejected over 10 rows, pass rate 0.70. ⚠ 0 of 7 measured contributions cleared the floor. A is 5 rows, D is 0 — the arms are NOT at comparable sizes** |
+| 43 | [The first A vs B numbers under physics, on one task family](doing/43-ab-navigation-sweep.md) | — | last step | **doing — library partitioned by arm (committed); dev split only** |
+| 44 | [Contribution moves from the micro-world to the tree](todo/44-tree-level-contribution.md) | 42, 43 | yes | **DECIDED 2026-09-12, not built — unit scenario becomes a VALIDITY gate; contribution moves to the tree under physics; ONE shared base node across all arms. Weakens #5, exempts #3, promotes #9. ⚠ needs a PRE-REGISTRATION amendment before any G1 number** |
+| 45 | [The seeded world generator](done/45-world-generator.md) | — | no | **DONE 2026-09-13 — 3 tiers, reproducible, ~250 ms/world, 20 tests. Found + fixed a latent `geodesic_distance` bug that dropped `world`. ⚠ `shortest_path_length` is 43 s on a generated world and SPL is a named secondary** |
+| 47 | [The strongest base node, and difficulty calibrated against it](done/47-strongest-base-node.md) | 45 | later | **done — moved 2026-09-15 with a STUB Outcome, executed without ever entering `doing/`. Base committed and frozen; difficulty REDEFINED as the base's failure rate. ⚠ PARTIAL: only the `maze` tier was ever measured against the base (50% / 40%, in band); `open` and `cluttered` never were, and the numbers live only in gitignored `out/growth/*.csv`** |
+| 45-50 | [Epic 05 — a larger, randomised environment suite](05-epic-environment-suite.md) | 44 | 48-49 yes | **PLANNING — chunks not written. DECIDED 2026-09-13: the new suite REPLACES lab42 as the benchmark (PRE-REGISTRATION amendment appended). ⚠ X=0.30 and the power analysis do NOT transfer and must be re-derived before any G2 number; a NEW sealed split is required. Randomisation is the only available fix for 0.16 power** |
 
 **Where this is going, 2026-09-07.** Chunk 37 redefined admission from "passes its unit scenario
 in isolation" to "runs", after the isolated test was measured to be a weak instrument: an A node
@@ -247,7 +296,13 @@ scale nobody has attempted yet, or the write-up reports a coverage count of one 
 of twenty and says why. That is a project-level decision, and it is flagged in the epic rather
 than discovered in Week 5.
 
-## Epic 03 — localisation as a real estimate  🟨 chunk 19 only; 20–27 deliberately not next
+## Epic 03 — localisation as a real estimate  🟨 19–24b done; 24–27 deliberately not next
+
+⚠️ **The SLAM pipeline is BUILT (19, 20, 21, 22, 22a, 23, 24a, 24b) and must not REPLACE
+`core/drift.py` before the first evaluation run.** The seed offsets and the sealed split's drift
+magnitudes are calibrated against the current drift model; swapping it moves them underneath
+`PRE-REGISTRATION.md`. Chunks 19–24b sat in `doing/` until 2026-09-15 to express that hold; the
+hold is real but the folder was the wrong place to record it, so it is written here instead.
 
 A second cycle: replace `core/drift.py`'s open-loop random walk with a real 2D lidar SLAM
 pipeline, so that **the pose estimate becomes a consequence of what the robot did**. Rationale,
@@ -255,14 +310,14 @@ the four decisions and the three named risks live in [`03-epic-slam.md`](03-epic
 
 | # | Chunk | Depends on | Needs Isaac Sim | Status |
 |---|---|---|---|---|
-| 19 | [The localisation contract](doing/19-localisation-contract.md) | — | no | **complete — byte-identical under physics; held in `doing/` until the epic opens** |
-| 20 | [The sensor noise model](doing/20-sensor-noise.md) | 19 | no | **complete — byte-identical off, deterministic on; held in `doing/`** |
-| 21 | [Scan matching: the front end](doing/21-scan-matching.md) | 19, 20 | no | **complete — 25 tests; ambiguity added, see Outcome** |
-| 22 | [Submaps and loop closure](doing/22-loop-closure.md) | 21 | no | **complete — 24 tests; three findings, see Outcome** |
-| 23 | [Pose graph: the back end](doing/23-pose-graph.md) | 22 | no | **complete — 40 tests; SLAM beats the walk, see Outcome** |
-| 22a | [The closure travel gate](doing/22a-closure-travel-gate.md) | 22 | no | **complete — a stationary robot no longer manufactures closures; held in `doing/`** |
-| 24a | [The cost model and the scan rate](doing/24a-slam-cost-model.md) | 23 | no | **complete — rate moved to 5 Hz without a GPU; held in `doing/`** |
-| 24b | [Seeing the SLAM run](doing/24b-slam-visualisation.md) | 23, 24a | no | **complete — the map, the graph and the error, drawn; held in `doing/`** |
+| 19 | [The localisation contract](done/19-localisation-contract.md) | — | no | **done — moved 2026-09-15 with a STUB Outcome: no contemporaneous record exists, and the Done-when checks were not re-run** |
+| 20 | [The sensor noise model](done/20-sensor-noise.md) | 19 | no | **done — moved 2026-09-15 with a STUB Outcome. ⚠ the chosen sigma is justified nowhere, and the controller-independence property that protects the ablation is unverified** |
+| 21 | [Scan matching: the front end](done/21-scan-matching.md) | 19, 20 | no | **done — 25 tests; ambiguity added, see Outcome** |
+| 22 | [Submaps and loop closure](done/22-loop-closure.md) | 21 | no | **done — 24 tests; three findings, see Outcome** |
+| 23 | [Pose graph: the back end](done/23-pose-graph.md) | 22 | no | **done — 40 tests; SLAM beats the walk, see Outcome** |
+| 22a | [The closure travel gate](done/22a-closure-travel-gate.md) | 22 | no | **done — a stationary robot no longer manufactures closures, see Outcome** |
+| 24a | [The cost model and the scan rate](done/24a-slam-cost-model.md) | 23 | no | **done — rate moved to 5 Hz without a GPU, see Outcome** |
+| 24b | [Seeing the SLAM run](done/24b-slam-visualisation.md) | 23, 24a | no | **done — the map, the graph and the error, drawn, see Outcome** |
 | 24 | [Determinism and cost gate](todo/24-slam-determinism.md) | 23, 24a | **yes** | todo — **now the physics half only** |
 | 25 | [Recalibration: what moves](todo/25-slam-recalibration.md) | 24 | no | todo |
 | 26 | [The cards SLAM unlocks](todo/26-slam-cards.md) | 25 | no | todo |
@@ -391,7 +446,7 @@ the SLAM run times out at SPL 0. The robot believed itself **0.017 m** from the 
 **1.015 m** away — it stopped because, by its own reckoning, it had arrived. (The runner scores
 the TRUE distance, so it was not recorded as a success; that separation is what it is for.)
 
-**Finding 2 was then fixed as chunk [22a](doing/22a-closure-travel-gate.md)**, on request.
+**Finding 2 was then fixed as chunk [22a](done/22a-closure-travel-gate.md)**, on request.
 `loop.py` now gates on **metres travelled** as well as submap index — `MIN_SUBMAP_TRAVEL = 2.0`,
 which is `MIN_SUBMAP_GAP = 2` restated in a unit that does not lie when the robot stands still.
 The episode drops from 37 accepted closures to 1 with 36 suppressed before matching; the two-lap

@@ -97,6 +97,10 @@ def load_spec(path=None):
       `controllers.scaffolding()` is the list. A sweep that quietly evaluated
       `scaffold_sweep` as condition A would produce a complete, plausible,
       meaningless table.
+    - **A `layer:<id>` binding is refused.** The growth pairing is the shared
+      base plus one leaf: a probe for `scripts/measure_growth.py`, never an
+      arm. The base is exempt from #3 as a declared substrate, which is exactly
+      what makes it part of every arm and an arm by itself in none.
     - **A bare `node:<id>` binding is refused.** It resolves — that is chunk
       36's point — but it is one leaf plus `ContractPorts`, which is evidence
       about that leaf and never a condition.
@@ -124,6 +128,17 @@ def load_spec(path=None):
                 f"{CONDITION_LABELS}; a fifth would break the identical-episode"
                 f"-count argument in non-negotiable #10.")
         controller = entry["controller"]
+        if controller.startswith(controllers.LAYER_PREFIX):
+            raise ValueError(
+                f"{path}: condition {label} is bound to {controller!r}, which "
+                f"is the GROWTH PAIRING — Layer[ContractPorts, BASE, node]: "
+                f"the shared substrate plus ONE leaf. It is a probe, not an "
+                f"arm. Refused for the same reason a bare "
+                f"{controllers.NODE_PREFIX}<id> is: the base is exempt from #3 "
+                f"as a declared substrate, which makes it part of every arm "
+                f"and therefore an arm by itself in no sweep. A condition is a "
+                f"composed tree ({controllers.COMPOSED_PREFIX}<id>) or a "
+                f"registered controller.")
         if controller.startswith(controllers.NODE_PREFIX):
             raise ValueError(
                 f"{path}: condition {label} is bound to {controller!r}, which "

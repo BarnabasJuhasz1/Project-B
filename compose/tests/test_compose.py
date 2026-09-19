@@ -14,7 +14,7 @@ import pytest
 
 from compose.compose import (Composition, CompositionError, RECORDS, build,
                              compose, library_as_recorded, load_composition,
-                             parse_plan, render, repair)
+                             V1_COMPOSE_PROMPT, parse_plan, render, repair)
 from compose.tests.conftest import (NAVIGATE_ID, REPAIR_ID, SEARCH_ID,
                                     SPLIT_PLAN_ID, STARVED_ID)
 from nodes.tree import Tree
@@ -127,7 +127,7 @@ def test_composing_from_a_committed_transcript_reproduces_the_record(
     `ReplayBackend` exists to provide."""
     result = compose(spec, recorded_library, replay, retrieval=recorded_found,
                      include_toys=True, records=tmp_path,
-                     transcripts=tmp_path)
+                     transcripts=tmp_path, prompt_file=V1_COMPOSE_PROMPT)
     assert result.ok, f"{result.reason}: {result.detail}"
     assert result.composition_id == NAVIGATE_ID
     committed = json.loads(
@@ -266,7 +266,8 @@ def test_repair_replays_from_the_same_retrieval(library, replay, tmp_path):
         include_toys=True)
 
     result = repair(previous, signature, replay, library=library,
-                    records=tmp_path, transcripts=tmp_path)
+                    records=tmp_path, transcripts=tmp_path,
+                    prompt_file=V1_COMPOSE_PROMPT)
     assert signature in result.prompt
     assert result.kind == "repair" and result.repair_of == SEARCH_ID
     assert result.composition_id == REPAIR_ID

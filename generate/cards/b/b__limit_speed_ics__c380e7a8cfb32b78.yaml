@@ -1,0 +1,118 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition B's card call (given the source document in full).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: brake_within_visible_free_space
+node_name: CapSpeedToBrakingHorizon
+source:
+  citation: 'T. Fraichard and H. Asama, "Inevitable Collision States. A Step Towards
+    Safer Robots?", Proc. IEEE/RSJ IROS, Las Vegas NV, Oct. 2003 (HAL inria-00182082).
+
+    '
+  span: '§I with Fig. 1 (braking-distance ICS: "assuming that it takes a certain distance
+    d to slow down and stop, the states corresponding to the wall and the states located
+    at a distance less than d to the left of the wall are such that, when A is in
+    such a state, no matter what it does in the future, a collision will occur");
+    Property 1, §III ("ICS(B) = ∩_ũ ICS(B,ũ)"); and Def. 3 (Safe State), stated in
+    §V immediately before §V-B with Fig. 8: "s is safe state iff s ∉ ICS(FoV_δ) and
+    s ∉ ICS(B_i) for every known obstacle B_i", where FoV_δ is the part of the field-of-view
+    boundary corresponding to the sensing range.
+
+    '
+  verified: unverified
+mechanism: 'A state is an inevitable collision state (ICS) when every future control
+  input ends in collision; by Property 1 the ICS set is the *intersection* over all
+  control inputs, so exhibiting a single witness manoeuvre that terminates collision-free
+  proves the current state is not an ICS. The paper''s safety criterion (Def. 3) adds
+  the part the sensor cannot see: because unexpected obstacles always appear first
+  on the boundary of the field of view, the sensing horizon FoV_δ must itself be treated
+  as a candidate obstacle when testing for ICS. Together these say: the robot is safe
+  only while it still has one manoeuvre that halts it strictly inside the region it
+  has actually observed to be free. Fig. 1 gives the scalar form of that test — a
+  state closer than the stopping distance d to the (possibly only hypothesised) obstacle
+  is already lost, regardless of what is commanded next. This helps an unmapped explorer
+  because speed is then spent only where perception has already bought the room to
+  give it back, and the robot stops grazing occluding corners it cannot see past (§V-D,
+  strategy 2: "Stay away from the corner so as to have a better view of what is on
+  the other side").
+
+  '
+trigger: 'Every control step in which the tree''s active leaf commands a non-zero
+  translation. The node is a filter on the outgoing Twist: it fires (and reduces the
+  commanded translational speed) whenever the commanded speed exceeds the speed from
+  which the robot could still be braked to rest inside the free space currently observed
+  along the direction of travel. Angular command wz is never altered, so the filter
+  can never remove the robot''s ability to turn in place and re-perceive. It is inert
+  — a pass-through — when the commanded speed is already below the cap, e.g. in wide
+  open space.
+
+  '
+derivation: "Mapping. The paper's point-mass/car state is here the frozen locomotion\
+  \ policy's commanded planar velocity: the only control is the Twist (vx, vy, wz),\
+  \ with |vx|,|vy| <= 0.8 m/s, |wz| <= 1.0 rad/s. The paper's \"known obstacles B_i\"\
+  \ become the finite lidar returns; the paper's FoV_δ becomes every beam reading\
+  \ `inf`, which this card treats as an obstacle at exactly `range_max` = 6.0 m rather\
+  \ than as free space — that identification is the paper's (Def. 3 / Fig. 8) and\
+  \ is the whole point of the node. The witness control input of Property 1 is chosen\
+  \ (as Property 4 chooses a subset E) to be the single manoeuvre \"hold heading,\
+  \ command zero translation until stopped\"; this is my choice, and it is conservative\
+  \ in the safe direction, since failing to find a witness only makes the node slower,\
+  \ never less safe. Numbers (MINE — the paper states no value for d, and the frozen\
+  \ policy's deceleration is not published):\n  a_brake = 0.8 m/s^2  effective deceleration\
+  \ of a Go2 tracking a zeroed\n                       velocity command (it can shed\
+  \ its full 0.8 m/s in\n                       roughly one second of gait);\n  tau\
+  \     = 0.15 s     dead time: one control step plus policy/gait lag, during\n  \
+  \                     which the robot keeps its current speed;\n  m       = 0.35\
+  \ m     body margin, half the Go2's ~0.70 m body length, so the\n              \
+  \         whole footprint clears.\nStopping distance of the witness manoeuvre at\
+  \ speed v:\n  d_stop(v) = m + v*tau + v^2 / (2*a_brake).\nFree distance along travel,\
+  \ computed ENTIRELY in the robot frame from `ranges` and `range_angles` (never from\
+  \ pose_estimate, so the node is immune to pose drift and needs no map):\n  theta_cmd\
+  \ = atan2(vy, vx);  v_cmd = hypot(vx, vy);\n  for each beam i:  r_i = ranges[i]\
+  \ if finite else range_max (= 6.0);\n                    delta = wrap_to_pi(range_angles[i]\
+  \ - theta_cmd);\n                    keep beam if |delta| <= pi/2 and\n        \
+  \               r_i*|sin(delta)| <= m + r_i*(dphi/2),\n                    where\
+  \ dphi = 2*pi/181 ≈ 0.0347 rad is the beam spacing; the\n                    r_i*dphi/2\
+  \ term inflates the swept corridor to cover the\n                    gap between\
+  \ adjacent beams at range (mine);\n  d_free = min over kept beams of r_i*cos(delta),\
+  \ or range_max if none kept.\nIf |wz| > 0 the heading rotates while stopping, so\
+  \ d_free is evaluated a second time at theta_cmd + wz*(tau + v_cmd/a_brake) and\
+  \ the smaller value is used (mine, conservative). Inverting d_stop(v) <= d_free\
+  \ gives the cap:\n  v_max = -a_brake*tau + sqrt((a_brake*tau)^2 + 2*a_brake*max(0,\
+  \ d_free - m))\n  v_out = clip(v_max, 0.0, 0.8)\nand the commanded translation is\
+  \ rescaled: (vx, vy) *= min(1, v_out / v_cmd) when v_cmd > 0. Worked values: d_free\
+  \ = 6.0 m (open, unseen horizon) -> v_max ≈ 2.9 m/s, saturated to 0.8, i.e. no cost\
+  \ in open space; d_free = 1.0 m -> v_max ≈ 0.91 -> still 0.8; d_free = 0.70 m ->\
+  \ v_max ≈ 0.62 m/s; d_free = 0.45 m -> v_max ≈ 0.29 m/s; d_free <= m = 0.35 m ->\
+  \ v_out = 0, translation blocked while wz passes through untouched so the robot\
+  \ may rotate and re-perceive. Beams behind the travel direction are excluded, so\
+  \ backing away from a wall is never capped by that wall. The `contact` flag is not\
+  \ consumed by this node — it is a post-hoc signal, whereas the whole claim here\
+  \ is about states before contact is possible.\n"
+prediction:
+  statement: 'Routing every translation command of an exploration controller through
+    this cap, on undisclosed-goal runs in unmapped indoor space, reduces the mean
+    number of collisions per episode by at least 0.5 relative to the reactive_avoid
+    baseline over the same seeds, because obstacles revealed at the sensing horizon
+    or from behind an occluding corner are always revealed while a stopping manoeuvre
+    still exists. It will simultaneously increase mean time_to_goal, since speed near
+    occlusions is traded for stopping room.
+
+    '
+  metric: collisions
+  baseline: reactive_avoid
+  min_effect: 0.5
+  cost_metric: time_to_goal
+confidence: medium
+generated:
+  condition: b
+  task: search_for_goal
+  treatment: paper
+  card_prompt_hash: 19215297ee7633ea
+  card_row_key: c380e7a8cfb32b78
+  card_model_id: claude-opus-5
+  ref_id: limit_speed_ics
+  paper_sha256: 32a1b5f27a7fd3e9e9ef55402358b06e803dc99c3ca4adda874a41ece7365bb5
+  generated_card_id: brake_within_visible_free_space
+  generated_node_name: CapSpeedToBrakingHorizon
+  citation_substituted: false

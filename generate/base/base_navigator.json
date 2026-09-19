@@ -1,0 +1,14 @@
+{
+  "backend": "claude-cli",
+  "is_condition": false,
+  "model_id": "claude-opus-5",
+  "name": "BaseNavigator",
+  "node_id": "base_navigator",
+  "note": "The shared base node. NOT a condition, NOT counted in G1, NOT in generate/staging/. Frozen once generated: every growth-loop number is relative to it.",
+  "prompt_chars": 9868,
+  "prompt_hash": "128534500760ffe0",
+  "role": "substrate",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "navigate_to_goal",
+  "temperature": null
+}

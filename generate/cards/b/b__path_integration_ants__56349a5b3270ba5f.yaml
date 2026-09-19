@@ -1,0 +1,125 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition B's card call (given the source document in full).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: ant_path_integration_outbound_bearing
+node_name: SteerAlongAntOutboundVector
+source:
+  citation: 'Müller, M. & Wehner, R. (1988) "Path integration in desert ants, Cataglyphis
+    fortis." Proc. Natl. Acad. Sci. USA 85:5287-5290.
+
+    '
+  span: 'Results, "Two-Leg Trajectories", p. 5288, Eqs. 1a, 1b and 2, and Eq. 3 (phi_{n+1}
+    = phi_n + k(180+d)(180-d)d / l_n); the fitted constant k = 4.009 x 10^-5 deg^-1
+    and the 90-degree normalisation cap are stated in the first paragraph of p. 5289.
+    Error-cancellation and the "sharp backward turns" failure mode: Discussion, p.
+    5289, first paragraph.
+
+    '
+  verified: unverified
+mechanism: 'A foraging ant does not vector-sum its outbound path. It carries exactly
+  two running scalars - a mean direction phi_n (the bearing from the nest along which
+  it reckons it has travelled) and an accumulated length l_n in stride units - and
+  updates them incrementally as a distance-weighted running mean: phi_{n+1} = [phi_n*l_n
+  + (phi_n + d)] / (l_n + 1), l_{n+1} = l_n + 1 - d/90deg (Eqs. 1a, 1b), which for
+  l >> 1 stride collapses to phi_{n+1} = phi_n + d/l_n (Eq. 2), and which fits the
+  ants'' measured homing errors over the full turning range only in the form phi_{n+1}
+  = phi_n + k(180deg + d)(180deg - d)d / l_n with k = 4.009e-5 deg^-1, the product
+  being normalised so it maximally reaches 90 degrees (Eq. 3, p. 5288-5289). Two properties
+  make this worth stealing, and neither is accuracy. First, the update is purely idiothetic:
+  it consumes only self-motion (one unit advance, one turn angle d) and never an external
+  position fix, so it cannot inherit the error of any position estimate. Second, the
+  division by l_n makes the direction estimate anneal itself: early steps swing phi
+  hard, and once l_n is large a single turn barely moves it, so the agent''s committed
+  outbound bearing stiffens automatically with distance travelled, with no tuned time
+  constant. The l-update is a turn-discounted odometer - a 90-degree turn cancels
+  a whole unit of advance and a reversal subtracts one - so l_n measures ground genuinely
+  gained away from the start, not path walked. Steering to hold the robot''s heading
+  on phi_n (i.e. directly away from the reckoned start point) therefore produces long,
+  straight, self-lengthening outbound excursions rather than a diffusive random walk,
+  which is what covering unseen indoor area cheaply requires. The paper''s own defence
+  of the approximation applies here: its errors are large only for sharp backward
+  turns, which are rare, and left/right errors are equal and opposite so they cancel
+  unless turns are strongly one-sided (Discussion, p. 5289).
+
+  '
+trigger: 'The accumulator runs on every control step of the episode unconditionally,
+  from t = 0, whichever leaf holds the tree - it is state, not an action. The leaf''s
+  precondition port fires only when all of: (a) obs.goal is None, i.e. the goal has
+  not yet been seen and latched, so the task is still coverage; (b) the accumulated
+  turn-discounted length satisfies l_n >= 6 strides (~0.5 m) so phi_n is defined and
+  not dominated by the first few ticks; (c) at least one lidar bearing inside +-90
+  deg of the desired robot-frame heading is admissible (see derivation). If (c) fails
+  the port returns false and the tree falls through to whatever recovery or avoidance
+  leaf sits to its right; this leaf never handles obstacle emergencies itself.
+
+  '
+derivation: 'Mapping. Ant stride -> one fixed 10 Hz accumulator tick (dt = 0.1 s),
+  chosen by me because the control rate is not specified; accumulate the commanded
+  Twist and fire the update when sim time t has advanced by >= 0.1 s. Ant unit length
+  -> u = 0.08 m, the distance covered in one tick at the |vx| <= 0.8 m/s saturation
+  limit; l_n stays dimensionless (strides), so reckoned distance from start is l_n
+  * u metres. Ant celestial compass + odometer -> the commanded (vx, vy, wz) themselves,
+  NOT pose_estimate: pose_estimate is a drifting belief with a seeded random walk
+  added, and the ant''s system reads no such external fix, so the transfer is only
+  faithful if the integrator is fed self-motion. Concretely, per tick: s_n = hypot(vx,
+  vy) * dt metres, d_n = degrees(wz * dt) signed, and an idiothetic heading psi_{n+1}
+  = psi_n + d_n (psi_0 = 0). Ant nest -> the robot''s pose at t = 0; phi_n is then
+  the reckoned bearing from that origin to the robot, in the same idiothetic frame
+  as psi, so the difference phi_n - psi_n is a robot-frame bearing that stays correct
+  even as both scalars drift together. This same-frame-difference argument is mine;
+  the paper has no drifting external estimate to contrast against. Numbers. Update
+  l_{n+1} = l_n + s_n/u - |d_n|/90, clamped to l_n >= 1. I read the "d/90" discount
+  of Eq. 1b as using |d|, because signed d would make a left turn lengthen the home
+  vector, which the paper''s geometry cannot mean; the absolute value is my reading.
+  Update phi with the paper''s Eq. 3 verbatim, phi_{n+1} = phi_n + k*(180 + d_n)*(180
+  - d_n)*d_n / l_n with k = 4.009e-5 deg^-1, all angles in degrees, the increment
+  clipped to +-90 deg per the paper''s normalisation, phi wrapped to (-180, 180].
+  At this robot''s limits |wz| <= 1.0 rad/s gives |d_n| <= 5.73 deg per tick, so (180
+  + d)(180 - d) ~= 32400 deg^2 and Eq. 3 reduces to phi_{n+1} = phi_n + 1.299 * d_n
+  / l_n: within the Go2''s turn-rate saturation the ant''s full model is Eq. 2 with
+  a fixed gain of 1.299, i.e. the outbound bearing swings about 30% more per degree
+  turned than the paper''s simpler Eq. 2 and about 1.30*(1 + 1/l_n) times more than
+  an exact vector sum. That overshoot is the ant''s systematic error, kept deliberately:
+  for choosing "which way is away" a few degrees of bias is irrelevant, and per p.
+  5289 it cancels over balanced left/right turning. The 1.299 reduction is arithmetic
+  of mine on the paper''s constant. Output. Desired robot-frame heading theta* = wrap(radians(phi_n)
+  - psi_n_rad). A lidar bearing theta_i is admissible if ranges[i] >= 1.5 m (treat
+  inf as range_max = 6.0 m) and every beam within +-0.35 rad of it reads >= 0.6 m.
+  Among admissible bearings with |wrap(theta_i - theta*)| <= 90 deg pick the one minimising
+  |wrap(theta_i - theta*)|; call it e. Command wz = clip(1.5 * e, -1.0, 1.0) rad/s,
+  vx = 0.8 * max(0, cos e) * min(1, (d_e - 0.6)/1.4) m/s where d_e is the range along
+  the selected bearing, vy = 0. If obs.contact is true, or the forward 30 deg sector
+  reads < 0.6 m, emit vx = 0 and let the port go false on the next tick. If goal latches
+  non-None the leaf stops emitting; the accumulator keeps running. The 1.5 m / 0.6
+  m / 0.35 rad / 1.5 gain / 6-stride numbers are mine, sized from Go2 body width ~0.31
+  m plus margin and the 0.8 m/s, 1.0 rad/s saturations; the paper states none of them.
+
+  '
+prediction:
+  statement: 'On unmapped indoor scenarios where obs.goal is None until seen, a leaf
+    that holds heading on the ant integrator''s outbound bearing phi_n (Eq. 3, fed
+    only by commanded twist) reaches the goal on a larger fraction of seeds than a
+    reactive_avoid baseline, because turn-discounted displacement from the start grows
+    monotonically and self-stiffens with distance instead of diffusing; the advantage
+    must persist on scenarios where pose_estimate drifts, since the integrator never
+    reads it.
+
+    '
+  metric: goal_reached
+  baseline: reactive_avoid
+  min_effect: 0.15
+  cost_metric: min_clearance
+confidence: medium
+generated:
+  condition: b
+  task: search_for_goal
+  treatment: paper
+  card_prompt_hash: fb42864f768eaf30
+  card_row_key: 56349a5b3270ba5f
+  card_model_id: claude-opus-5
+  ref_id: path_integration_ants
+  paper_sha256: e9f40cbbd48ac1a9bdfa95b00f5faae737c0b0a32ffc443d665d8222a8ad5da6
+  generated_card_id: ant_path_integration_outbound_bearing
+  generated_node_name: SteerAlongAntOutboundVector
+  citation_substituted: false

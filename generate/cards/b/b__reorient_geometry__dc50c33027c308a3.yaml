@@ -1,0 +1,141 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition B's card call (given the source document in full).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: geometric_shape_revisit_reroute
+node_name: RerouteAtShapeRecognisedPlace
+source:
+  citation: 'Cheng, K. (1986). A purely geometric module in the rat''s spatial representation.
+    Cognition, 23, 149-178.
+
+    '
+  span: 'General Discussion, pp. 171-172 (the displacement-properties argument and
+    the "A geometric module" section, which opens on p. 172): "the rat must have recorded
+    the metric relations of distances and angles between target and shape, and kept
+    track of left-right relations, or sense... That rats do not systematically make
+    affine or reflection errors at quadrants adjacent to the correct one, but do make
+    rotational errors, indicates that they encode and use both metric relations and
+    sense". Quantitative anchors: Exp. 1A Discussion, p. 158 ("The 3 : 2 ratio of
+    correct digs to rotational errors means, however, that the animals were only 20%
+    above chance at distinguishing the correct location from the rotational error");
+    Exp. 1A Apparatus p. 153 ("a wooden box (120 X 60 cm)") and Results p. 157 ("If
+    a dig was within 15 cm of the centre of the food dish, it was correct... A circle
+    of 15 cm radius covers 10% of the surface area"); Exp. 3 Discussion p. 170 (transposition
+    of features costs nothing, affine/reflection of geometry costs performance).
+
+    '
+  verified: unverified
+mechanism: 'A place can be identified by the SHAPE of the surrounding surfaces alone
+  - "the arrangement of surfaces as surfaces" - held as a record specified by displacement
+  properties: metric distances and angles PLUS sense (handedness). Cheng''s rats matched
+  such a record to the world rigidly and non-mirrored. The evidence is the error signature:
+  in a rectangle their mistakes were almost exclusively at the location 180 degrees
+  rotated through the centre (Exp. 1A, Table 1, p. 158: 47% correct, 31% rotational,
+  22% other), which is exactly the second rigid congruence a rectangle admits, and
+  there were no reflection or affine errors at the adjacent quadrants, which are the
+  congruences the record would admit if sense or metric were dropped (pp. 171-172).
+  Why shape-keyed identity helps: it is invariant to everything except geometry. Rearranging
+  all the surface features while leaving geometry intact (the diagonal transposition,
+  Exp. 3) cost the rats nothing; changing the geometric relations while keeping the
+  local feature (affine transformation or reflection) made every rat''s performance
+  drop (p. 170). And it never consults the animal''s belief about where it is. The
+  price is precisely one failure mode, and the paper measures it: when the shape is
+  self-congruent under rotation the record cannot pick between the two fits, and the
+  rats were "only 20% above chance" at doing so (p. 158). So a shape record is a trustworthy
+  place key exactly when its own best fit is decisively better than its next rotational
+  fit, and a detector built on it must refuse to answer when it is not.
+
+  '
+trigger: 'obs.goal is None (goal not yet disclosed, so the task is covering unvisited
+  ground); the current scan has at least 30 finite returns (enough structure to constitute
+  a shape); and the shape memory holds at least one record captured more than 4.0
+  m of accumulated commanded travel ago. If any of these fails, the node returns FAILURE
+  on the same tick and the tree falls through to whatever explorer sits below it.
+
+  '
+derivation: 'MAPPING. "Arrangement of surfaces as surfaces" -> the 181-beam range
+  profile, inf replaced by range_max = 6.0 m, which is a featureless record of where
+  surfaces are and nothing about what they look like. "Metric relations" -> the range
+  values in metres. "Sense" -> the beam ORDER around the circle. "Rigid congruence
+  of record to world" -> circular shift of the profile, because range_angles are robot-frame,
+  so a yaw change is exactly a circular shift. "Rotational error" -> a shift other
+  than the true one that fits nearly as well. The rat''s non-geometric features (brightness,
+  odour) have no analogue on this sensor and are simply absent; that absence is the
+  paper''s point, not a loss. The paper is about returning to a remembered goal; using
+  the same record to detect that you are somewhere you have already been, and to leave
+  by a different exit, is MY extension, not Cheng''s.
+
+  DESCRIPTOR. r[i] = min(ranges[i], 6.0) for the N distinct bearings (N = 181; if
+  range_angles wraps so the last beam duplicates the first, drop it and use N = 180).
+  Beam pitch d_ang = 2*pi/N rad (about 1.99 deg).
+
+  MATCH. For shift k in [0, N): d(k) = (1/N) * sum_i |r_cur[i] - r_rec[(i+k) mod N]|,
+  in metres. d* = min_k d(k), k* = argmin. NEVER evaluate the mirrored comparison
+  (r_rec reversed): rats make no reflection errors, so sense is part of the record
+  (pp. 171-172). This is the paper''s constraint, carried over unchanged.
+
+  ACCEPT. Declare a revisit iff d* <= tau, with tau = clip(0.125 * m, 0.20, 0.75)
+  metres, where m is the median finite range of the stored record. The 0.125 is the
+  rats'' scoring tolerance expressed as a fraction of their arena: 15 cm radius in
+  a 120 cm box (pp. 153, 157). Reading that ratio as a scale-relative match tolerance
+  and applying it in range-difference space is MINE; the clip bounds (0.20 m, 0.75
+  m) are mine, set so a tight corridor does not demand sub-decimetre agreement and
+  a large open room does not accept everything.
+
+  REFUSE WHEN AMBIGUOUS. Let k2 = argmin d(k) over shifts whose circular separation
+  from k* is at least 23 beams (about 45 deg). If d(k2) <= 1.20 * d*, the shape is
+  rotationally self-similar - a corridor, a square room, a bare rectangle - and the
+  node returns FAILURE without acting and without writing an exit. The 1.20 is the
+  rats'' own margin: a 3:2 correct-to-rotational split is "only 20% above chance"
+  (p. 158), i.e. 20% is the observed level at which two rigid fits remain confusable.
+  Transplanting that percentage into descriptor- score space is MINE.
+
+  ACT. Each record stores, besides r, the set E of exit bearings in ITS OWN frame:
+  the mean commanded motion bearing atan2(vy, vx) over the 1.0 m of travel following
+  capture. On an accepted, unambiguous match, k* converts them into the current robot
+  frame: phi_cur = wrap(phi_rec - k* * d_ang), with the sign following the indexing
+  above (implementers must keep the convention consistent with their correlation).
+  Choose the target bearing theta* that maximises the minimum circular distance to
+  every phi_cur, subject to (a) min(r) over beams within +/-20 deg of theta* being
+  >= 1.2 m, and (b) that minimum circular distance being >= 60 deg (1.05 rad). If
+  no bearing satisfies both, return FAILURE. Otherwise command vy = 0, wz = clip(1.5
+  * wrap(theta* - 0), -1.0, 1.0) with the error measured against the robot''s own
+  forward axis, and vx = 0.5 m/s once |error| <= 0.35 rad, else vx = 0. Hold RUNNING
+  until the robot has covered 1.0 m along the new exit, then append that exit to the
+  record''s E and return SUCCESS. 4.0 m blackout, 1.2 m corridor width, 60 deg exit
+  separation, the 1.5 gain and the 0.5 m/s crawl are all MINE: the blackout keeps
+  consecutive frames in a corridor from matching themselves, 1.2 m clears a Go2 plus
+  margin, 60 deg is a heading change larger than the descriptor''s own ambiguity window.
+
+  POSE. pose_estimate is never read by this node. Place identity comes only from the
+  scan; the only integrated quantity is commanded-travel distance, used as a monotone
+  counter for the blackout, where drift in its absolute value is harmless.
+
+  '
+prediction:
+  statement: 'On scenarios where obs.goal is None at episode start, inserting this
+    leaf above the default explorer raises the fraction of seeds on which the goal
+    is found, because shape-keyed revisit detection breaks the loop-and-re-tread behaviour
+    that pose-keyed or pose-free exploration falls into once pose_estimate has drifted.
+    It is falsified if goal_reached fails to improve by the stated margin, and the
+    mechanism specifically (rather than the extra turning) is falsified if allowing
+    the mirrored match or deleting the 1.20 ambiguity guard leaves goal_reached unchanged.
+
+    '
+  metric: goal_reached
+  baseline: reactive_avoid
+  min_effect: 0.1
+  cost_metric: path_length
+confidence: medium
+generated:
+  condition: b
+  task: search_for_goal
+  treatment: paper
+  card_prompt_hash: a311b5689f8b3cf8
+  card_row_key: dc50c33027c308a3
+  card_model_id: claude-opus-5
+  ref_id: reorient_geometry
+  paper_sha256: ff51f04ec7e6c1740db32895933207302084b3177ef980e62b0c2e863c07769d
+  generated_card_id: geometric_shape_revisit_reroute
+  generated_node_name: RerouteAtShapeRecognisedPlace
+  citation_substituted: false

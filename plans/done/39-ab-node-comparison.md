@@ -25,8 +25,8 @@ because widening a leak assertion is the user's call. **Do not "fix" it as a
 side effect of this chunk.**
 
 Background you need, in order: `CLAUDE.md`, `generate/FINDINGS.md`,
-`compose/FINDINGS.md`, `plans/doing/37-admission-becomes-validity.md` (Outcome),
-`plans/doing/38-node-contribution-ablation.md` (Outcome).
+`compose/FINDINGS.md`, `plans/done/37-admission-becomes-validity.md` (Outcome),
+`plans/done/38-node-contribution-ablation.md` (Outcome).
 
 ### The state as of 2026-09-07
 

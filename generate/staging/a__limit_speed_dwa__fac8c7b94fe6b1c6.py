@@ -1,269 +1,252 @@
-"""Dynamic-window admissible-velocity search for a Go2 with a 181-beam 2D scan.
-
-Implements `dynamic_window_velocity_search`: collision avoidance posed as a
-constrained search in velocity space rather than position space. Each control
-step samples the (vx, wz) pairs reachable from the previous command within one
-acceleration-limited interval, keeps only those from which the body could still
-brake to a standstill before the nearest obstacle on the implied arc, and picks
-the survivor maximising a weighted sum of goal alignment, clearance and speed.
-
-Safety is a hard feasibility constraint derived from braking physics, so an
-inadmissible command is never scored at all; progress and speed stay soft
-preferences. Unlike a repulsion field it never commands a velocity it cannot
-stop out of, and unlike pure pursuit it prefers the roomier of two arcs that
-make comparable progress. Both constraints and two of the three objective terms
-are computed in the robot frame from lidar alone, so pose drift degrades goal
-alignment only -- never the safety guarantee.
-"""
-
 import math
 
 import numpy as np
 
-from core.observation import Command
 from nodes.contract import Action, Direction, Port, PortType, Status
-from harness.micro import MicroScenario, room
-
-# Actuation saturations enforced by the runner.
-V_MAX = 0.8
-W_MAX = 1.0
-
-# Acceleration limits. The frozen locomotion policy hides the true ones; these
-# are estimates of the rate at which a ~15 kg quadruped can change commanded
-# body velocity without the tracker falling behind.
-A_V = 2.0
-A_W = 4.0
-A_BRAKE = 2.0
-
-T_W = 0.25          # window horizon ~ settling time of the policy on a step command
-T_SIM = 2.0         # arc rollout horizon; 2.0 s * 0.8 m/s = 1.6 m >> braking distance
-R_SAFE = 0.35       # Go2 circumscribed body radius, no extra margin
-N_V = 11
-N_W = 21
-
-ALPHA = 0.6         # heading: dominant, so the node keeps making progress
-BETA = 0.3          # clearance: enough to flip a choice between similar bearings
-GAMMA = 0.1         # speed: tie-break only
-CLEAR_SAT = 2.0     # room beyond 2 m should not outbid goal progress
-
-TRIGGER_RANGE = 2.5
-V_EPS = 1e-6
-
-# Below this turn rate the arc is treated as a straight line. At w = 0.05 and
-# v = 0.8 the arc departs from its chord by 0.08 m over T_SIM, well inside
-# R_SAFE, while R = v/w = 16 m is about where the law-of-cosines contact test
-# starts losing precision to cancellation.
-W_STRAIGHT = 0.05
-
-
-def _wrap(a):
-    return (a + math.pi) % (2.0 * math.pi) - math.pi
-
-
-def _minmax(x):
-    """Normalise a term to [0, 1] across the surviving set."""
-    lo = float(np.min(x))
-    hi = float(np.max(x))
-    if hi - lo < 1e-9:
-        # Degenerate: the term separates nothing, so it must not bias the argmax.
-        return np.ones_like(x)
-    return (x - lo) / (hi - lo)
 
 
 class SelectVelocityByDynamicWindow(Action):
-    """Emit the best admissible velocity in the dynamic window.
+    """Dynamic-window admissible-velocity search over (vx, wz).
 
-    Reachability cuts the search to commands the body can actually produce next
-    step; admissibility (v <= sqrt(2 * dist * a_brake), plus its rotational
-    analogue) cuts it to commands it can stop out of. What is left is scored by
-    0.6 * heading + 0.3 * clearance + 0.1 * speed and the argmax is driven. If
-    nothing is admissible the node stops and reports FAILURE rather than
-    emitting the least-bad unstoppable command, leaving recovery to another leaf.
+    Poses collision avoidance as a constrained search in velocity space: sample
+    the commands reachable from the current velocity within one acceleration-
+    limited interval, discard every candidate from which the robot could not
+    brake to a standstill before the first obstacle on the arc it implies, and
+    pick the survivor maximising a weighted sum of goal alignment, clearance
+    and speed.
+
+    Revises `vx` and `wz` because those are exactly the two degrees of freedom
+    the arc model searches over; it writes them with `adjust` rather than `cap`
+    because the mechanism *selects* a velocity (which may be faster or turn the
+    other way than the base asked) rather than bounding one. `vy` is left to the
+    base -- zeroing it would make the arc model exact but would mean declaring
+    the whole Twist.
+
+    Declines (leaving the base's command untouched, byte-identical) when the
+    surroundings are not constrained: no finite lidar return within 2.5 m at a
+    bearing of |theta| <= pi/2, or a fully infinite scan. Returns FAILURE after
+    emitting a stop when the admissible set is empty, so a recovery leaf can
+    take over instead of this node guessing at a least-bad unsafe command.
     """
 
-    PORTS = (
-        # Mirrors the FAILURE status so a sibling recovery leaf can be gated on
-        # the empty-admissible-set case without inspecting return values.
-        Port("dwa_infeasible", PortType.FLAG, Direction.OUT),
-    )
-
+    WRITES = ("vx", "wz")
+    PORTS = (Port("dwa_safe_speed", PortType.SPEED, Direction.OUT),)
     PRECONDITION = (
-        "The scan has at least one finite return and at least one forward beam "
-        "(|bearing| <= pi/2) closer than 2.5 m, so the surroundings constrain "
-        "which velocities are safe."
+        "The robot is in locally constrained surroundings: at least one lidar "
+        "beam with |bearing| <= pi/2 returns a finite range below 2.5 m."
     )
     EFFECT = (
-        "Drives the reachable velocity that maximises the weighted heading, "
-        "clearance and speed score among those from which the robot could still "
-        "brake to a standstill before the nearest obstacle on its arc."
+        "Replaces the forward speed and turn rate with the highest-scoring "
+        "velocity from which the robot can still brake before the nearest "
+        "obstacle on the arc that velocity implies."
     )
-    TAGS = (
-        "dynamic_window",
-        "velocity_space",
-        "collision_avoidance",
-        "local_planner",
-        "admissible",
-        "lidar",
-        "braking",
-    )
+    TAGS = ("dynamic_window", "velocity_space", "admissibility", "clearance",
+            "local_avoidance", "lidar")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._vx_prev = 0.0
-        self._wz_prev = 0.0
+    # Actuation saturations (the runner clips to these anyway).
+    V_MAX = 0.8
+    W_MAX = 1.0
+
+    # Estimated acceleration limits of the frozen locomotion policy: roughly
+    # how fast a ~15 kg quadruped's tracker can follow a step in commanded body
+    # velocity. These are the card's numbers, not measured ones.
+    A_V = 2.0
+    A_W = 4.0
+    A_BRAKE = 2.0
+
+    T_WINDOW = 0.25          # one window interval ~ policy settling time
+    T_SIM = 2.0              # arc rollout horizon; 2.0 s * 0.8 m/s = 1.6 m
+    R_SAFE = 0.35            # Go2 circumscribed body radius, no extra margin
+
+    N_V = 11
+    N_W = 21
+
+    CLUTTER_RANGE = 2.5      # trigger threshold on forward beams
+    CLEAR_SAT = 2.0          # clearance saturates here so room beyond 2 m
+                             # cannot outbid goal progress
+
+    ALPHA = 0.6              # heading
+    BETA = 0.3               # clearance
+    GAMMA = 0.1              # speed
+
+    # Class-level defaults so the node is usable even if reset() is never called.
+    _v_prev = 0.0
+    _w_prev = 0.0
+    _was_active = False
 
     def reset(self, scenario, rng):
-        self._vx_prev = 0.0
-        self._wz_prev = 0.0
+        self._v_prev = 0.0
+        self._w_prev = 0.0
+        self._was_active = False
 
-    def precondition(self, obs, ports):
-        ranges = np.asarray(obs.ranges, dtype=float)
-        finite = np.isfinite(ranges)
-        if not np.any(finite):
-            return False
-        forward = np.abs(np.asarray(obs.range_angles, dtype=float)) <= 0.5 * math.pi
-        # An unconstrained window needs no search; yield to straight-line pursuit.
-        return bool(np.any(finite & forward & (ranges < TRIGGER_RANGE)))
-
-    def tick(self, obs, ports):
-        px, py, blocked_now = self._obstacles(obs)
-        v, w = self._window()
-        dist, dist_ang = self._clearance(
-            v, w, px, py, float(obs.range_max), blocked_now
-        )
-
-        admissible = (v <= np.sqrt(2.0 * A_BRAKE * dist) + 1e-9) & (
-            np.abs(w) <= np.sqrt(2.0 * A_W * dist_ang) + 1e-9
-        )
-        if not np.any(admissible):
-            self._vx_prev = 0.0
-            self._wz_prev = 0.0
-            ports["dwa_infeasible"] = True
-            ports.drive(Command(0.0, 0.0, 0.0))
-            return Status.FAILURE
-
-        v = v[admissible]
-        w = w[admissible]
-        dist = dist[admissible]
-
-        yaw = float(obs.pose_estimate[2])
-        target = self._target_bearing(obs)
-        # Alignment of the heading the candidate would have reached by T_W.
-        heading = 1.0 - np.abs(_wrap(target - (yaw + w * T_W))) / math.pi
-        clear = np.minimum(dist, CLEAR_SAT) / CLEAR_SAT
-        speed = v / V_MAX
-
-        score = ALPHA * _minmax(heading) + BETA * _minmax(clear) + GAMMA * _minmax(speed)
-        best = int(np.argmax(score))
-
-        self._vx_prev = float(v[best])
-        self._wz_prev = float(w[best])
-        ports["dwa_infeasible"] = False
-        # vy is held at zero: the arc model behind every dist() above assumes
-        # motion along a circle of radius vx/wz, and lateral drift invalidates it.
-        ports.drive(Command(self._vx_prev, 0.0, self._wz_prev))
-        return Status.RUNNING
-
-    def _target_bearing(self, obs):
-        """World-frame bearing to aim at, or the current heading if undisclosed."""
-        x, y, yaw = obs.pose_estimate
-        if obs.goal is None:
-            # Degrades into "hold the committed direction on the fastest safe arc".
-            return float(yaw)
-        gx, gy = obs.goal
-        return math.atan2(float(gy) - float(y), float(gx) - float(x))
-
-    def _window(self):
-        v_lo = max(0.0, self._vx_prev - A_V * T_W)
-        v_hi = min(V_MAX, self._vx_prev + A_V * T_W)
-        w_lo = max(-W_MAX, self._wz_prev - A_W * T_W)
-        w_hi = min(W_MAX, self._wz_prev + A_W * T_W)
-        vs = np.linspace(v_lo, v_hi, N_V)
-        ws = np.linspace(w_lo, w_hi, N_W)
-        grid_v, grid_w = np.meshgrid(vs, ws, indexing="ij")
-        return grid_v.ravel(), grid_w.ravel()
-
-    def _obstacles(self, obs):
-        """Finite returns as robot-frame points, minus any already inside R_SAFE.
-
-        A point nearer than R_SAFE is inside the swept disc at t=0, so the arc
-        contact time is meaningless for it. Split by side: one ahead of the
-        lateral axis blocks all forward motion, one at or behind it is dropped,
-        because a forward arc opens the gap to it immediately. That keeps the
-        node from driving into something 0.34 m in front while still letting it
-        slide past a wall it is nearly brushing.
-        """
+    def precondition(self, obs, ports) -> bool:
         ranges = np.asarray(obs.ranges, dtype=float)
         angles = np.asarray(obs.range_angles, dtype=float)
         finite = np.isfinite(ranges)
-        r = ranges[finite]
-        a = angles[finite]
-        px = r * np.cos(a)
-        py = r * np.sin(a)
+        if not finite.any():
+            self._was_active = False
+            return False
 
-        overlap = r <= R_SAFE
-        blocked_now = bool(np.any(overlap & (px > 0.0)))
-        keep = ~overlap
-        return px[keep], py[keep], blocked_now
+        forward = np.abs(angles) <= 0.5 * math.pi
+        active = bool((finite & forward & (ranges < self.CLUTTER_RANGE)).any())
+        if not active:
+            # Remember that the base, not us, is driving: the next active tick
+            # must build its reachable window around the base's velocity.
+            self._was_active = False
+        return active
 
-    def _clearance(self, v, w, px, py, range_max, blocked_now):
-        """Free arc length and free arc angle for every candidate.
+    def tick(self, obs, ports) -> Status:
+        pending = ports.command
+        px, py = self._obstacle_points(obs)
+        if px.size == 0:
+            return Status.FAILURE
 
-        Closed form rather than a stepped rollout: the robot centre rides a
-        circle of radius |R| = |v/w| about C = (0, R), its angle on that circle
-        is beta(t) = a0 + w*t with a0 = -sign(w)*pi/2, and an obstacle at polar
-        (d, phi) about C is first swept when beta = phi - sign(w)*delta, where
-        cos(delta) = (d^2 + R^2 - r_safe^2) / (2*d*|R|). Same answer as
-        simulating, with no blind spot between steps.
+        if self._was_active:
+            v_prev, w_prev = self._v_prev, self._w_prev
+        else:
+            # First active tick after a gap: the body is executing the base's
+            # command, so that is the velocity we are actually reachable from.
+            v_prev = float(np.clip(pending.vx, 0.0, self.V_MAX))
+            w_prev = float(np.clip(pending.wz, -self.W_MAX, self.W_MAX))
+
+        dv = self.A_V * self.T_WINDOW
+        dw = self.A_W * self.T_WINDOW
+        vs = np.linspace(max(0.0, v_prev - dv),
+                         min(self.V_MAX, v_prev + dv), self.N_V)
+        ws = np.linspace(max(-self.W_MAX, w_prev - dw),
+                         min(self.W_MAX, w_prev + dw), self.N_W)
+        V, W = np.meshgrid(vs, ws, indexing="ij")
+        V = V.ravel()
+        W = W.ravel()
+
+        dist, dist_ang = self._arc_clearance(V, W, px, py, float(obs.range_max))
+
+        # Hard feasibility: an inadmissible command is never scored.
+        keep = ((V <= np.sqrt(2.0 * self.A_BRAKE * dist) + 1e-9)
+                & (np.abs(W) <= np.sqrt(2.0 * self.A_W * dist_ang) + 1e-9))
+
+        if not keep.any():
+            ports.adjust(vx=0.0, wz=0.0)
+            ports["dwa_safe_speed"] = 0.0
+            self._v_prev = 0.0
+            self._w_prev = 0.0
+            self._was_active = True
+            return Status.FAILURE
+
+        Vk = V[keep]
+        Wk = W[keep]
+        dk = dist[keep]
+
+        heading = 1.0 - np.abs(self._wrap(self._target_bearing(obs)
+                                          - Wk * self.T_WINDOW)) / math.pi
+        clear = np.minimum(dk, self.CLEAR_SAT) / self.CLEAR_SAT
+        speed = np.abs(Vk) / self.V_MAX
+
+        score = (self.ALPHA * self._normalise(heading)
+                 + self.BETA * self._normalise(clear)
+                 + self.GAMMA * self._normalise(speed))
+        best = int(np.argmax(score))
+
+        v_cmd = float(Vk[best])
+        w_cmd = float(Wk[best])
+        ports.adjust(vx=v_cmd, wz=w_cmd)
+        ports["dwa_safe_speed"] = float(
+            min(self.V_MAX, math.sqrt(2.0 * self.A_BRAKE * float(dk[best]))))
+
+        self._v_prev = v_cmd
+        self._w_prev = w_cmd
+        self._was_active = True
+        return Status.SUCCESS
+
+    def _obstacle_points(self, obs):
+        """Finite lidar returns as Cartesian points in the robot frame."""
+        ranges = np.asarray(obs.ranges, dtype=float)
+        angles = np.asarray(obs.range_angles, dtype=float)
+        n = min(ranges.size, angles.size)
+        ranges = ranges[:n]
+        angles = angles[:n]
+        good = np.isfinite(ranges) & (ranges > 1e-3)
+        r = ranges[good]
+        a = angles[good]
+        return r * np.cos(a), r * np.sin(a)
+
+    def _target_bearing(self, obs) -> float:
+        """Bearing to the goal in the robot frame, or 0 if it is undisclosed.
+
+        With no goal this degrades into "hold the committed heading on the
+        fastest safe arc", which is the graceful fallback the card asks for.
         """
-        dist = np.minimum(range_max, T_SIM * v)
-        dist_ang = T_SIM * np.abs(w)
+        goal = obs.goal
+        if goal is None:
+            return 0.0
+        x, y, yaw = obs.pose_estimate
+        return float(self._wrap(math.atan2(goal[1] - y, goal[0] - x) - yaw))
 
-        moving = v > V_EPS
-        if px.size:
-            curved = moving & (np.abs(w) >= W_STRAIGHT)
-            straight = moving & ~curved
+    def _arc_clearance(self, V, W, px, py, range_max):
+        """Free arc length and free arc angle before the swept disc hits a point.
 
-            if np.any(straight):
-                on_path = (np.abs(py) <= R_SAFE) & (px >= 0.0)
-                if np.any(on_path):
-                    entry_x = px[on_path] - np.sqrt(
-                        np.maximum(R_SAFE ** 2 - py[on_path] ** 2, 0.0)
-                    )
-                    nearest = max(float(np.min(entry_x)), 0.0)
-                    dist[straight] = np.minimum(dist[straight], nearest)
-                # A straight arc sweeps no angle, so dist_ang stays unbounded.
+        Returned distances are capped at the rollout horizon and the sensor
+        range, so an unobstructed arc scores the same as a very long one.
+        """
+        dist = np.minimum(range_max, self.T_SIM * V)
+        dist_ang = np.minimum(math.pi, self.T_SIM * np.abs(W))
 
-            if np.any(curved):
-                radius = v[curved][:, None] / w[curved][:, None]
-                abs_r = np.abs(radius)
-                dy = py[None, :] - radius
-                dx = np.broadcast_to(px[None, :], dy.shape)
-                d = np.hypot(dx, dy)
+        straight = np.abs(W) < 1e-3
+        curving = (~straight) & (V > 1e-6)
 
-                # The path circle passes within R_SAFE of the point at all.
-                hit = np.abs(d - abs_r) <= R_SAFE
-                cos_delta = (d * d + radius * radius - R_SAFE ** 2) / (
-                    2.0 * np.maximum(d, 1e-9) * np.maximum(abs_r, 1e-9)
-                )
-                delta = np.arccos(np.clip(cos_delta, -1.0, 1.0))
+        if straight.any():
+            # Swept disc travelling along +x: a point is struck when its
+            # distance to the disc centre falls to R_SAFE.
+            lateral = np.abs(py) <= self.R_SAFE
+            if lateral.any():
+                half = np.sqrt(np.maximum(self.R_SAFE ** 2 - py[lateral] ** 2, 0.0))
+                s_enter = px[lateral] - half
+                s_exit = px[lateral] + half
+                ahead = s_exit >= 0.0
+                if ahead.any():
+                    d_line = float(np.maximum(s_enter[ahead], 0.0).min())
+                    dist[straight] = np.minimum(dist[straight], d_line)
 
-                turn_sign = np.sign(w[curved][:, None])
-                start_angle = -0.5 * math.pi * turn_sign
-                entry_angle = np.arctan2(dy, dx) - turn_sign * delta
-                # Angle actually travelled before entry, measured in the
-                # direction of turn, hence non-negative.
-                travel = np.where(
-                    hit,
-                    np.mod(turn_sign * (entry_angle - start_angle), 2.0 * math.pi),
-                    np.inf,
-                )
-                dist[curved] = np.minimum(dist[curved], np.min(abs_r * travel, axis=1))
-                dist_ang[curved] = np.minimum(dist_ang[curved], np.min(travel, axis=1))
+        if curving.any():
+            Vc = V[curving]
+            Wc = W[curving]
+            R = Vc / Wc                      # signed turn radius
+            aR = np.abs(R)
+            sgn = np.sign(Wc)
 
-        if blocked_now:
-            dist = np.where(moving, 0.0, dist)
+            # Distance of each point from the arc centre (0, R); the swept disc
+            # can only ever reach points within R_SAFE of the arc's own radius.
+            rho = np.hypot(px[None, :], py[None, :] - R[:, None])
+            hit = np.abs(rho - aR[:, None]) <= self.R_SAFE
+
+            # Angle about the centre from the robot's start angle, measured in
+            # the direction of travel; minus the angular slack corresponding to
+            # the body radius, which makes contact register slightly early.
+            beta = np.arctan2(py[None, :] - R[:, None], px[None, :])
+            alpha0 = -0.5 * math.pi * sgn
+            swept = np.mod((beta - alpha0[:, None]) * sgn[:, None], 2.0 * math.pi)
+            slack = np.minimum(self.R_SAFE / aR, math.pi)
+            swept = np.maximum(swept - slack[:, None], 0.0)
+
+            first = np.where(hit, swept, np.inf).min(axis=1)
+            dist[curving] = np.minimum(dist[curving], aR * first)
+            dist_ang[curving] = np.minimum(dist_ang[curving], first)
+
+        # Candidates with v == 0 keep dist == 0 (no arc) but an unconstrained
+        # arc angle: spinning a disc body in place sweeps no new floor.
         return dist, dist_ang
+
+    @staticmethod
+    def _wrap(a):
+        return np.arctan2(np.sin(a), np.cos(a))
+
+    @staticmethod
+    def _normalise(a):
+        lo = float(a.min())
+        hi = float(a.max())
+        if hi - lo < 1e-9:
+            return np.zeros_like(a)
+        return (a - lo) / (hi - lo)
 
 
 PREDICTION = {
@@ -277,41 +260,5 @@ PREDICTION = {
     "metric": "collisions",
     "baseline": "goal_seeker",
     "min_effect": 0.5,
-    # Admissibility caps speed by braking distance and the clearance term buys
-    # detours, so the route is slower than walking straight at the goal.
     "cost_metric": "time_to_goal",
 }
-
-
-def micro(seed=0):
-    """A 4.5 m square with a partition and one piece of furniture.
-
-    The straight line from start to goal runs along y = x and enters the
-    partition at (1.6, 1.6), so goal_seeker -- which does not sense -- drives
-    into it. The detour is over the partition's free end (1.7 m of gap) and past
-    the table (0.5 m of clearance above it), both far wider than the 0.7 m the
-    admissibility test needs, so a robot that searches velocity space gets
-    through without contact.
-
-    The room is deliberately small: opposite wall distances along either axis
-    sum to 4.5 m, and any 180-degree forward span contains two axis directions,
-    so some forward beam always returns under 2.25 m. The trigger therefore
-    holds at every step and the node is never gated off part-way through.
-    """
-    world = room(
-        4.5,
-        4.5,
-        boxes=[
-            (1.6, 0.0, 2.0, 2.8),   # partition rooted in the bottom wall
-            (2.6, 2.6, 3.2, 3.2),   # table, occludes the far approach
-        ],
-    )
-    return MicroScenario(
-        id="dwa_partition_and_furniture",
-        world=world,
-        start=(0.7, 0.7, 0.785),
-        goal=(3.8, 3.8),
-        time_limit=40.0,
-        seed=seed,
-        goal_known=True,
-    )

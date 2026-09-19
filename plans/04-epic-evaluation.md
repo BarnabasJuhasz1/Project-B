@@ -58,7 +58,7 @@ it is flagged here rather than buried.
 | # | Chunk | Depends on | Needs Isaac Sim |
 |---|---|---|---|
 | 28 | [The batch runner and aggregation](done/28-batch-runner.md) | 17 | no (exercised on the dev set) |
-| 29 | [Grow the libraries to a reportable size](doing/29-grow-libraries.md) | 15, 28 | no |
+| 29 | [Grow the libraries to a reportable size](done/29-grow-libraries.md) | 15, 28 | no |
 | 30 | Condition C — the Nav2 baseline | 28 | **yes** |
 | 31 | The container run | 28, 29 | **yes** |
 | 32 | G3 — composition over the held-out split | 16, 29, 31 | **yes** |

@@ -1,0 +1,63 @@
+{
+  "admitted": true,
+  "detail": "valid; goal_reached effect -1.000 against a reported floor of 0.500",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "reorient_geometry",
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "568331945c5eb42c",
+    "card_row_key": "8fec33b617453c97",
+    "citation_id": null,
+    "citation_substituted": false,
+    "condition": "b",
+    "confidence": "medium",
+    "contribution": {
+      "baseline": 1.0,
+      "candidate": 0.0,
+      "cleared_floor": false,
+      "effect": -1.0,
+      "measured": true,
+      "metric": "goal_reached",
+      "reason": "MALFORMED: the fixed baseline already succeeds on this micro-world, so the scenario cannot distinguish the node from doing nothing. Make the world harder, not the bar lower.",
+      "required": 0.5
+    },
+    "emitted_code": true,
+    "generated_card_id": "shape_anchored_goal_address",
+    "generated_node_name": "ReanchorGoalToVisibleShape",
+    "is_traceable": false,
+    "mechanism_family": "ReorientToGeometry",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_8fec33b617453c97",
+    "origin": "card",
+    "paper_sha256": "ff51f04ec7e6c1740db32895933207302084b3177ef980e62b0c2e863c07769d",
+    "pipeline_version": "v2-card-first",
+    "precondition_fired": {
+      "drove": 600,
+      "fraction": 1.0,
+      "passed": 600,
+      "ticks": 600
+    },
+    "prediction_restated_faithfully": true,
+    "prompt_hash": "18be3d40c936cabb",
+    "ref_id": "reorient_geometry",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": "Experiment 1B, Discussion, p. 161 (\"the retention and use of both featural and inertial information are subsidiary to the use of the geometric relations between the target and the shape of the environment\"); General Discussion, p. 171 (\"the rat must have recorded the metric relations of distances and angles between target and shape, and kept track of left-right relations, or sense. Metric relations and sense together are known as displacement properties\"); Table 1, p. 158 (Exp. 1A: 47% correct digs vs 31% rotational errors, average over three rats).\n",
+    "span_verified": false,
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "treatment": "paper",
+    "validity": {
+      "reason": "valid",
+      "valid": true
+    }
+  },
+  "node_id": "gen_b_8fec33b617453c97",
+  "reason": "admitted",
+  "unit": {
+    "baseline": 1.0,
+    "candidate": 0.0,
+    "effect": -1.0,
+    "metric": "goal_reached",
+    "required": 0.5
+  }
+}

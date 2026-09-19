@@ -22,6 +22,7 @@ SPL of an impossible task is not a number anyone should report.
     python -c "import core.scenario as s; print([x.id for x in s.all_scenarios()])"
 """
 
+import re
 import math
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
@@ -314,8 +315,12 @@ class Scenario:
         x, y = float(pose_xy[0]), float(pose_xy[1])
         if math.hypot(gx - x, gy - y) > self.detect_radius:
             return False
+        # world=self.world, not the LAB42 default: line of sight must be
+        # tested against the geometry this scenario actually lives in, or a
+        # generated world's goal would be "seen" through its walls.
         return float(segment_clearance(np.array([x, y]),
-                                       np.array([gx, gy]))) > 0.0
+                                       np.array([gx, gy]),
+                                       world=self.world)) > 0.0
 
     def optimal_distance(self):
         """The SPL denominator: least distance that satisfies the goal test.
@@ -336,8 +341,13 @@ class Scenario:
         Together those two were about 1.0 m of slack in an ~10.6 m denominator,
         enough that every controller within ~9% of optimal scored exactly 1.0.
         """
+        # ⚠️ On a GENERATED world this is the 43-second call — the visibility
+        # graph is quadratic in obstacle count (epic 05, chunk 45 outcome). It is
+        # correct here and it is the SPL denominator; the cost is the epic's
+        # problem to solve, not a reason to compute the wrong number.
         return shortest_path_length(self.start[:2], self.goal,
-                                    stop_radius=GOAL_RADIUS)
+                                    stop_radius=GOAL_RADIUS,
+                                    world=self.world)
 
 
 # The development set: seen during generation, prompts iterated freely against
@@ -406,6 +416,39 @@ def _held_out():
     return HELD_OUT_SCENARIOS
 
 
+_GENERATED_ID = re.compile(r"^gen-([a-z_]+)-([0-9]{1,8})$")
+
+
+def _generated(scenario_id):
+    """`gen-<tier>-<seed>` -> a GeneratedScenario, or None if it is not one.
+
+    Lazy import, for the same reason `_held_out()` is: core.worldgen imports
+    Scenario from THIS module, so a module-level import here would be circular.
+
+    ⚠️ Resolvable BY NAME, never enumerated — exactly the rule the sealed split
+    follows, and for a related reason. A generated world is not a benchmark
+    scenario: `all_scenarios()` must never return one, or a batch runner that
+    iterates "everything" would evaluate against worlds that are in no split,
+    carry no sealed seed and are not in `PRE-REGISTRATION.md`. Naming one is an
+    explicit act; listing them is what we avoid.
+
+    `time_limit` is the generator's own default (120 s), which is what
+    scripts/measure_growth.py rolls out against — so a physics run and the
+    growth row it explains agree about when the episode ends.
+    """
+    match = _GENERATED_ID.match(scenario_id or "")
+    if match is None:
+        return None
+    from core.worldgen import TIERS, generate, to_scenario
+
+    tier, seed = match.group(1), int(match.group(2))
+    if tier not in TIERS:
+        raise KeyError(
+            f"unknown tier {tier!r} in generated scenario id {scenario_id!r}. "
+            f"Known tiers: {sorted(TIERS)}")
+    return to_scenario(generate(tier, seed))
+
+
 def all_scenarios(split=None):
     """Dev scenarios, always. Held-out only when asked for BY NAME.
 
@@ -463,7 +506,7 @@ def validate(scenario):
                 f"scenario {scenario.id!r}: {label} ({x}, {y}) is outside the "
                 f"room bounds {bounds()}")
 
-    grid = occupancy_grid()
+    grid = occupancy_grid(world=scenario.world)
     for label, (x, y) in (("start", scenario.start[:2]), ("goal", scenario.goal)):
         if not grid.is_free((x, y)):
             raise ValueError(
@@ -474,7 +517,8 @@ def validate(scenario):
     # grid field is exhaustive over the whole room, so "no path" is a statement
     # about the floorplan; the visibility graph answers one query and a bug in
     # it would masquerade as an unreachable goal.
-    d_grid = geodesic_distance(scenario.start[:2], scenario.goal)
+    d_grid = geodesic_distance(scenario.start[:2], scenario.goal,
+                               grid=grid, world=scenario.world)
     if not math.isfinite(d_grid):
         raise ValueError(
             f"scenario {scenario.id!r}: goal {scenario.goal} is UNREACHABLE from "
@@ -485,7 +529,8 @@ def validate(scenario):
     # optimal_distance() subtracts GOAL_RADIUS from a start->goal path, which is
     # only the same thing as the distance to the goal DISC when that disc is
     # entirely walkable — otherwise the run-in it shortens is not run-in-able.
-    if float(clearance(np.asarray(scenario.goal, dtype=float))) < ROBOT_RADIUS + GOAL_RADIUS:
+    if float(clearance(np.asarray(scenario.goal, dtype=float),
+                       world=scenario.world)) < ROBOT_RADIUS + GOAL_RADIUS:
         raise ValueError(
             f"scenario {scenario.id!r}: goal {scenario.goal} is within "
             f"{ROBOT_RADIUS + GOAL_RADIUS} m of a wall, so part of the "
@@ -581,6 +626,13 @@ def load(scenario_id):
     for scenario in _held_out():
         if scenario.id == scenario_id:
             return validate(scenario)
+    generated = _generated(scenario_id)
+    if generated is not None:
+        # ⚠️ This pays ~40 s: validate() calls optimal_distance(), a
+        # visibility-graph solve that is quadratic in obstacle count on a
+        # generated world. Paid deliberately — a physics run whose SPL
+        # denominator was never computed cannot be scored.
+        return validate(generated)
     raise KeyError(
         f"unknown scenario {scenario_id!r}. Dev: {sorted(_BY_ID)}. "
         f"Held-out ids exist but are not listed here on purpose; see "

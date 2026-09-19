@@ -4,6 +4,13 @@
 possible.** 39 gets numbers; 40 gets numbers that mean what a reader will assume.
 **Blocked by:** nothing.
 
+⚠️ **SUPERSEDED 2026-09-14 by [52 — a layered command pipeline](52-layered-command-pipeline.md).** The measurement below stands and is carried
+forward into 52. The RECOMMENDATION below (option 2, a consuming Action) is REFUTED:
+growth round 1 showed the problem is not only orphaned ports but that exclusive
+control is the wrong execution model, and option 2 requires the consumer to know
+about each modifier in advance — which cannot support an open-ended growth loop.
+**Kept, not deleted: this is where the diagnosis was first made.**
+
 ---
 
 ## Read this first if you are a fresh session

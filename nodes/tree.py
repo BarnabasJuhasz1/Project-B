@@ -90,6 +90,42 @@ class Fallback(Composite):
         return Status.FAILURE
 
 
+class Layer(Composite):
+    """Tick **every** child, in order. Nobody short-circuits anybody.
+
+    THE COMPOSITE CHUNK 52 NEEDED AND NEITHER EXISTING ONE COULD BE.
+    `Sequence` stops on anything that is not SUCCESS and `Fallback` on anything
+    that is not FAILURE, so a base returning RUNNING — which the base always
+    does, by its prompt's one hard requirement — stops both dead. "Put the base
+    first and let later nodes override it" is therefore not a reinterpretation
+    of the existing tree; it needs this.
+
+    **Position is priority, and later is higher.** The first child proposes a
+    command; each later child may revise the fields it declared in `WRITES`.
+    That is the whole ordering rule — there are no weights and nothing to tune,
+    because the arbitration rule is part of the experiment and is kept minimal
+    on purpose (see `nodes/contract.py`).
+
+    A child whose precondition fails returns FAILURE without ticking, exactly as
+    everywhere else, and the pending command is left **untouched** — which is
+    what makes "a modifier that declines changes nothing" true by construction
+    rather than by the modifier remembering to be careful.
+
+    Status: FAILURE only if EVERY child failed, meaning nobody handled this
+    step; RUNNING otherwise. It is deliberately not SUCCESS — a Layer that
+    produced a command has not finished anything, and returning SUCCESS would
+    short-circuit a `Sequence` above it.
+    """
+
+    def tick(self, obs, ports):
+        handled = False
+        for child in self.children:
+            status = tick_node(child, obs, ports.store)
+            if status is not Status.FAILURE:
+                handled = True
+        return Status.RUNNING if handled else Status.FAILURE
+
+
 def tick_node(node, obs, store):
     """Tick one node, with its precondition and its restricted port view.
 

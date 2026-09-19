@@ -1,0 +1,45 @@
+{
+  "admitted": false,
+  "detail": "raised while ticking the validity world: PortAccessError: 'gen_b_33af0e006b6f45dd is a decorator and called drive(). Only an Action emits a Twist \u2014 that is the distinction between the three leaf kinds, not the label.'",
+  "metadata": {
+    "backend": "claude-cli",
+    "card_id": "limit_speed_ics",
+    "card_model_id": "claude-opus-5",
+    "card_prompt_hash": "5cee03fa20d28a74",
+    "card_row_key": "33af0e006b6f45dd",
+    "citation_id": null,
+    "citation_substituted": false,
+    "condition": "b",
+    "confidence": "medium",
+    "emitted_code": true,
+    "generated_card_id": "brake_within_seen_free_space",
+    "generated_node_name": "LimitSpeedToStoppableSeenDistance",
+    "is_traceable": false,
+    "mechanism_family": "LimitSpeedToVisibleRange",
+    "model_id": "claude-opus-5",
+    "node_id": "gen_b_33af0e006b6f45dd",
+    "origin": "card",
+    "paper_sha256": "32a1b5f27a7fd3e9e9ef55402358b06e803dc99c3ca4adda874a41ece7365bb5",
+    "pipeline_version": "v2-card-first",
+    "precondition_fired": {
+      "drove": 0,
+      "fraction": 0.0,
+      "passed": 0,
+      "ticks": 0
+    },
+    "prompt_hash": "3ee3b9d7eb122f01",
+    "ref_id": "limit_speed_ics",
+    "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+    "source_span": "Def. 3 (Safe State) in Sec. V-A \"Statement of the Problem\", together with the braking-distance argument of Sec. I and Fig. 1 (\"Collision states vs inevitable collision states\"); the two corner strategies quoted are in Sec. V-D.\n",
+    "span_verified": false,
+    "task": "navigate_to_goal",
+    "temperature": null,
+    "treatment": "paper",
+    "validity": {
+      "reason": "raised while ticking the validity world: PortAccessError: 'gen_b_33af0e006b6f45dd is a decorator and called drive(). Only an Action emits a Twist \u2014 that is the distinction between the three leaf kinds, not the label.'",
+      "valid": false
+    }
+  },
+  "node_id": "gen_b_33af0e006b6f45dd",
+  "reason": "INVALID_NODE"
+}

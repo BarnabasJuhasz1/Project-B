@@ -394,7 +394,7 @@ def test_a_slower_scan_rate_takes_fewer_scans():
     ran at 4.53 Hz. Chunk 24a reports this and does not fix it: carrying the
     remainder instead of resetting to zero would move every committed SLAM
     number in `out/evidence/localisers/`, and that is a `Decided` for chunk 25,
-    not a change to make in passing. See plans/todo/24a-slam-cost-model.md.
+    not a change to make in passing. See plans/done/24a-slam-cost-model.md.
     """
     counts = {}
     for rate in (50.0, 5.0):

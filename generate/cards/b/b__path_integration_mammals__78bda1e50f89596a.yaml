@@ -1,0 +1,113 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition B's card call (given the source document in full).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: pi_terminal_spiral_search
+node_name: SpiralSearchAtBelievedGoal
+source:
+  citation: 'Etienne AS, Jeffery KJ. 2004. Path Integration in Mammals. Hippocampus
+    14:180-192.
+
+    '
+  span: 'Section "Binding of Landmark Information and Self-Motion Cues", p. 186, left
+    column, second paragraph: "In conditions in which navigation has to be very precise,
+    such as during the final approach to a goal, PI is too error-prone to be wholly
+    relied upon ... During homing, when their path integrator indicates proximity
+    to the nest, both species switch from a fairly linear homeward progression to
+    circular movements in search of familiar cues near the nest entrance (Seguinot
+    et al., 1993; Muller and Wehner, 1994)." Supporting statement on error growth:
+    section "Computation of Position Vectors and Goal Vectors", p. 184, right column:
+    "PI being an incremental recursive process, in which changes in the current estimate
+    of the position are added to the position vector of the previous step, these errors
+    are necessarily cumulative".
+
+    '
+  verified: unverified
+mechanism: 'A dead-reckoned position estimate degrades monotonically along a journey,
+  because each increment of motion is added onto the previous estimate and each increment
+  carries error. The paper''s consequence is that the integrator is accurate enough
+  to steer a long approach but NOT accurate enough to terminate one: "in conditions
+  in which navigation has to be very precise, such as during the final approach to
+  a goal, PI is too error-prone to be wholly relied upon" (p. 186). Animals that rely
+  on path integration therefore do not stop when the integrator reads zero. They change
+  behavioural mode: hamsters and desert ants both "switch from a fairly linear homeward
+  progression to circular movements" once the integrator indicates proximity to the
+  goal (p. 186), sweeping the neighbourhood of the believed goal instead of trusting
+  the believed goal. The mode switch converts an unbounded point-accuracy requirement
+  into a bounded area-coverage requirement: the straight leg only has to deliver the
+  animal to within the search radius, and the search does the rest. This helps precisely
+  when the integrator is wrong, and costs distance when it is right.
+
+  '
+trigger: 'goal is not None, AND the residual goal vector computed in the belief frame,
+  d = || goal - (pose_estimate.x, pose_estimate.y) ||, has fallen to or below the
+  switch radius r_switch (defined in derivation), AND this leaf has not already spent
+  its per-episode budget. The leaf yields (returns RUNNING to the parent''s higher-priority
+  avoidance branch, resuming afterwards from its stored spiral phase) whenever contact
+  is True or the minimum range within +/-30 deg of the current heading is below 0.4
+  m; obstacle handling is not part of this mechanism and belongs to another node.
+
+  '
+derivation: 'MAPPING (paper -> this robot). The animal''s path integrator maps onto
+  `pose_estimate`: both are recursive self-motion estimates, never observable against
+  ground truth, and both accumulate error without bound - the scenario''s seeded random
+  walk added to `pose_estimate` is a literal instantiation of the paper''s "necessarily
+  cumulative" errors (p. 184). The animal''s stored nest-to-food vector maps onto
+  `goal`, and the paper''s homing rule - subtract "the (short-term) nest-to-current-position
+  vector from the (long-term) nest-to-food-site vector, up to zero vector" (p. 185)
+  - is exactly `goal - pose_estimate[:2]`. "Circular movements ... near the nest entrance"
+  maps onto a planar Archimedean spiral driven through the Twist interface, since
+  the frozen locomotion policy accepts nothing else. WHERE THE MAPPING IS MINE, NOT
+  THE PAPER''S. (1) The animals terminate their search by recognising familiar cues
+  at the nest entrance. This robot has no goal detector of any kind - a planar lidar
+  cannot recognise a goal - so the search is run open-loop and arrival is adjudicated
+  by the scorer, not by the robot. This is the one place the biology does not carry
+  over, and I am substituting a radius-and-timeout termination for cue recognition.
+  (2) `pose_error_estimate` has no counterpart in the paper: the animal does not read
+  out its own integrator error. Using it to size the search is my construction. (3)
+  The paper states no spiral pitch, no switch radius and no search duration. Every
+  number below is mine. NUMBERS. Switch radius r_switch = clip(1.5 * pose_error_estimate,
+  0.7, 3.0) metres. The 1.5 factor covers the tail of a zero-mean drift of scale `pose_error_estimate`,
+  so the true goal lies inside the swept disc for the large majority of seeds. The
+  0.7 m floor is one Go2 body length, below which a spiral is not physically meaningful;
+  the 3.0 m ceiling is half `range_max`, so the search stays inside sensed space.
+  Spiral: r(phi) = r0 + b*phi/(2*pi), with r0 = 0.35 m and pitch b = 0.5 m per turn,
+  phi accumulated in radians of arc about the believed goal. r0 = 0.35 m is forced
+  by the actuator envelope, not chosen: a circle of radius r at speed v needs wz =
+  v/r, and at the chosen v = 0.35 m/s the |wz| <= 1.0 rad/s limit gives r >= 0.35
+  m exactly. v = 0.35 m/s (well under the 0.8 m/s cap) leaves headroom for the avoidance
+  branch to preempt. Pitch 0.5 m means successive turns are 0.5 m apart, so any success
+  radius >= 0.25 m is swept with no gap - I do not know the scorer''s success radius,
+  and 0.25 m is my assumption about it. Command law each step: with e = goal - pose_estimate[:2]
+  and the spiral centre fixed at that believed goal, drive vx = 0.35, vy = 0.0, wz
+  = clip(0.35 / r(phi), -1.0, 1.0), advancing phi by (vx/r(phi)) * dt. Exit and hand
+  control back to the goal-seeking leaf when r(phi) >= r_switch, or after 60 s of
+  accumulated spiral time - at 0.35 m/s and pitch 0.5 m, covering a disc of radius
+  3.0 m costs about pi*3.0^2/0.5 = 57 m of path, so a budget is needed; 60 s buys
+  about 21 m, i.e. full coverage out to ~1.8 m.
+
+  '
+prediction:
+  statement: 'On scenarios where pose_estimate drifts, a controller that spirals outward
+    around the believed goal instead of halting at it reaches the true goal on a strictly
+    larger fraction of seeds than one that drives the residual goal vector to zero
+    and stops.
+
+    '
+  metric: goal_reached
+  baseline: goal_seeker
+  min_effect: 0.1
+  cost_metric: path_length
+confidence: low
+generated:
+  condition: b
+  task: navigate_to_goal
+  treatment: paper
+  card_prompt_hash: ef76accf91939dc4
+  card_row_key: 78bda1e50f89596a
+  card_model_id: claude-opus-5
+  ref_id: path_integration_mammals
+  paper_sha256: fef30a6310c32f30c7c234e0e1a2a5cc1b986e83d6410ce571e9d3535245792c
+  generated_card_id: pi_terminal_spiral_search
+  generated_node_name: SpiralSearchAtBelievedGoal
+  citation_substituted: false

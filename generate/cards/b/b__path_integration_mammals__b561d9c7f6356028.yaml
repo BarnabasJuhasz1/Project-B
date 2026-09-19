@@ -1,0 +1,136 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition B's card call (given the source document in full).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: home_base_anchored_excursions
+node_name: ExploreByAnchoredExcursions
+source:
+  citation: 'Etienne AS, Jeffery KJ (2004). Path Integration in Mammals. Hippocampus
+    14:180-192. doi:10.1002/hipo.10173
+
+    '
+  span: 'Section "PI and the Representation of Space" (pp. 188-189), the paragraph
+    beginning "According to a number of investigators (Gallistel, 1990; McNaughton
+    et al., 1996; Etienne, 1998), PI may well play a leading role in the construction
+    of a map" - containing the sentence "Frequent returns to the home base reset the
+    path integrator to its zero state, so that each exploratory trip starts with an
+    error-free path integrator." Supporting sentences quoted in `derivation` are from
+    the same section (McNaughton model paragraph) and from Fig. 1B caption, p. 181.
+
+    '
+  verified: unverified
+mechanism: 'When a mammal explores an environment it has no representation of, it
+  does not perform one open-ended walk. "When exploring a new environment, rats and
+  other rodents center their excursion on a basic reference point, their fictive or
+  real ''home base'' (Golani et al., 1993)," computing their position vector relative
+  to that point, and "Frequent returns to the home base reset the path integrator
+  to its zero state, so that each exploratory trip starts with an error-free path
+  integrator." The reason this matters is stated by the same paper twice over: path
+  integration is "an incremental recursive process, in which changes in the current
+  estimate of the position are added to the position vector of the previous step,"
+  so "these errors are necessarily cumulative" (section "Computation of Position Vectors
+  and Goal Vectors"), and the only thing that clears them is re-encountering a familiar
+  place, whose landmarks "set the origin for PI and clear the PI system from errors."
+  The consequence for exploration is that the useful unit of exploration is a bounded
+  excursion whose length is limited by how much integration error the navigator can
+  afford to accumulate before it must return and re-zero - not a walk that runs until
+  something interesting happens. The paper also notes that the return itself need
+  not be straight: "the return trip can be fairly direct as well as convoluted" (Fig.
+  1B), so the home vector is an attractor, not a commanded straight line.
+
+  '
+trigger: 'Active while the goal has not yet been latched (obs.goal is None) and the
+  robot is free-running (not in contact, not being driven by a higher-priority recovery
+  or collision-avoidance branch). On its first tick it latches a home anchor; thereafter
+  it owns the Twist until the goal latches, at which point it yields unconditionally
+  and never re-arms - the excursion structure is a search policy, not a travel policy.
+
+  '
+derivation: "MAPPING (what in the paper becomes what here). (a) \"Path integrator\"\
+  \ -> obs.pose_estimate. The paper's cumulative PI error -> obs.pose_error_estimate,\
+  \ the belief's own scalar estimate of its wrongness. Both are beliefs; ground truth\
+  \ is never observable here either, exactly as for the animal. (b) \"Home base\"\
+  \ -> a latched anchor A = pose_estimate[:2] at the first tick, stored together with\
+  \ a home signature S = the 181-beam `ranges` vector taken at that instant (inf clipped\
+  \ to range_max = 6.0 m) and the yaw at that instant. The paper's familiar reference\
+  \ is a visual landmark panorama; the substitution of a planar-lidar range signature\
+  \ for that panorama is MINE, not the paper's - the paper says only that a fix on\
+  \ \"a rich landmark panorama induces a total reset, comprising both head direction\
+  \ and location.\" (c) \"Reset the path integrator to its zero state\" cannot be\
+  \ done literally: we do not write pose_estimate, the platform does. What we CAN\
+  \ zero is the anchor's expression in the drifted belief frame. On arriving near\
+  \ the anchor we re-fit S to the live scan and add the best-fit offset to A, so the\
+  \ next excursion's home vector points at the same PHYSICAL place even though the\
+  \ belief frame has moved under it. This re-anchoring construction is MINE; the paper\
+  \ asserts only that the return clears the integrator.\nSTATE (persists across ticks):\
+  \ A (anchor xy, belief frame), S (home scan), e0 (pose_error_estimate at last re-anchor),\
+  \ d (path length since last re-anchor, accumulated as the sum of |pose_estimate[:2]\
+  \ delta| per tick, so no control-rate assumption is needed), phase in {OUTBOUND,\
+  \ RETURN}, and used_sectors (a set of 6 allocentric 60-degree sectors).\nOUTBOUND.\
+  \ Pick one excursion bearing per excursion: the allocentric bearing maximising the\
+  \ 15-degree-smoothed free range that lies in a sector at least 60 degrees from every\
+  \ sector already in used_sectors; if all six sectors are used, clear the set and\
+  \ re-use the least recently used one. Six sectors of 60 degrees tile the circle,\
+  \ so successive excursions fan around the anchor instead of re-walking one corridor\
+  \ - this is the \"centre the excursions on a reference point\" part made concrete,\
+  \ and the 60-degree figure is MINE. Drive that bearing: heading error psi = wrap(target_bearing\
+  \ - yaw); wz = clip(1.8 * psi, -1.0, 1.0) rad/s; vx = 0.6 * max(0, cos psi) m/s,\
+  \ vy = 0. Scale vx by clip((d_min - 0.35) / 0.45, 0, 1), where d_min is the minimum\
+  \ range within +/-50 degrees of the travel direction: 0.35 m is roughly the Go2\
+  \ body half-diagonal plus a margin (body ~0.70 x 0.31 m), 0.80 m is where full speed\
+  \ resumes. If d_min < 0.35 m, re-aim at the nearest bearing within +/-90 degrees\
+  \ of the excursion bearing whose range exceeds 1.2 m.\nTERMINATION OF THE OUTBOUND\
+  \ LEG - the quantitative heart, and every number below is MINE; the paper gives\
+  \ no excursion budget, only \"frequent returns\". Switch to RETURN when any of:\n\
+  \  (i)  d >= 12.0 m = 2 * range_max. One range_max of outbound displacement is\n\
+  \       the minimum that exposes a sensor footprint of ground not already\n    \
+  \   visible from the anchor; 2x allows for the detours the paper says\n       returns\
+  \ and excursions actually take.\n  (ii) pose_error_estimate - e0 >= 0.75 m. Re-anchoring\
+  \ needs the live scan to\n       overlap S, which requires arriving within about\
+  \ range_max / 2 = 3.0 m\n       of the true anchor. The return leg accrues roughly\
+  \ as much fresh error\n       as the outbound leg did, so tripping at 0.75 m of\
+  \ growth caps expected\n       arrival error near 1.5 m - half the 3.0 m matching\
+  \ basin.\n  (iii) no bearing within +/-90 degrees of the excursion bearing has range\
+  \ >\n       1.5 m (dead end).\n\nRETURN. h = A - pose_estimate[:2]; psi = wrap(atan2(h_y,\
+  \ h_x) - yaw); same Twist law and same clearance modulation as OUTBOUND, with the\
+  \ same +/-90 degree sliding detour rule. The home vector is the attractor; the realised\
+  \ path may be convoluted.\nRE-ANCHOR (on |h| <= 1.0 m). Search offsets dxy over\
+  \ a +/-2.0 m grid at 0.25 m and dyaw over +/-30 degrees at 5 degrees; score each\
+  \ by the mean absolute difference between S and the live scan predicted under that\
+  \ offset, using only beams finite in both and clipping at 6.0 m. Accept the best\
+  \ offset if its residual is < 0.35 m AND < 0.9x the residual at zero offset; on\
+  \ acceptance, A <- A + (correction that realigns the live scan onto S). Whether\
+  \ or not the match is accepted, set e0 <- pose_error_estimate, d <- 0, mark the\
+  \ sector used, and pick the next bearing - resetting the budget unconditionally\
+  \ prevents thrashing on a rejected match, at the cost of one excursion run on a\
+  \ stale anchor.\nLOST-ANCHOR ESCAPE. If a RETURN leg accumulates more than 1.5x\
+  \ the outbound leg's path length plus 10.0 m without reaching |h| <= 1.0 m, declare\
+  \ the anchor lost: latch a new A and S here, clear used_sectors, and resume OUTBOUND.\
+  \ This is mine and exists only so the leaf cannot deadlock; the paper has no analogue.\n\
+  Outputs a Twist every tick; never exceeds the |vx|,|vy| <= 0.8 m/s and |wz| <= 1.0\
+  \ rad/s saturation, and touches nothing below the frozen policy.\n"
+prediction:
+  statement: 'On tasks where the goal is not disclosed, structuring exploration as
+    bounded out-and-back excursions from a re-anchored home base finds and latches
+    the goal on a larger fraction of seeds than open-ended reactive wandering, because
+    the frame in which unexplored bearings are recorded is re-zeroed before drift
+    makes that record meaningless.
+
+    '
+  metric: goal_reached
+  baseline: reactive_avoid
+  min_effect: 0.1
+  cost_metric: path_length
+confidence: medium
+generated:
+  condition: b
+  task: search_for_goal
+  treatment: paper
+  card_prompt_hash: 15f9c43d58b804d1
+  card_row_key: b561d9c7f6356028
+  card_model_id: claude-opus-5
+  ref_id: path_integration_mammals
+  paper_sha256: fef30a6310c32f30c7c234e0e1a2a5cc1b986e83d6410ce571e9d3535245792c
+  generated_card_id: home_base_anchored_excursions
+  generated_node_name: ExploreByAnchoredExcursions
+  citation_substituted: false

@@ -16,7 +16,7 @@ spending more calls**. A could once not either: until 2026-09-06 it was handed
 no literature at all and its ceiling was |TASKS|. It is now handed the CITATION
 of a card — the reference and none of its content — so it enumerates over the
 store exactly as B does and its ceiling is B's. **Only D is still capped.**
-That fact drives the whole of plans/doing/29, and it was
+That fact drives the whole of plans/done/29, and it was
 prose in a plan file until this module made it a test. The numbers below are
 asserted explicitly rather than derived, so that adding a task family or a card
 fails here and the plan gets re-read, rather than the ceiling silently moving
@@ -32,7 +32,7 @@ from generate.generator import (CONDITIONS, CORPUS_CONDITIONS, TASKS,
                                 plan_hash)
 
 # ---- the ceiling, stated. Below this line is data, not code. ----------------
-# Update these WITH plans/doing/29-grow-libraries.md, never instead of it.
+# Update these WITH plans/done/29-grow-libraries.md, never instead of it.
 #
 # Moved 2026-09-05 from (3, 15, 3) to (4, 20, 4) by chunk 29's open question 2:
 # the fourth cell of chunk 11a's frozen 2x2 (hidden goal AND drifting pose) was
@@ -84,7 +84,7 @@ def test_the_reachable_node_count_is_fixed_by_the_prompt_inputs(condition, store
 
 
 def test_d_cannot_reach_g1s_target_by_spending_more_calls():
-    """The finding that plans/doing/29 exists to force a decision about, now
+    """The finding that plans/done/29 exists to force a decision about, now
     narrowed to D. This is an upper bound assuming EVERY candidate is admitted;
     the observed pass rate is well below 1, so the expected yield is lower still.
 

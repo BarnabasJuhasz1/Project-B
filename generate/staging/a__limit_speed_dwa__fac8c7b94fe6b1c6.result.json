@@ -1,6 +1,6 @@
 {
   "admitted": true,
-  "detail": "valid; contribution not measured (the candidate's own micro-world is malformed: micro 'dwa_partition_and_furniture': goal (3.8, 3.8) is too close to a wall for the whole GOAL_RADIUS disc to be reachable, so optimal_distance() would understate the denominator)",
+  "detail": "valid; contribution not measured (no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9.)",
   "metadata": {
     "backend": "claude-cli",
     "card_id": null,
@@ -13,7 +13,7 @@
     "confidence": "medium",
     "contribution": {
       "measured": false,
-      "reason": "the candidate's own micro-world is malformed: micro 'dwa_partition_and_furniture': goal (3.8, 3.8) is too close to a wall for the whole GOAL_RADIUS disc to be reachable, so optimal_distance() would understate the denominator"
+      "reason": "no micro() \u2014 the modifier prompt does not ask for one. Contribution is measured on the shared growth suite by scripts/measure_growth.py, against the same base, which is chunk 44's decision and non-negotiable #9."
     },
     "emitted_code": true,
     "generated_card_id": "dynamic_window_velocity_search",
@@ -24,14 +24,14 @@
     "node_id": "gen_a_fac8c7b94fe6b1c6",
     "origin": "citation",
     "paper_sha256": null,
-    "pipeline_version": "v2-card-first",
+    "pipeline_version": "v3-layered",
     "precondition_fired": {
       "drove": 600,
       "fraction": 1.0,
       "passed": 600,
       "ticks": 600
     },
-    "prompt_hash": "877c92292aa77e91",
+    "prompt_hash": "b6e9b0a2dffe2ecd",
     "ref_id": "limit_speed_dwa",
     "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
     "source_span": "Section \"The Dynamic Window Approach\", subsections on admissible velocities (braking condition v <= sqrt(2 * dist(v,omega) * accel_brake)) and on maximizing the objective function G = sigma(alpha*heading + beta*dist + gamma*velocity). Section/equation NUMBERS not asserted - not recalled with certainty.",

@@ -223,6 +223,15 @@ def _effect(metric, candidate, baseline):
     return (candidate - baseline) / abs(baseline)
 
 
+# The public name for `_effect`. ⚠️ THE EFFECT SIZE HAS EXACTLY ONE DEFINITION
+# IN THIS REPO and this is it: absolute for a rate metric, RELATIVE TO THE
+# BASELINE for every other. `repair/verdict.py` (chunk 54) judges a node against
+# its card's own `min_effect` and needs the same arithmetic — a second copy
+# would drift, and the two numbers would end up reported as if they were
+# comparable. Alias only: no behaviour changes and no caller moves.
+effect = _effect
+
+
 def required_effect(unit):
     """The floor, raised to whatever the scenario itself demands."""
     floor = MIN_EFFECT_RATE if unit.metric in RATE_METRICS else MIN_EFFECT_REL

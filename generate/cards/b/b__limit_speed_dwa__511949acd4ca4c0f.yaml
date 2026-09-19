@@ -1,0 +1,128 @@
+# ⚠️ MODEL-WRITTEN CARD — NOT A PRINCIPLE CARD.
+# Written by condition B's card call (given the source document in full).
+# Nobody has verified anything in this file. The span is a CLAIM.
+# cards.store refuses to load this directory. See generate/cardgen.py.
+id: braking_admissible_velocity_filter
+node_name: ClampTwistToBrakingAdmissible
+source:
+  citation: 'D. Fox, W. Burgard, S. Thrun, "The Dynamic Window Approach to Collision
+    Avoidance." (RHINO / Univ. Bonn & CMU technical paper reproduced in full; venue
+    not stated in the reproduced text.)
+
+    '
+  span: 'Section 4.1, subsection "Admissible Velocities", Eq. (14) — the set Va =
+    {(v,w) | v <= sqrt(2 * dist(v,w) * vb_dot) AND w <= sqrt(2 * dist(v,w) * wb_dot)};
+    with the arc-clearance definition dist = gamma * r from Section 5.2 ("The Obstacle
+    Line Field") and Figure 19. Example 1 in Section 4.1 gives RHINO''s braking accelerations
+    vb_dot = 50 cm/sec^2, wb_dot = 60 deg/sec^2.
+
+    '
+  verified: unverified
+mechanism: 'A commanded velocity is only permitted if the robot could still stop,
+  under its own braking accelerations, before reaching the nearest obstacle lying
+  on the circular arc that this velocity traces. The paper states this as a hard admissibility
+  set, Eq. (14): a pair (v, w) is admissible iff v <= sqrt(2 * dist(v,w) * vb_dot)
+  and w <= sqrt(2 * dist(v,w) * wb_dot), where dist(v,w) is the distance, measured
+  ALONG THE ARC the pair traces (Section 5.2: gamma * r, with r the arc radius and
+  gamma the swept angle to the intersection with the obstacle), to the closest obstacle
+  on that arc. The key content is that the clearance test is arc-specific and coupled
+  to speed, not a fixed forward stopping box: two commands with the same forward speed
+  can have wildly different dist() because they curve into different parts of the
+  world, and the same command is safe at one speed and inadmissible at a higher one.
+  Why it helps: it replaces "is something close?" with "given how fast I am going
+  and where I am actually going to sweep, can I still stop?", so the robot is free
+  to run at full speed through open arcs while being forced — by the same single inequality
+  — to slow down exactly as much as the geometry of its own chosen curve demands.
+  Note the set is never empty: v = 0 satisfies the first inequality for any dist >=
+  0, so the filter degrades to a stop rather than to an undefined command.
+
+  '
+trigger: 'Applies as a filter on every Twist about to be issued, whenever an upstream
+  node (a frontier/coverage driver, a recovery, anything) has produced a desired (vx,
+  vy, wz) and the current `ranges` array contains at least one finite return below
+  `range_max`. Precondition port: a desired twist is present on the blackboard AND
+  `ranges` is fresh for this control step. It does NOT trigger on goal visibility,
+  on `pose_error_estimate`, or on `contact` — it is unconditional with respect to
+  all of those, which is the point: it is the last thing between any policy and the
+  locomotion policy. If every beam is `inf` the filter is inert (dist saturates at
+  range_max and no inequality binds), so it is still safe to leave permanently armed.
+
+  '
+derivation: "MAPPING FROM THE PAPER TO THIS ROBOT. The paper's synchro-drive (v, w)\
+  \ maps onto (vx, wz) here. The paper's arcs assume \"the translational velocity\
+  \ v always leads in the steering direction\" (Section 3.1) — there is no lateral\
+  \ term in Eqs. (5)-(9), so the arc model simply cannot predict where a vy command\
+  \ sweeps. MY CHOICE, not the paper's: this leaf zeroes vy (emits vy = 0) rather\
+  \ than passing it through, because the dist() it computes would otherwise be a prediction\
+  \ about a path the robot is not taking. The paper's obstacle line field built from\
+  \ 24 sonar beams with FIFO memory maps onto the 181 instantaneous lidar beams here;\
+  \ MY CHOICE: no FIFO memory is kept, only the current sweep, because the lidar gives\
+  \ a full circle every step and memory would inherit `pose_estimate` drift. This\
+  \ is why the mechanism is drift-immune: everything below is computed in the ROBOT\
+  \ frame from `ranges` and `range_angles`, and `pose_estimate` is never read. OBSTACLE\
+  \ POINTS. For each beam i with finite r_i <= range_max = 6.0 m, take p_i = (r_i*cos(a_i),\
+  \ r_i*sin(a_i)) in the robot frame. Inflate the body to a disc of radius rho = 0.38\
+  \ m (MY NUMBER: Go2 body is about 0.70 m long by 0.31 m wide, circumscribed radius\
+  \ sqrt(0.35^2 + 0.155^2) ≈ 0.38 m). The paper's speed-dependent side clearance (Section\
+  \ 5.3) is deliberately NOT included here — it is a second mechanism and belongs\
+  \ on its own card. dist(vx, wz), following Section 5.2 / Figure 19:\n  - straight\
+  \ case, |wz| < 1e-3 rad/s: over beams with |y_i| <= rho and x_i > 0,\n    dist =\
+  \ min(x_i) - rho, clamped to [0, 6.0]; 6.0 if the set is empty.\n  - arc case: r\
+  \ = vx / wz, centre C = (0, r) in the robot frame. Beam i lies in\n    the swept\
+  \ annulus iff abs(norm(p_i - C) - |r|) <= rho. For those beams let\n    gamma_i\
+  \ in [0, 2*pi) be the angle about C from the robot's current position\n    to p_i,\
+  \ taken in the direction of travel (sign of wz, i.e. sign-corrected so\n    an obstacle\
+  \ behind the sweep gives gamma near 2*pi, not near 0). Then, per the\n    paper,\
+  \ the arc distance is gamma_i * |r|; take\n    dist = min_i(gamma_i * |r|) - rho,\
+  \ clamped to [0, 6.0]; 6.0 if empty.\n  - vx = 0 and |wz| >= 1e-3: pure spin sweeps\
+  \ no new ground for the disc model, so\n    dist = 6.0 and only the wz inequality\
+  \ can bind (it will not, since it needs\n    |wz| <= sqrt(2*6.0*wb_dot)). MY CHOICE.\n\
+  BRAKING ACCELERATIONS. The paper uses vb_dot = 50 cm/sec^2 and wb_dot = 60 deg/sec^2\
+  \ for RHINO (Example 1). Those are RHINO's, not a Go2's, and the true deceleration\
+  \ of the frozen locomotion policy is not observable through this interface. MY NUMBERS,\
+  \ chosen so the full command range is nulled in about one second of tracking: vb_dot\
+  \ = 0.8 m/s^2 (0.8 m/s -> 0 in 1.0 s) and wb_dot = 1.5 rad/s^2 (1.0 rad/s -> 0 in\
+  \ 0.67 s). Consequence to check against behaviour: at full speed vx = 0.8 m/s the\
+  \ filter demands dist >= 0.8^2 / (2*0.8) = 0.40 m of arc clearance beyond the 0.38\
+  \ m inflation, i.e. roughly 0.78 m of raw beam range ahead on the traced arc; at\
+  \ dist = 0.10 m the ceiling is sqrt(2*0.10*0.8) = 0.40 m/s. vb_dot is the single\
+  \ safety knob: halving it multiplies every permitted speed at a given distance by\
+  \ 1/sqrt(2). APPLICATION. Given the desired (vx_d, vy_d, wz_d), first saturate to\
+  \ the interface limits (|vx| <= 0.8, |wz| <= 1.0), set vy = 0, then evaluate dist(vx,\
+  \ wz) on a grid of candidates vx in {0.0, 0.1, ..., 0.8} x wz in {-1.0, -0.9, ...,\
+  \ 1.0} and keep only pairs satisfying BOTH inequalities of Eq. (14) with |wz| in\
+  \ place of the paper's w. Emit the admissible pair minimising (vx - vx_d)^2 + (0.5*(wz\
+  \ - wz_d))^2 — MY CHOICE of tie-break, a nearest-point projection onto the admissible\
+  \ set, weighted so a rad/s of turn error costs half what a m/s of speed error costs;\
+  \ the intent is that the leaf changes the upstream command as little as admissibility\
+  \ allows, so the measured effect is attributable to Eq. (14) and not to a second\
+  \ objective smuggled in. (0.0, wz_d) is always in the candidate set, so a command\
+  \ always exists. The paper's dynamic window itself, Eq. (15) — restricting to velocities\
+  \ reachable within one interval given finite accelerations — is NOT part of this\
+  \ card; it is a separate mechanism.\n"
+prediction:
+  statement: 'With the braking-admissibility filter armed on top of an unchanged exploration
+    driver, mean collisions per episode over the seed set drops by at least 50% relative
+    to the reactive_avoid baseline on undisclosed-goal exploration scenarios, and
+    this holds on the drifting-pose scenarios too, because the filter reads only robot-frame
+    lidar. Falsified if the relative reduction is under 50%, or if collisions do not
+    fall at all.
+
+    '
+  metric: collisions
+  baseline: reactive_avoid
+  min_effect: 0.5
+  cost_metric: time_to_goal
+confidence: medium
+generated:
+  condition: b
+  task: search_for_goal
+  treatment: paper
+  card_prompt_hash: a5034b32b2b86e4f
+  card_row_key: 511949acd4ca4c0f
+  card_model_id: claude-opus-5
+  ref_id: limit_speed_dwa
+  paper_sha256: 7b398d18448ca622a4011957a57dd32714cc97c8e8f981a98722baafa7f68ff1
+  generated_card_id: braking_admissible_velocity_filter
+  generated_node_name: ClampTwistToBrakingAdmissible
+  citation_substituted: false

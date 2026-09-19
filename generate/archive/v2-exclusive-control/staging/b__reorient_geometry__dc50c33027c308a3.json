@@ -1,0 +1,23 @@
+{
+  "backend": "claude-cli",
+  "card_id": "reorient_geometry",
+  "card_model_id": "claude-opus-5",
+  "card_prompt_hash": "a311b5689f8b3cf8",
+  "card_row_key": "dc50c33027c308a3",
+  "citation_id": null,
+  "citation_substituted": false,
+  "condition": "b",
+  "emitted_code": true,
+  "generated_card_id": "geometric_shape_revisit_reroute",
+  "generated_node_name": "RerouteAtShapeRecognisedPlace",
+  "model_id": "claude-opus-5",
+  "node_id": "gen_b_dc50c33027c308a3",
+  "paper_sha256": "ff51f04ec7e6c1740db32895933207302084b3177ef980e62b0c2e863c07769d",
+  "pipeline_version": "v2-card-first",
+  "prompt_hash": "16ec85e62da1eb0a",
+  "ref_id": "reorient_geometry",
+  "sampling_note": "claude-opus-5 does not accept a temperature parameter (removed from the Messages API on this model family); sampling is the model default and generation is reproducible from the transcript, not repeatable from the prompt",
+  "task": "search_for_goal",
+  "temperature": null,
+  "treatment": "paper"
+}
