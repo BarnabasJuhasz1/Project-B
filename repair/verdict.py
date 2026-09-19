@@ -682,7 +682,16 @@ def _find_metrics_csv(tier):
     exact = GROWTH_DIR / f"{tier}-metrics.csv"
     if exact.exists():
         return exact
-    found = sorted(GROWTH_DIR.glob(f"{tier}*-metrics.csv"))
+    # ⚠️ AN AXIS-RENAMED TABLE IS A DIFFERENT EXPERIMENT AND IS NEVER A
+    # FALLBACK FOR THIS ONE. `measure_growth.py --drift 0.10` writes
+    # `maze+drift0.10-metrics.csv`, and `+` (0x2B) sorts BEFORE `-` (0x2D), so
+    # the moment the first drifted table was written this glob returned it and
+    # every CLEAN verdict began reading drifted metrics beside a clean worlds
+    # table. Three tests went red within a minute of that file appearing —
+    # which is the only reason it was noticed, and it would not have been
+    # noticed at all had the run been named anything sorting after `maze-`.
+    found = sorted(p for p in GROWTH_DIR.glob(f"{tier}*-metrics.csv")
+                   if "+" not in p.name)
     return found[0] if found else None
 
 

@@ -272,8 +272,12 @@ def run_round(node_id, number, budget, tier="maze", backend=None,
         return rec, None, node_id
 
     seed = case_seed if case_seed is not None else worst_case_seed(measurement)
+    # ⚠️ `drift=drift` IS LOAD-BEARING. Without it the conditions block renders
+    # the DEFAULTS, so a drifted lineage tells the diagnosing agent
+    # `drift: None` and invites it to ask for a measurement it has already been
+    # given. That happened on the first drift lineage, 2026-09-19.
     b = make_bundle(node_id, tier=tier, case_seed=seed, measurement=measurement,
-                    verdict=verdict)
+                    verdict=verdict, drift=drift)
     if b.leaks():
         rec.outcome = f"ABORTED: bundle leaks {b.leaks()}"
         rec.seconds = time.time() - started

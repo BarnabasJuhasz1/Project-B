@@ -239,3 +239,32 @@ def test_the_node_source_may_name_its_own_paper_and_that_leak_is_bounded():
     for tell in E.ARM_TELLS:
         assert tell.lower() not in src.lower(), (
             f"{tell} is an explicit LABEL, not a code comment")
+
+
+def test_a_drifted_run_is_not_described_as_undrifted():
+    """⚠️ THE THIRD DIAGNOSIS WRITTEN AGAINST AN EXPERIMENT THAT DID NOT HAPPEN.
+
+    `conditions_block` built its scenario from the DEFAULTS whatever axis the
+    loop was running on. So the first `--drift 0.10` lineage — 20 worlds all
+    named `+drift0.10` — told the diagnosing agent `drift: None`, and four
+    lines later told it that an axis reading None has not been tested against
+    the card's claim. The agent asked for the measurement to be re-made with
+    drift enabled. It already had been, and the round was spent on it."""
+    from repair.evidence import conditions_block
+
+    drifted = conditions_block("maze", seed=2000, drift=0.10)
+    assert "drift               : None" not in drifted
+    assert "sigma_xy=0.1" in drifted
+    assert "Asking for" in drifted, "and it says so in as many words"
+
+
+def test_the_undrifted_conditions_text_is_byte_identical():
+    """⚠️ Every committed diagnosis transcript is keyed by a hash over the
+    RENDERED prompt. A cosmetic change to the clean text orphans all of them —
+    the same rule that keeps `prompts/node.md` and `compose.md` frozen."""
+    from repair.evidence import conditions_block
+
+    a = conditions_block("maze", seed=2000)
+    b = conditions_block("maze", seed=2000, drift=None)
+    assert a == b
+    assert a.rstrip().endswith("it has not been tested against its own claim.")

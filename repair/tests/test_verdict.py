@@ -327,3 +327,20 @@ def test_repair_is_sim_free_and_sealed(path):
         assert not any(m == banned or m.startswith(banned + ".") for m in mods), \
             f"{path} imports {banned}"
     assert "core.scenarios_held_out" not in mods, f"{path} imports the SEALED split"
+
+
+def test_an_axis_renamed_sidecar_is_never_a_fallback_for_the_clean_tier():
+    """⚠️ CROSS-AXIS CONTAMINATION, FOUND THE DAY THE FIRST DRIFTED TABLE WAS
+    WRITTEN. `_find_metrics_csv` fell back to the alphabetically first
+    `<tier>*-metrics.csv`, and `+` sorts before `-`, so
+    `maze+drift0.10-metrics.csv` was returned for plain `maze` — drifted
+    metrics read beside a clean worlds table, in every verdict, silently.
+
+    An axis renames the table for the same reason it renames the scenario: it
+    is a different experiment. It may be asked for by name; it may never be
+    found by a search for another one."""
+    from repair import verdict as V
+
+    assert V.GROWTH_DIR.exists()
+    found = V._find_metrics_csv("maze")
+    assert found is None or "+" not in found.name, found
