@@ -10,16 +10,53 @@ plans/
   doing/         in progress — keep this to one file at a time
   hold/          paused, intact, resumable — NOT cancelled and NOT superseded
   done/          finished, with an Outcome section appended
+  trash/         SUPERSEDED BY EPIC 07 — kept, never deleted. See trash/README.md
 ```
 
 ---
 
-## ⚠️ EVERYTHING IS ON HOLD EXCEPT EPIC 06 (2026-09-16, the user's instruction)
+## ⚠️ THE CURRENT WORK IS EPIC 07 — THE WHOLE-CONTROLLER ARM (2026-09-21)
 
-**The current work is [epic 06 — the autonomous diagnose-and-repair loop](06-epic-repair-loop.md).**
-Read [`../REPAIR-LOOP.md`](../REPAIR-LOOP.md) first: it holds the verdict taxonomy, the repair
-action space, the arm-blindness decision and the traps, and every chunk in the epic references it
-rather than repeating it.
+**Epic 06 is complete and the hold it imposed is lifted.** `hold/` is empty. The repair loop
+works, it found real defects, and fixing nodes is no longer the bottleneck.
+
+**The current work is [epic 07 — the whole-controller arm](07-epic-whole-controller.md).**
+Read it before any chunk in it. ⚠️ **The behaviour-tree execution model is dropped**: a model is
+handed `generate/base/base_navigator.py` and asked to fold a principle into it, and the
+deliverable is a whole `Controller` plus a readable diff. Four superseded chunks moved to
+[`trash/`](trash/) — nothing deleted, and `trash/README.md` says why each one is there.
+
+| # | Chunk | Depends on | Model calls | Status |
+|---|---|---|---|---|
+| 59 | [The card-level report](todo/59-card-level-report.md) | — | no | **todo — FIRST** |
+| 60 | [The edit prompt and the `p` gate](todo/60-edit-generation.md) | — | yes | todo |
+| 61 | [The paired measurement and the diff readout](todo/61-paired-measurement.md) | 60 | no | todo |
+
+⚠️ **59 does not depend on 60 and must not be scheduled behind it.** It needs no robot, no
+controller and no simulator; it is the result most likely to survive the remaining week. The
+project is in **week 5 of 6** (started 2026-08-21).
+
+⚠️ **60 carries a gate that can stop the epic for three model calls.** Arm `p` — "improve this
+navigator", no card — runs first. If a model handed working code makes it uniformly worse, the
+edit framing is refuted cheaply and nothing else is spent.
+
+**Why.** B−A came out **exactly zero three times**, under exclusive control, under layered
+modifiers, and under layered modifiers **with the drift hazard switched on** — epic 06 repaired
+the best available excuse and the null survived it (`out/growth/maze+drift0.10.csv`). The library
+splits bimodally (4 never fire, 6 fire ~100% and overwrite the base, all 6 regress); sixteen
+papers do not produce a bimodal distribution, an execution contract does. Zero of sixteen nodes
+improved their own claimed metric while still doing the task. **The problem is not that the
+results are negative — it is that not one of them is interpretable.**
+
+⚠️ **There is no "model alone" condition and the hypothesis names one.** The naive arm was
+retired and D is not it. Epic 07 restores that control as arm **`p`**, and it is the cheapest
+thing in the epic.
+
+### Epic 06 — the autonomous diagnose-and-repair loop  ✅ complete
+
+[`../REPAIR-LOOP.md`](../REPAIR-LOOP.md) holds the verdict taxonomy, the repair action space and
+the arm-blindness decision. Still required reading — epic 07's argument is built out of what this
+epic found.
 
 | # | Chunk | Depends on | Model calls | Status |
 |---|---|---|---|---|
@@ -29,30 +66,17 @@ rather than repeating it.
 | 57 | [The diagnosis call](done/57-diagnosis-call.md) | 55 | yes | **done** |
 | 58 | [The loop](done/58-repair-loop.md) | 54–57 | yes | **done** |
 
-**Why now.** `gen_b_44d12df4d25b437f` was admitted as valid, fired on 97.4% of ticks, and froze
-the robot in open space — 46 cm of clearance, zero contacts — for the last 52 s of a 120 s
-episode, on a world the base alone solves. Diagnosing it by hand took a session and turned up
-three defects at three different layers. **Hand-fixing it fixes one node, in one environment,
-once.** The deliverable of this project is a pipeline, so the pipeline has to be able to do what
-that session did.
+Its motivating case is still the clearest statement of why the pipeline has to diagnose rather
+than be hand-fixed: `to_scenario()` never set `drift`, so **every world in the growth suite
+handed the controller a perfect pose estimate** — while the node being measured predicted an
+effect *"on scenarios where pose_estimate drifts"*. Epic 06 fixed it; the fix did not move B−A.
 
-> ⚠️ **2026-09-18:** *"on a world the base alone solves"* is true **kinematically** and **false
-> under physics** — `results/gen-maze-02004__base__seed2004.json` records the base timing out at
-> 120 s having walked 30.1 m against a 16.2 m optimum. The growth pairing is kinematic and
-> internally consistent, so the verdicts stand for the suite they were measured on; the prose does
-> not. See the 2026-09-18 CORRECTION in [chunk 58's Outcome](done/58-repair-loop.md).
+> ⚠️ **2026-09-18, and it still binds:** *"on a world the base alone solves"* is true
+> **kinematically** and **false under physics** — `results/gen-maze-02004__base__seed2004.json`
+> records the base timing out at 120 s having walked 30.1 m against a 16.2 m optimum. No prose
+> anywhere may say the base *solves* a world without saying kinematically. See the 2026-09-18
+> CORRECTION in [chunk 58's Outcome](done/58-repair-loop.md).
 
-
-A third finding fell out while planning and is the epic's motivating case: `to_scenario()` never
-sets `drift`, so **every world in the growth suite hands the controller a perfect pose estimate**
-— and that node's card predicts an effect *"on scenarios where pose_estimate drifts"*. It was
-measured, ranked and written up across twenty worlds, none of which contain the condition its
-card names in its first clause. There are fifteen other nodes and nobody has read their cards
-against the worlds they were scored on.
-
-**Four chunks are paused in [`hold/`](hold/)** — 33, 43, 52, 53. Each carries a dated banner, is
-intact, and resumes by being moved back to `doing/`. Everything in `todo/` below was already
-not-started and stays that way.
 
 Workflow: `git mv plans/todo/NN-x.md plans/doing/` to start, `git mv plans/doing/NN-x.md plans/done/`
 when the Done-when checks pass. Append an **Outcome** section before moving to `done/` recording
@@ -207,19 +231,19 @@ the epic rather than to one chunk live in [`04-epic-evaluation.md`](04-epic-eval
 | 30 | Condition C — the Nav2 baseline | 28 | **yes** | not written |
 | 31 | The container run | 28, 29 | **yes** | not written |
 | 32 | G3 — composition over the held-out split | 16, 29, 31 | **yes** | not written |
-| 33 | [The citations probe](doing/33-citation-probe.md) | 14, 15 | no | **doing — machinery built; five model calls outstanding** |
+| 33 | [The citations probe](todo/33-citation-probe.md) | 14, 15 | no | **todo — machinery built; five model calls outstanding. ⚠️ MOVED BACK FROM `hold/` 2026-09-21: card-level and architecture-independent, it feeds [59](todo/59-card-level-report.md)** |
 | 34 | [Condition C — failure context](todo/34-condition-c-failure-context.md) | 28 | no | specified, not built |
 | 35 | [The unseen post-cutoff corpus](todo/35-unseen-corpus.md) | 14 | no | specified, not built |
 | 36 | [A node under physics + the A/B video pair](done/36-node-physics-evidence.md) | 37 | **yes** | **done — every kinematic verdict survived; one failure MECHANISM did not** |
 | 37 | [Admission becomes a validity gate](done/37-admission-becomes-validity.md) | 29 | no | **done — code landed; CLAUDE.md #5 reworded 2026-09-12. The PRE-REGISTRATION append is still drafted-not-landed, which its own Done-when accepts** |
 | 38 | [Node contribution: leave-one-out ablation](done/38-node-contribution-ablation.md) | 37 | no | **done — built and working, but SUPERSEDED in use: removal-based ablation was retired 2026-09-13 for `measure_growth.py`. `harness/ablate.py` is Tier 1 in DELETION-CANDIDATES.md** |
 | 39 | [The first comparable A vs B numbers](done/39-ab-node-comparison.md) | 37, 38 | no | **done — A > B on 5/5 cards, and NEITHER arm beats a handwritten toy** |
-| 40 | [The contract cannot express a modifier](todo/40-modifier-kind.md) | 38, 39 | no | **SUPERSEDED by 52 — measurement stands, recommendation refuted** |
-| 52 | [Nodes that support the base instead of replacing it](doing/52-layered-command-pipeline.md) | 47 | later | **BUILT 2026-09-14 — absorbs 40. `Layer` + field-scoped `WRITES` + `cap`/`adjust`, 17 tests. Library regenerated as modifiers (16/16 admitted, $7.17); v2 archived. `fixed` MOVED: 0 → 2, and replicated 4/20 on fresh seeds — 6 fixed, 0 broken over 40 paired worlds. ⚠️ but it is arm **D**, B−A is still exactly zero, and 14 of 16 nodes still do nothing or harm. Selectivity is the variable. Arbitration rule is in PRE-REGISTRATION** |
+| 40 | [The contract cannot express a modifier](trash/40-modifier-kind.md) | 38, 39 | no | **→ `trash/` 2026-09-21. Superseded by 52, then by epic 07. The measurement stands and is carried into epic 07; there is no node contract on the live path** |
+| 52 | [Nodes that support the base instead of replacing it](trash/52-layered-command-pipeline.md) | 47 | later | **→ `trash/` 2026-09-21 — THIS IS THE ARCHITECTURE EPIC 07 DROPS. BUILT 2026-09-14 — absorbs 40. `Layer` + field-scoped `WRITES` + `cap`/`adjust`, 17 tests. Library regenerated as modifiers (16/16 admitted, $7.17); v2 archived. `fixed` MOVED: 0 → 2, and replicated 4/20 on fresh seeds — 6 fixed, 0 broken over 40 paired worlds. ⚠️ but it is arm **D**, B−A is still exactly zero, and 14 of 16 nodes still do nothing or harm. Selectivity is the variable. Arbitration rule is in PRE-REGISTRATION** |
 | 41 | [The harness and the runner do not share a timebase](todo/41-timebase-mismatch.md) | — | one run | **written — a 3.78e-12 s difference silently disables a node's mechanism** |
 | 42 | [Card-first generation: every arm writes its own card](done/42-card-first-generation.md) | — | none yet | **done — B's `navigate_to_goal` + `search_for_goal` families generated 2026-09-12: 7 admitted / 3 rejected over 10 rows, pass rate 0.70. ⚠ 0 of 7 measured contributions cleared the floor. A is 5 rows, D is 0 — the arms are NOT at comparable sizes** |
-| 43 | [The first A vs B numbers under physics, on one task family](doing/43-ab-navigation-sweep.md) | — | last step | **doing — library partitioned by arm (committed); dev split only** |
-| 44 | [Contribution moves from the micro-world to the tree](todo/44-tree-level-contribution.md) | 42, 43 | yes | **DECIDED 2026-09-12, not built — unit scenario becomes a VALIDITY gate; contribution moves to the tree under physics; ONE shared base node across all arms. Weakens #5, exempts #3, promotes #9. ⚠ needs a PRE-REGISTRATION amendment before any G1 number** |
+| 43 | [The first A vs B numbers under physics, on one task family](trash/43-ab-navigation-sweep.md) | — | last step | **→ `trash/` 2026-09-21. Library partitioning landed (`dfe022a`); the retrieval step it protects does not exist without composition** |
+| 44 | [Contribution moves from the micro-world to the tree](trash/44-tree-level-contribution.md) | 42, 43 | yes | **→ `trash/` 2026-09-21 — there are no trees; the idea survives in epic 07 as "a controller earns its place by beating the base". DECIDED 2026-09-12, not built — unit scenario becomes a VALIDITY gate; contribution moves to the tree under physics; ONE shared base node across all arms. Weakens #5, exempts #3, promotes #9. ⚠ needs a PRE-REGISTRATION amendment before any G1 number** |
 | 45 | [The seeded world generator](done/45-world-generator.md) | — | no | **DONE 2026-09-13 — 3 tiers, reproducible, ~250 ms/world, 20 tests. Found + fixed a latent `geodesic_distance` bug that dropped `world`. ⚠ `shortest_path_length` is 43 s on a generated world and SPL is a named secondary** |
 | 47 | [The strongest base node, and difficulty calibrated against it](done/47-strongest-base-node.md) | 45 | later | **done — moved 2026-09-15 with a STUB Outcome, executed without ever entering `doing/`. Base committed and frozen; difficulty REDEFINED as the base's failure rate. ⚠ PARTIAL: only the `maze` tier was ever measured against the base (50% / 40%, in band); `open` and `cluttered` never were, and the numbers live only in gitignored `out/growth/*.csv`** |
 | 45-50 | [Epic 05 — a larger, randomised environment suite](05-epic-environment-suite.md) | 44 | 48-49 yes | **PLANNING — chunks not written. DECIDED 2026-09-13: the new suite REPLACES lab42 as the benchmark (PRE-REGISTRATION amendment appended). ⚠ X=0.30 and the power analysis do NOT transfer and must be re-derived before any G2 number; a NEW sealed split is required. Randomisation is the only available fix for 0.16 power** |

@@ -3,6 +3,19 @@
 **Covers:** execution-plan Weeks 2–4. **Chunks:** 11a, 11–17.
 **Depends on:** epic [00](00-epic-reproducible-episode.md), complete.
 
+⚠️ **THE EXECUTION MODEL THIS EPIC BUILT IS SUPERSEDED, 2026-09-21, BY
+[epic 07](07-epic-whole-controller.md).** A generated artefact is no longer a leaf node in a
+tree; it is a whole `Controller`, produced by editing `generate/base/base_navigator.py`.
+Non-negotiable #4 is **suspended for that arm only**, on the user's explicit instruction.
+
+**Nothing here is retracted and nothing is deleted.** The node contract, the library, the unit
+harness, the cards, the generator and composition all still load, still carry their snapshot tags
+and still back every committed composition and every pass-rate denominator. This epic is the
+record of how that architecture was built and what it measured — epic 07's argument is assembled
+out of it. Four not-started chunks that planned further tree work moved to
+[`trash/`](trash/README.md); everything in `done/` stays exactly where it is.
+
+
 ## Why this epic exists
 
 Everything built so far sits *below* the experiment. `Observation → Command` is the contract,

@@ -1,5 +1,11 @@
 # Results
 
+> ⚠️ **HISTORICAL, AND THE SPLIT MATTERS (2026-09-21).** These are lab42 episodes plus a handful
+> of physics runs on generated worlds. lab42 stopped being the benchmark on 2026-09-13 and the
+> behaviour tree was dropped on 2026-09-21. **Nothing here pools with a number from epic 07**,
+> under any pipeline version. The base's own physics run on maze 2004 is here and is the reason
+> no prose may say the base *solves* a world without saying **kinematically**.
+
 One JSON file per episode, committed. `<scenario>__<controller>__seed<N>.json`, two top-level
 keys:
 

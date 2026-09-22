@@ -1,5 +1,17 @@
 # `generate/archive/` — superseded generation records, kept intact
 
+> ⚠️ **A FOURTH PIPELINE EXISTS FROM 2026-09-21: `v4-edited-base`.** Epic 07 drops the behaviour
+> tree; the generated artefact is a whole `Controller` produced by editing the frozen base.
+> It stages into its own directory with its own `pipeline_version`, and ⚠️ **`admit.pass_rate`
+> must refuse to pool it**, exactly as it refuses `v1-single-call`.
+>
+> ⚠️ **v3 (the modifiers now in `generate/staging/`) is NOT archived by this pivot.** It is the
+> comparison epic 07 is measured against, and moving it would break the growth tables. The
+> mechanical reason v2 had to move — `plan_hash` is a pure function of `(condition, task, card)`
+> and the cards are not regenerated, so a new candidate lands on an identical stem — is handled
+> differently this time: **`plan_hash` takes a sample index** (k = 3 samples per row), so v4
+> stems cannot collide with v3's.
+
 ⚠️ **Nothing here is deleted and nothing here is live.** These are complete
 records of generation pipelines that no longer exist. They are real evidence
 about real questions and the denominators they belong to may not be edited after

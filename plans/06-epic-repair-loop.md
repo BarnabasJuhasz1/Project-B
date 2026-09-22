@@ -2,6 +2,15 @@
 
 **Opened 2026-09-16, on the user's instruction. Every other epic is on hold — `plans/hold/`.**
 
+✅ **COMPLETE, 2026-09-21. The hold this epic imposed is lifted and `plans/hold/` is empty.**
+The current work is [epic 07 — the whole-controller arm](07-epic-whole-controller.md).
+
+⚠️ **`../REPAIR-LOOP.md` is still required reading.** Epic 07's case is built out of what this
+epic found — above all that the drift confound was repaired and **B−A did not move**
+(`out/growth/maze+drift0.10.csv`). An elimination that costs a whole epic is worth more than
+most positive results, and it is the strongest single argument for dropping the tree.
+
+
 ⚠️ **Read [`../REPAIR-LOOP.md`](../REPAIR-LOOP.md) first.** It holds the verdict taxonomy, the
 repair action space, the arm-blindness decision and the traps. The chunks below reference those
 definitions and do not repeat them.

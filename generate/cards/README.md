@@ -1,5 +1,20 @@
 # `generate/cards/` — model-written cards, never principle cards
 
+> ⚠️ **THESE CARDS ARE THE LIVE INDEPENDENT VARIABLE AND THEY DO NOT MOVE (2026-09-21).**
+> Epic 07 replaces the node-side call with an **edit** call and **makes zero card calls**: every
+> file here is reused **byte for byte**. The independent variable and the execution model must
+> never move in the same step.
+>
+> ⚠️ **A and B are built on the same five references** — `limit_speed_dwa`, `limit_speed_ics`,
+> `path_integration_ants`, `path_integration_mammals`, `reorient_geometry`. A has one card each
+> (5); B has two each (10) only because B ran two task families. **At the source level the arms
+> are matched**, which is what makes the dossier rule (all of an arm's cards, every time, no
+> retrieval) a fair comparison.
+>
+> ⚠️ **No card here sets `mechanism_family`**, so `CardStore.family()` falls back to `node_name`,
+> which is 1-1 with the card. **A naive coverage count over this directory returns the card
+> count.** See `plans/todo/59-card-level-report.md` before reporting any coverage number.
+
 ⚠️ **Nothing in this directory was extracted from anything.** These are the cards
 each condition wrote *for itself*, one per grid row, in chunk 42's card call.
 Nobody has opened a paper to write any of them and every `span` in here is a

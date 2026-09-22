@@ -1,4 +1,31 @@
-# Chunk 15 findings
+# generate/ — findings
+
+> ⚠️ **READ FIRST, AND THE PIPELINE PIVOTED ON 2026-09-21.** The node-side call is replaced by an
+> **edit** call: a model is handed the frozen base navigator's source plus an arm's cards and
+> returns **a whole `core.observation.Controller` and a diff**. `plans/todo/60-edit-generation.md`
+> is the plan; `plans/07-epic-whole-controller.md` is the why.
+>
+> **What still holds, unchanged and still binding:**
+> - ⚠️ **The harness cannot detect CARD INFIDELITY.** The deliberately-bad card was ADMITTED.
+>   This is a stated limitation absorbed by the control arm, never a fidelity check. Under the
+>   new design the **diff makes infidelity visible for the first time** — but reading a diff is a
+>   human reading, not an automatic check, and the limitation stands.
+> - ⚠️ **Temperature-0 determinism does not exist on any current model.** Reproducibility comes
+>   from committed transcripts and `ReplayBackend`. Generation is reproducible but **not
+>   repeatable** — and that is exactly why epic 07 generates **k = 3** samples per row.
+> - ⚠️ **`admit.pass_rate` refuses to pool pipelines.** There are now four: `v1-single-call`,
+>   v2 (exclusive control), v3 (modifiers) and **`v4-edited-base`**. No number crosses.
+>
+> **What is now historical:** every table below is about nodes that drove, or modifiers that
+> revised a base inside a `Layer`. The cards are untouched and are reused byte for byte —
+> **epic 07 makes zero card calls.**
+>
+> ⚠️ Everything above the 2026-09-08 entry is about the superseded ONE-call pipeline; pass
+> `pipeline_version="v1-single-call"` for those numbers.
+
+---
+
+## Chunk 15 findings
 
 ## 0. What the four real generation calls produced
 

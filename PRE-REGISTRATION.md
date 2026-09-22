@@ -960,3 +960,107 @@ diagnostic tool and it binds nothing.
 
 ⚠️ **None of this touches G2.** The primary metric is `goal_reached`, a rate over scenarios, and
 it has none of this problem. X = 0.30 and `core/stats.py:decide()` are untouched by this append.
+
+---
+
+### 2026-09-21 — the architecture pivots: a whole-controller arm, and a `p` control
+
+⚠️ **This is a DATED APPEND and nothing above it is edited.** `prereg-v1` remains tagged at
+`a84cd46`, and §7's frozen constants and their digest are **untouched** — this append freezes no
+new constant and changes no existing one.
+
+**What changed, as a fact this document must record.** On 2026-09-21, on the user's explicit
+decision, the **behaviour-tree execution model was dropped**. A generated artefact is no longer a
+leaf node composed into a tree. A model is handed the frozen base navigator's source
+(`generate/base/base_navigator.py`) together with an arm's cards, and returns **a whole
+`core.observation.Controller` and a diff**. There is no `Layer`, no `WRITES`, no arbitration, no
+layer order, no retrieval and no composition on the live path. The epic is
+`plans/07-epic-whole-controller.md`.
+
+**Why it is recorded here.** This document describes an experiment, and as of 2026-09-21 the
+experiment it describes is not the one being run. Leaving that implicit would be the failure mode
+the append-never-edit rule exists to prevent.
+
+**The evidence that motivated it**, all of it collected under this document's own rules:
+
+- **B−A came out exactly zero three times**, under exclusive control, under layered modifiers,
+  and under layered modifiers **with the drift hazard switched on**. The 2026-09-14 arbitration
+  amendment's design was implemented and measured; the 2026-09-16 drift defect was repaired and
+  re-measured (`out/growth/maze+drift0.10.csv`). The null survived the repair.
+- The library splits **bimodally** — 4 nodes never fire, 6 fire on ~100% of ticks and overwrite
+  the base entirely, all 6 regress. Sixteen papers do not produce a bimodal distribution.
+- **Zero of sixteen nodes improved their own claimed metric while still doing the task.**
+
+⚠️ **THE 2026-09-14 ARBITRATION AMENDMENT IS SUPERSEDED IN EFFECT, NOT RETRACTED.** Two
+combinators, no weights, nothing tunable — that rule governed how a tree combined what its nodes
+proposed. There is no tree, so there is nothing for it to govern. It stays on the record because
+every v3 record was produced under it.
+
+## What this append DOES declare
+
+**A control arm, `p`.** The base edited with **no card and no new information**. ⚠️ The
+hypothesis names *"an LLM asked plainly"* and this project has never had that condition — the
+naive arm was retired (2026-09-06 amendment) and D is not it, because D articulates a principle
+before implementing. ⚠️ **Asking a model to improve code is itself a treatment**, so `p` is an
+*edited* base and not the frozen one; **B − P is the corpus effect and B − BASE is not.**
+⚠️ The letter is `p` and never `n`: `n` means sample size throughout this document.
+
+**`generate.cardgen.CONDITIONS` stays `("a","b","d")`.** `p` lives only in epic 07's registry. It
+is a control for the edit call, not a fourth card condition.
+
+**Non-negotiable #4 is SUSPENDED for this arm only.** "The generator emits leaf nodes, never a
+monolithic stack" is what this arm stops doing. Suspended, not repealed.
+
+**The cards do not move.** Every card under `generate/cards/{a,b}/` is reused byte for byte, and
+**this arm makes zero card calls** — the same discipline the 2026-09-14 amendment followed. The
+independent variable and the execution model must never move in the same step.
+
+**The unit: 3 arms × 4 task families × k = 3 = 36 controllers.** ⚠️ **k exists because one
+generation is one draw from a stochastic process** — §8's temperature-0 finding, applied to a
+larger artefact. Editing suppresses most of the variance that writing from scratch would carry;
+it does not remove it.
+
+**The dossier rule:** all of an arm's cards, every time, **no retrieval**. Retrieval is an
+apparatus surface and this cycle is what apparatus surfaces cost.
+
+## What this append does NOT settle, and what must land before the first scoring run
+
+⚠️ **No number from this arm may be reported until a further dated amendment closes these.**
+They are named now so the first scoring run does not discover them.
+
+1. **The analysis unit and the bootstrap cluster.** There are two nested factors, controller
+   sample and world. The proposal, to be confirmed: *an arm's score on a world is the mean over
+   its k controllers; the bootstrap resamples worlds.* That is **n = 20, not n = 60**, and only
+   one of those is honest — the k samples of a row are repeated measures of one generation
+   process, not independent observations of a world.
+2. **Best-of-k.** It answers a real question — does the corpus expand what is *reachable* — but
+   it rises mechanically with k. It is a **secondary, declared in advance or not reported**.
+   ⚠️ Scoring k controllers, picking the best, and reporting it as the arm's score would
+   invalidate the result.
+3. **X, and whether G2's decision rule applies at all.** X = 0.30 was derived on lab42's twelve
+   scenarios and the 2026-09-13 amendment already records that it does not transfer to the
+   randomised suite. It has not been re-derived, and nothing in this append re-derives it.
+4. **The count-metric question raised on 2026-09-15** is still open and still binds here.
+
+## Two things are given up, and the write-up states them rather than omitting them
+
+- ⚠️ **G3 is not measurable from this arm.** Compositional generalisation needs primitives to
+  recombine and a whole controller has none. G3 stands on the node library or it does not stand.
+  **Generalisation across world sets may be reported, but never as G3.**
+- ⚠️ **§6's G1 library framing narrows to the card level for this arm.** The coverage count
+  (distinct mechanism *families*) and the provenance fraction were always properties of the
+  **cards** — the 2026-08-31 amendment says so — and that is where they are reported.
+
+## The threat this design adds, declared in advance
+
+⚠️ **ANCHORING, and its direction is toward null.** A model handed working code makes
+conservative edits. If a card implies a structurally different navigator, editing will not produce
+it. **A null result from this arm means "cards did not improve this navigator", never "literature
+does not help"**, and that distinction is stated from the start rather than discovered afterwards.
+It joins §8's declared threats.
+
+⚠️ **And §8's existing card-infidelity limitation is unchanged.** A controller can be handed a
+card and ignore it. The diff makes that **visible for the first time**, but reading a diff is a
+human judgement, not an automatic check, and the limitation is absorbed by `p` rather than solved.
+
+⚠️ **No number from this arm pools with any node-library number**, under any pipeline version.

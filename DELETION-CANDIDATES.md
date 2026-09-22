@@ -1,5 +1,21 @@
 # Marked for deletion — obsolete under the layered command pipeline
 
+> ⚠️ **STILL NOTHING HAS BEEN DELETED, AND THE GATE NOW MATTERS MORE, NOT LESS (2026-09-21).**
+> The layered command pipeline this list was written for is **itself superseded** by
+> `plans/07-epic-whole-controller.md`. That does **not** promote anything here to deletable —
+> it does the opposite. `scripts/prune_obsolete.py --gate` refuses to delete until
+> `measure_growth.py` shows a non-zero `fixed`, on the principle that **"we replaced it" and
+> "the replacement is better" are different claims and only the second justifies throwing
+> anything away**. The architecture has now been replaced twice without that claim ever being
+> established, which is precisely the argument for keeping everything.
+>
+> ⚠️ **The node library, `compose/`, `nodes/tree.py:Layer` and every v1/v2/v3 record stay.**
+> They still load, still carry their snapshot tags, and still back every committed composition
+> and every pass-rate denominator. Epic 07's case is assembled out of them.
+>
+> **Superseded PLANS are a different thing and were moved, not deleted**, to
+> `plans/trash/` on 2026-09-21, each with a per-file reason in `plans/trash/README.md`.
+
 **Created 2026-09-14, chunk 52.** Nothing in this list has been deleted. It is
 the list of things that become dead weight *once the layered pipeline is
 confirmed to work*, written down now while the reasons are fresh, so that the

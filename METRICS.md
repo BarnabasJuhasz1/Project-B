@@ -1,5 +1,23 @@
 # What the growth numbers mean, and which worlds they were measured on
 
+> ⚠️ **THE MEASURED UNIT CHANGED ON 2026-09-21.** `measure_growth.py` pairs
+> `Layer[ports, BASE, node]` against the base; the live experiment pairs **a whole edited
+> controller** against the same base, on the same 20 worlds, through
+> `scripts/measure_controller.py` (`plans/todo/61-paired-measurement.md`).
+>
+> **Everything below still applies, and four rules carry over unchanged and are not optional:**
+> 1. **The full metric set**, never `goal_reached` alone — 6 of 16 nodes predicted `collisions`.
+> 2. **Each card's own claimed metric is marked.**
+> 3. ⚠️ **Every COUNT metric is reported PER METRE**, beside the raw count, with a flag when the
+>    two disagree. A robot that stops scores perfectly on collisions, and that already produced
+>    an apparent win whose sign reversed.
+> 4. ⚠️ **The drift axis is switched ON where a card names it.** `to_scenario()` never set
+>    `drift`; epic 06 fixed it and `out/growth/maze+drift0.10.csv` is the result.
+>
+> ⚠️ **Growth CSVs are AGGREGATES** — `fixed = 2` never says *which* two worlds — and **nothing
+> here is a benchmark number**: these are kinematic rollouts with the frozen locomotion policy
+> absent.
+
 Written 2026-09-15. Covers every number in `out/growth/*.csv` and the tables in
 `generate/FINDINGS.md` from 2026-09-14 onward.
 

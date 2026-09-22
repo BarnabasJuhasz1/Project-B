@@ -1,5 +1,15 @@
 # `cards/probe/` — reconstructed cards, never real ones
 
+> ⚠️ **PROMOTED, 2026-09-21: this directory feeds chunk 59.** `plans/todo/33-citation-probe.md`
+> came back out of `hold/` because it is **card-level and architecture-independent**, and its
+> three reconstructions plus their `.diff.json` are folded into the card-level report
+> (`plans/todo/59-card-level-report.md`) as the recall-against-a-human-extraction half of the
+> provenance result.
+>
+> ⚠️ **Nothing below changes.** These remain model reconstructions, never principle cards;
+> `cards.store` still refuses to load this directory two ways over; they are counted in no G1
+> number and no episode is ever run from one. The report must say so where the numbers appear.
+
 ⚠️ **Nothing in this directory is a principle card.** These are what a model
 recalls when it is handed **a citation and nothing else**. They are not extracted
 from any document, nobody has opened the papers to write them, and a span in

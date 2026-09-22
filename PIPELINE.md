@@ -5,15 +5,33 @@ manual and the source of truth for decisions; this file is the thing to read
 first if the words *card*, *node*, *port* and *admission* are not yet a single
 picture in your head.
 
+> ⚠️ **THE SPINE CHANGED ON 2026-09-21. THE BEHAVIOUR TREE IS GONE.**
+> A card no longer becomes a *node* that joins a *library* and is *composed* into a *tree*. A
+> card is now fed, with the frozen base navigator's source, to a single **edit** call that
+> returns **a whole `core.observation.Controller` and a diff**. See
+> `plans/07-epic-whole-controller.md`.
+>
+> **The vocabulary that survives:** paper, card, arm, candidate, admission, episode, score.
+> **The vocabulary that is now historical:** node, port, `WRITES`, `Layer`, arbitration,
+> retrieval, composition, tree. Those sections are kept and are accurate for the library that
+> still sits in `nodes/` and `generate/staging/` — they are just not the live path.
+
 ---
 
 ## The one-sentence version
 
-We extract **principles** from research papers into **cards**, hand one card at a
-time to a model, get back one **node** — a small typed piece of robot behaviour —
-let an automatic **harness** decide whether that node actually works, keep the
-ones that do in a **library**, and then measure whether a robot built out of
-literature-derived nodes navigates better than one built without them.
+⚠️ **Current, from 2026-09-21.** We extract **principles** from research papers into
+**cards**, hand an arm's cards — together with the source of one frozen, already-scored
+**base navigator** — to a model, and get back **a whole controller and a diff**. An automatic
+check decides only whether the artefact *is* a controller; whether it is a *better* one is
+settled by scoring it against the same base on the same worlds. Then we measure whether the
+controllers written with literature navigate better than the ones written without it — which is
+what the control arm **`p`** is for.
+
+⚠️ **Historical, to 2026-09-21.** We extracted principles into cards, handed one card at a
+time to a model, got back one **node** — a small typed piece of robot behaviour — let an
+automatic **harness** decide whether that node worked, kept the ones that did in a **library**,
+and composed them into **trees**.
 
 Nothing is trained. The robot's walking is inherited and frozen. The only thing
 that varies is the *code above the legs*, and where that code's ideas came from.
@@ -21,6 +39,33 @@ that varies is the *code above the legs*, and where that code's ideas came from.
 ---
 
 ## The spine
+
+**Current, from 2026-09-21:**
+
+```mermaid
+flowchart LR
+    P[paper] --> C[card]
+    C --> PR[edit prompt]
+    BASE[(frozen base<br/>navigator)] --> PR
+    TS[task family] --> PR
+    PR --> M((model))
+    M --> CAND[controller<br/>+ diff]
+    CAND --> V{validity}
+    V -->|is a controller| E[episode]
+    V -->|fails| R[recorded<br/>rejection]
+    E --> S[score]
+    BASE --> S
+```
+
+Read left to right: **a paper becomes a card; a card plus the base becomes a whole
+controller; the controller drives a robot; and the robot's number is compared against the
+same base on the same worlds.** ⚠️ The base appears twice on purpose — it is both the input to
+every edit and the reference every score is paired against.
+
+⚠️ **Arm `p` is the same picture with the card node removed.** That is the whole of the
+control: no card, everything else identical.
+
+**Historical, to 2026-09-21:**
 
 ```mermaid
 flowchart LR
@@ -37,8 +82,8 @@ flowchart LR
     E --> S[score]
 ```
 
-Read left to right: **a paper becomes a card, a card becomes a node, nodes become
-a tree, a tree drives a robot, and the robot gets a number.**
+Read left to right: **a paper became a card, a card became a node, nodes became
+a tree, a tree drove a robot, and the robot got a number.**
 
 Each arrow is a place something can be checked, and most of the project's design
 effort went into making those checks automatic rather than a matter of judgement.

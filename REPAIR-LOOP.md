@@ -1,7 +1,31 @@
 # REPAIR-LOOP.md — the autonomous diagnose-and-repair pipeline
 
-**Written 2026-09-16, on the user's instruction. Everything else is on hold until the core of
-this is running — see `plans/hold/` and `plans/README.md`.**
+**Written 2026-09-16, on the user's instruction.**
+
+> ✅ **EPIC 06 IS COMPLETE AND THE HOLD IS LIFTED (2026-09-21). `plans/hold/` is empty.**
+> The current work is `plans/07-epic-whole-controller.md`.
+>
+> ⚠️ **THIS DOCUMENT IS STILL REQUIRED READING**, because epic 07's case is assembled out of
+> what this epic found — above all the elimination it bought:
+>
+> **The drift confound was repaired and B−A did not move.** `to_scenario()` never set `drift`,
+> so every growth world handed the controller a perfect pose estimate while 6 of 16 cards
+> predicated on drift. Epic 06 fixed it. Re-measured with the hazard on
+> (`out/growth/maze+drift0.10.csv`): **B−A is still exactly zero**, every high-firing node still
+> regresses, and the repaired ant node still regresses (`repair-r01.csv`, −0.20). The single best
+> available excuse was removed and the null survived it. ⚠️ **An elimination that costs a whole
+> epic is worth more than most positive results, and it is the strongest single argument for
+> dropping the behaviour tree.**
+>
+> **The four-way verdict taxonomy below outlives the architecture and must be carried into epic
+> 07 unchanged.** *A worse number is not a broken artefact* — it may be genuinely broken; it may
+> have had nothing to do here; it may have spent a metric its card said it would spend; or it may
+> be faithful, competent, and the paper does not transfer. ⚠️ **The fourth is a finding, not a
+> loop failure**, and it is one of the more interesting findings this project can produce.
+>
+> **What is now historical:** the repair *action space* is node-shaped — triggers, ports,
+> `WRITES`, arbitration. Under epic 07 a repair is an edit to a whole controller, and the
+> taxonomy applies but the actions do not.
 
 ⚠️ **This document is the WHY and the WHAT. The HOW is `plans/06-epic-repair-loop.md` and its
 chunks.** Read this before touching any of them: the chunks reference these definitions rather

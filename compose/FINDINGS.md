@@ -1,5 +1,23 @@
 # compose/ — findings
 
+> ⚠️ **HISTORICAL FROM 2026-09-21. COMPOSITION IS NOT ON THE LIVE PATH.** The behaviour-tree
+> execution model is dropped; there is no retrieval step and no composer. See
+> `plans/07-epic-whole-controller.md`.
+>
+> **Nothing here is retracted.** The eight committed compositions still resolve and still mean
+> what they meant, and the findings below are still the reason several design decisions were
+> made. Two of them outlive the architecture and should be carried into the write-up:
+> - **A composition can SUCCEED and produce a tree that does not work** (committed pair). The
+>   general form — *an artefact that passes its own generation check is not thereby a working
+>   controller* — is exactly why epic 07's admission is **validity only** and contribution is
+>   settled by scoring against the base.
+> - **The admitted node has TWO effects**, which `nodes/contract.py` forbids and neither the
+>   harness nor composition could detect. Reported, not hidden.
+>
+> ⚠️ **G3 (compositional generalisation) stands on the node library or it does not stand.** A
+> whole controller has no primitives to recombine, and generalisation across world sets must
+> never be reported as G3.
+
 ⚠️ **Read this before using anything in `compose/` and before writing chunk 17.**
 Two of these change what a reported number means.
 
@@ -241,7 +259,7 @@ speed cap is not a Condition, not an Action and not a Decorator as defined, so
 every mechanism was forced into an Action with a carrier welded on. That gives a
 B node exactly two ways to affect the robot — drive itself and starve whatever
 else would have, or publish into the void — and the table above is both of them.
-`plans/todo/40-modifier-kind.md` is the decision.
+`plans/trash/40-modifier-kind.md` is the decision (moved 2026-09-21).
 
 **⚠️ The reference row that reframes all of it.** The carrier alone —
 `AvoidObstacles`, a handwritten fixture that is scaffolding under #3 and that

@@ -7,7 +7,7 @@
 SLAM changes what several committed numbers *mean*. This chunk is where that is worked out
 deliberately, in one place, rather than discovered halfway through cycle 2's evaluation.
 
-It is the counterpart of chunk [17](17-pre-registration.md) for this epic, and like 17 it
+It is the counterpart of chunk [17](../done/17-pre-registration.md) for this epic, and like 17 it
 **blocks the first evaluation run that uses SLAM**.
 
 ## Decided

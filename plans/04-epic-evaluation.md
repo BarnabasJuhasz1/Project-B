@@ -5,6 +5,22 @@
 [02](02-epic-node-library.md), both complete, and
 [`PRE-REGISTRATION.md`](../PRE-REGISTRATION.md), tagged `prereg-v1`.
 
+⚠️ **AMENDED BY THE 2026-09-21 PIVOT — read
+[epic 07](07-epic-whole-controller.md) first.** The behaviour-tree execution model is dropped, so
+the thing this epic sweeps has changed: a condition is now a **whole generated `Controller`**,
+not a composed tree over a node library. Chunks 28–32 are not retracted — `runs/` is built,
+rehearsed and still the evaluation machinery — but **what gets bound to a condition is different**,
+and `runs/spec.py` will need a binding for arm `p`.
+
+⚠️ **Chunk 34 (condition C) and chunk 35 (the unseen corpus) are unaffected in kind**: both are
+card-level and architecture-independent. ⚠️ **Chunk 31's G3 reading does NOT survive** — a whole
+controller has no primitives to recombine, and generalisation across world sets must never be
+reported as G3.
+
+⚠️ **The pivot is recorded as a dated append in `PRE-REGISTRATION.md` (2026-09-21)**, which also
+names four things that must land in a *further* append before any number from the new arm is
+reported.
+
 ## Why this epic exists
 
 Everything built so far produces **one** episode. `run_episode.py` runs a scenario with a
@@ -62,7 +78,7 @@ it is flagged here rather than buried.
 | 30 | Condition C — the Nav2 baseline | 28 | **yes** |
 | 31 | The container run | 28, 29 | **yes** |
 | 32 | G3 — composition over the held-out split | 16, 29, 31 | **yes** |
-| 33 | [The citations probe](doing/33-citation-probe.md) — does extraction earn its place? | 14, 15 | no |
+| 33 | [The citations probe](todo/33-citation-probe.md) — does extraction earn its place? | 14, 15 | no |
 
 **28 is done.** The rest are named so the shape is visible; each gets written when its blockers
 clear, because a plan written against a blocked dependency is a guess.
