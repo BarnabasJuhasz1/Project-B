@@ -357,3 +357,31 @@ n = 8 controllers per arm on **one hand-authored world**. The sample generalises
 over generation variance, not over environments: this is one draw from one
 geometry, in no split, in no PRE-REGISTRATION constant. p = 0.041 is a statement
 about this world.
+
+## Exp 3 apparatus (2026-11-02) — repeated, perturbed physics episodes with traces
+
+`Mindfire_Experiment_Plan.md` §3. **Built and smoke-tested; the sweep has NOT run.**
+
+| piece | what |
+|---|---|
+| `demo/exp3.py` | the design as data: `REP_CONDITIONS` (rep 0 = seed 0, no offset = the original condition; reps 1–2 = seeds 1–2 and start offsets drawn once from `PERTURB_SEED` 3003, U(±0.10 m) in x/y, U(±0.15 rad) in yaw, **the same for every controller**), the interleaved order (`ORDER_SEED` 3), the trace format, tracking error, success = **all four legs** |
+| `demo/record_isaac.py` | `--seed`, `--start-dx/-dy/-dyaw`, `--trace PATH.csv.gz`, `--dry-run` (validates flags and the import gate, never boots the simulator). The `RESULT` line is unchanged; a `RESULT_JSON` line follows it |
+| `demo/physics_sweep.py` | arms from `render.ARMS`, `--reps 3`, keyed on `(arm, k, rep)` for resume, rep-major blocks each a jittered stratified shuffle across arms, load average per episode, writes `demo/out/v2/` and **refuses to write `demo/out/physics.csv`**; `--compare-only` checks rep 0 against it |
+| `demo/rollout.py` | `rollout(..., start_offset=)`, the same offsets for the kinematic loop (default unchanged) |
+| `demo/test_exp3.py` | 25 test cases, no simulator (record_isaac through `--dry-run`) |
+
+**The trace** (`demo/out/v2/traces/<arm>__<k>__r<rep>.csv.gz`, one row per 50 Hz
+control step, ~0.14 MB per 120 s episode): `t, leg, door, x, y, yaw, vx, vy, wz,
+gap, contact, step_ms, err_v, err_wz`. `step_ms` is the controller's own
+`step()` wall time; `err_v` / `err_wz` are |realised − commanded| planar
+velocity and realised − commanded yaw rate over that step (review M1).
+
+**Smoke check, 2026-11-02, n = 1** (`arm0/k4`, rep 0, local, `in_container: false`):
+legs 4/4, leg times `[19.82, 20.28, 54.12, 26.76]`, 121.0 sim-s — **identical to
+its `physics.csv` row**. 117 s wall (the pilot row took 221 s). arm0/k4 has no
+wall-clock budget, so this checks physics determinism only; rep 0 of the
+`perf_counter`-budgeted controllers is the part of the sweep that can still differ.
+
+    # the sweep (pilot 16 + base, 3 reps = 51 episodes). Quiet machine only.
+    python demo/physics_sweep.py --arms arm0,armB --ks k0,k1,k2,k3,k4,k5,k6,k7
+    python demo/physics_sweep.py --compare-only      # rep 0 vs physics.csv
