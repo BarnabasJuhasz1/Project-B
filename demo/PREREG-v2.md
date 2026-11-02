@@ -59,10 +59,10 @@ is **not** used to make the tests one-sided.
 |---|---|
 | arms | `arm0` (task only), `armB` (task + Stentz 1994, `paper.txt`), `armX` (task + length-matched Feng et al. 2015, `controls/feng2015.txt`) |
 | prompts | `prompt.md` and `task.md` **unchanged**; the three renders byte-identical outside the paper block (`render.check()`) |
-| prompt hashes | arm0 `c6a5b5e6eac0def5`, armB `4045efb3e514b981`, armX **`<to be filled from the armX build>`** |
+| prompt hashes | arm0 `c6a5b5e6eac0def5`, armB `4045efb3e514b981`, armX **`a848cebd7806d2cc`** (the 979-line cut; the 813-line `2c56254bc6d40d86` was calibrated and replaced, `controls/MANIFEST.md`) |
 | model | `claude-opus-5` via `ClaudeCliBackend`. If not served: all three arms generated with the successor, pilot reported separately and never pooled (plan R2) |
 | CLI | pilot ran on Claude Code **2.1.278**; installed now is **2.1.302**. ⚠️ **DECISION FOR BARNA: pin a version for the campaign or not** (§11). Either way `claude --version` is recorded for every call, in `tool_use.csv` |
-| tool policy | pilot: no `--tools`/`--allowedTools`/`--max-turns`/`--permission-mode`, so the default tool set was offered and anything needing approval was denied. ⚠️ **DECISION FOR BARNA: the same flags (poolable with the pilot) or `--tools ""` for all three arms (strictly prompt → code, no pooling)** (§11). Identical across the three arms either way |
+| tool policy | pilot: no `--tools`/`--allowedTools`/`--max-turns`/`--permission-mode`, so the default tool set was offered and anything needing approval was denied. ⚠️ **DECISION FOR BARNA: the same flags (poolable with the pilot) or `--tools ""` for all three arms (strictly prompt → code, no pooling)** (§11). Identical across the three arms either way. ⚠️ Campaign calls also pass **`--strict-mcp-config`**, so no MCP connector reaches the model; the pilot calls did not pass it, a flag difference from the pilot that is disclosed |
 | **k per arm (fresh)** | ⚠️ **DECISION FOR BARNA: 24 or 30** (§11). Recommended **30**. Written into `analyse.K_CONFIRMATORY` at the freeze |
 | fresh k indices | arm0 `k8..k(7+k)`, armB `k8..k(7+k)`, armX `k0..k(k-1)` (`analyse.FRESH_START`) |
 | generation order | all 3k jobs shuffled with a fixed seed **`<shuffle seed, to be fixed>`**, `--jobs 6`, 1800 s timeout |
@@ -117,7 +117,7 @@ power of H1 under Holm over H1–H3 with armX = arm0 (the content scenario).
 | episode produces no `RESULT` line (simulator crash, apparatus) | **re-run**, never scored as 0. Two failed re-runs of one episode stop the sweep for diagnosis |
 | episode run while a generation call or another simulator was active | re-run; the original stays in the log and is not analysed |
 | fewer than 3 valid reps for any confirmatory controller | `analyse.py` **refuses** (`Incomplete`). No confirmatory number is produced from a partial set |
-| armX samples generated before a failed token-match check (plan R3: first armX transcripts' input tokens > 1 % from armB's 25,314) | generation stops, the control is re-truncated, the affected armX samples are **reported but replaced** and the replacement count is stated |
+| armX samples generated before a failed token-match check (plan R3: first-turn input tokens of the first armX transcripts > 1 % from the first-turn count of **fresh armB samples on CLI 2.1.302** — 26,464 on the calibration call — not the pilot's 25,314 on 2.1.278) | generation stops, the control is re-truncated, the affected armX samples are **reported but replaced** and the replacement count is stated |
 | the `(base)` reference row | descriptive only, never tested |
 | pilot 16 | excluded from H1–H3; enter S5 (pooled), Exp 3 and Exp 4 |
 
@@ -248,11 +248,12 @@ labels; the two raters give Cohen's κ per dimension.
 4. **CLI version pinning** (step 0, check 4). The pilot ran on 2.1.278; 2.1.302
    is installed. Pin one version for the whole campaign (disable auto-update)
    or not. A different CLI can change the ~11.6k-token overhead (and so the
-   25,314-token armB target the armX token match is gated on, plan R3) and the
+   armB target the armX token match is gated on, plan R3: 25,314 on 2.1.278,
+   26,464 on 2.1.302 at calibration) and the
    default tool set. Step 0 recommends pinning and re-measuring arm0/armB input
    tokens from the first new transcripts before trusting the ±1 % gate.
-5. The generation **shuffle seed** and the **armX prompt hash** (from the armX
-   build).
+5. The generation **shuffle seed**. (The armX prompt hash is now fixed:
+   `a848cebd7806d2cc`.)
 6. Container or local for the v2 sweep (plan §3.3), stated before it starts.
 7. Approve this document, then commit and tag it **before the first generation
    call**. Optional OSF mirror.
