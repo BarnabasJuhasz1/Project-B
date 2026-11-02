@@ -386,3 +386,25 @@ wall-clock budget, so this checks physics determinism only; rep 0 of the
     # the sweep (pilot 16 + base, 3 reps = 51 episodes). Quiet machine only.
     python demo/physics_sweep.py --arms arm0,armB --ks k0,k1,k2,k3,k4,k5,k6,k7
     python demo/physics_sweep.py --compare-only      # rep 0 vs physics.csv
+
+### Exp 3 result (2026-11-02): 51/51 episodes, `demo/out/v2/SUMMARY.md`
+
+Local, `in_container: false`, success = all four legs, n = 8 controllers per arm
+× 3 reps. Rows #22–25 ran in ACPI `low-power` after a reboot and #37 straddled a
+profile change; all five are kept in `physics_lowpower.csv` and were rerun under
+`performance` (4 of 5 reruns gave the identical result, armB/k5 r1 went 2 → 1 leg).
+
+| | maj-of-3 success | episodes | rep 0 | rep 1 | rep 2 | all 3 reps agree |
+|---|---|---|---|---|---|---|
+| arm0 | 4/8 | 14/24 | 7/8 | 3/8 | 4/8 | 4/8 |
+| armB | 2/8 | 6/24 | 2/8 | 2/8 | 2/8 | 8/8 |
+
+- **Rep 0 reproduces the pilot's verdicts 17/17** (legs and 4-leg success). 11/17
+  rows are exact to the 10 ms; **all 6 that differ in timing have a wall-clock
+  planning budget**, and all 10 without one (base included) are exact.
+- **The pilot's arm0 7/8 does not survive perturbation**: 4 arm0 controllers fail
+  at least one perturbed rep, so majority-of-3 is 4/8 vs 2/8 (Fisher p = 0.608).
+  armB's verdicts are perfectly stable; arm0's are not.
+- Tracking error (median per-step |commanded − realised| displacement, 50 Hz):
+  arm0 1.50 mm [IQR 1.35, 1.60], armB 1.55 mm [1.33, 2.18]; Mann–Whitney at
+  controller level p = 0.574.
