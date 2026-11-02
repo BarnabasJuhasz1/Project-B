@@ -1,12 +1,20 @@
 """
 demo/render.py
 
-THE ONE PLACE THE TWO ARMS DIFFER, and it is a delimited block.
+THE ONE PLACE THE ARMS DIFFER, and it is a delimited block.
 
 `arm0` gets the task and nothing else. `armB` gets the identical task plus one
-paper, inside `PAPER BLOCK`. Strip that block from either rendering and the two
-are **byte-identical** -- `check()` asserts it, and `demo/test_demo.py` fails if
-it ever stops being true.
+paper, inside `PAPER BLOCK`. `armX` (added 2026-11-02, Mindfire plan §2.2) gets
+the SAME block holding a length-matched OFF-TOPIC paper -- Feng et al. 2015 on
+acoustic gas thermometry -- so armB - armX is the paper's CONTENT and armX -
+arm0 is the cost of a long document. Strip the block from any rendering and all
+three are **byte-identical** -- `check()` asserts it, and `demo/test_demo.py`
+fails if it ever stops being true.
+
+⚠️ armX controls for length and distraction, NOT for "a relevant-looking paper
+pulls the model off course" (plan R8). Its text is not committed (R10):
+`demo/controls/build_feng2015.py` regenerates it and `controls/manifest.json`
+pins its hash.
 
 That is the whole basis for the comparison. If the arms could differ anywhere
 else -- a word of extra instruction, a reordered section, a different framing of
@@ -28,15 +36,25 @@ BLOCK = re.compile(
     r"\n*<!-- ---- PAPER BLOCK BEGIN ---- -->\n(?P<block>.*?)"
     r"<!-- ---- PAPER BLOCK END ---- -->\n", re.S)
 
-ARMS = ("arm0", "armB")
+ARMS = ("arm0", "armB", "armX")
+
+# Which document fills the block. arm0 has none: its block is REMOVED, not
+# emptied. Both documents are `pdftotext -layout <pdf> -`, then `.strip()`.
+DOCUMENTS = {
+    "armB": HERE / "paper.txt",
+    "armX": HERE / "controls" / "feng2015.txt",
+}
 
 
 def paper_text(path=None):
-    p = pathlib.Path(path) if path else HERE / "paper.txt"
+    p = pathlib.Path(path) if path else DOCUMENTS["armB"]
     if not p.is_file():
+        how = ("run `python demo/controls/build_feng2015.py` to regenerate it"
+               if p == DOCUMENTS["armX"] else "see demo/README.md for how the "
+               "text is produced")
         raise FileNotFoundError(
-            f"{p} is missing. armB cannot run without the paper; arm0 can. "
-            f"See demo/README.md for how the text is produced.")
+            f"{p} is missing. The arms with a paper block cannot run without "
+            f"it; arm0 can. To fix: {how}.")
     text = p.read_text(encoding="utf-8", errors="replace").strip()
     if len(text) < 5000:
         raise ValueError(
@@ -47,7 +65,11 @@ def paper_text(path=None):
 
 
 def render(arm, paper=None):
-    """The exact text sent to the model. Hashed and recorded by generate.py."""
+    """The exact text sent to the model. Hashed and recorded by generate.py.
+
+    `paper` overrides the arm's document (tests use a placeholder); it is
+    ignored for arm0, which has no block.
+    """
     if arm not in ARMS:
         raise KeyError(f"no arm {arm!r}. Known: {ARMS}")
     template = (HERE / "prompt.md").read_text(encoding="utf-8")
@@ -55,7 +77,8 @@ def render(arm, paper=None):
     if arm == "arm0":
         template = BLOCK.sub("", template)          # the block is REMOVED
     else:
-        template = template.replace("{{PAPER}}", paper or paper_text())
+        template = template.replace(
+            "{{PAPER}}", paper or paper_text(DOCUMENTS[arm]))
     return template.replace("{{TASK}}", task).strip() + "\n"
 
 
@@ -69,16 +92,21 @@ def shared_body(arm, paper=None):
     return BLOCK.sub("", render(arm, paper=paper)).strip()
 
 
-def check(paper=None):
-    """Returns (ok, detail). The property the comparison rests on."""
+def check(paper=None, arms=ARMS):
+    """Returns (ok, detail). The property the comparison rests on: every arm's
+    rendering, block stripped, is byte-identical to arm0's."""
     a = shared_body("arm0", paper=paper)
-    b = shared_body("armB", paper=paper)
-    if a == b:
-        return True, f"identical outside the paper block ({len(a)} chars)"
-    import difflib
-    diff = "\n".join(list(difflib.unified_diff(
-        a.splitlines(), b.splitlines(), "arm0", "armB", lineterm=""))[:40])
-    return False, diff
+    for arm in arms:
+        if arm == "arm0":
+            continue
+        b = shared_body(arm, paper=paper)
+        if a != b:
+            import difflib
+            diff = "\n".join(list(difflib.unified_diff(
+                a.splitlines(), b.splitlines(), "arm0", arm, lineterm=""))[:40])
+            return False, diff
+    return True, (f"{', '.join(arms)} identical outside the paper block "
+                  f"({len(a)} chars)")
 
 
 if __name__ == "__main__":

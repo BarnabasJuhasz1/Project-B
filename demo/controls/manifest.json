@@ -1,0 +1,84 @@
+{
+  "arm": "armX",
+  "source": "Feng X J, Zhang J T, Lin H, Gillis K A, Moldover M R (2015). Determination of the Boltzmann Constant Using the Differential - Cylindrical Procedure. arXiv:1501.02519",
+  "source_url": "https://arxiv.org/abs/1501.02519",
+  "pdf_name": "feng-2015-boltzmann-differential-cylindrical-arxiv-1501.02519.pdf",
+  "pdf_sha256": "da7a29778e0e10557cadeec545709dcd368cd5fadac722a06f972d855e219cdf",
+  "pdf_pages": 41,
+  "extraction_command": "pdftotext -layout <pdf> -",
+  "pdftotext_version": "pdftotext 24.02.0 (poppler)",
+  "paper_txt_rule_check": "pdftotext -layout demo/paper.pdf - is byte-identical to demo/paper.txt (41,121 bytes, sha256 1294dc34b73f9b2a...), checked 2026-11-02",
+  "cleaning": ".strip() only",
+  "full_extraction_chars": 71524,
+  "full_extraction_lines": 1740,
+  "full_extraction_sha256": "492391387cd2f5c4ea565e869abba03ccd7df45a61ed1becdb08e71968b3bfa7",
+  "cut_lines": 813,
+  "cut_rule": "first cut_lines lines of the stripped extraction, then .strip(); the cut is a paragraph boundary (build_feng2015.paragraph_ends)",
+  "cut_after_text": "NIM’s TPW reference cells.",
+  "truncated_chars": 32600,
+  "truncated_sha256": "e666212f768fd6364d475924e6cbbff37909c58f10b2587df1d60fde4c85437a",
+  "prompt_sha256_16": {
+    "arm0": "c6a5b5e6eac0def5",
+    "armB": "4045efb3e514b981",
+    "armX": "2c56254bc6d40d86"
+  },
+  "prompt_chars": {
+    "arm0": 3687,
+    "armB": 45222,
+    "armX": 36966
+  },
+  "claude_input_tokens": {
+    "arm0": 12549,
+    "armB": 25315,
+    "armX_estimate": 25415,
+    "armX_estimate_proxy_range": [
+      25351,
+      25480
+    ],
+    "armX_measured": null,
+    "method": "offline proxy transfer, see MANIFEST.md; NOT a Claude count",
+    "tolerance": 0.005,
+    "anchor_cli_version": "2.1.278 (pilot transcripts)",
+    "campaign_cli_version": "2.1.302",
+    "cli_version_note": "arm0/armB anchors include CLI overhead (~11.6k tokens) that may differ by CLI version; the block difference cancels it, absolute counts do not. Compare armX only against counts taken under the same CLI version."
+  },
+  "keyword_scan": {
+    "terms": [
+      "path",
+      "plan",
+      "graph",
+      "robot",
+      "search",
+      "heuristic",
+      "obstacle",
+      "map",
+      "navigat",
+      "lidar"
+    ],
+    "feng_truncated": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "dstar_paper_txt": [
+      73,
+      33,
+      5,
+      66,
+      8,
+      4,
+      32,
+      34,
+      5,
+      0
+    ],
+    "rule": "case-insensitive, word-initial regex \\bterm"
+  }
+}
