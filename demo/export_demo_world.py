@@ -19,13 +19,18 @@ in no split, no PRE-REGISTRATION constant and no committed result.
 
     python demo/export_demo_world.py
     # -> scenes/demo-patrol.usd
+    python demo/export_demo_world.py --maze maze2     # Mindfire Exp F
+    # -> scenes/demo-maze2.usd
 """
 import argparse
 import os
 import sys
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--out", default=os.path.join("scenes", "demo-patrol.usd"))
+parser.add_argument("--maze", default="patrol",
+                    help="demo/mazes.py name (Exp F: maze2)")
+parser.add_argument("--out", default=None,
+                    help="default: the maze's own scene path")
 parser.add_argument("--gui", action="store_true")
 parser.add_argument("--asset", default=None)
 args = parser.parse_args()
@@ -36,7 +41,12 @@ from core.scene_spec import (
     CEILING_HEIGHT, CEILING_RADIUS, CEILING_INTENSITY, CEILING_LIGHTS,
     GO2_START,
 )
-from demo.world import OPEN_WORLD, DOOR, HOME, GOAL
+from demo import mazes
+_MAZE = mazes.get(args.maze)
+OPEN_WORLD, DOOR, HOME, GOAL = (_MAZE["open"], _MAZE["door"], _MAZE["home"],
+                                _MAZE["goal"])
+if args.out is None:
+    args.out = _MAZE["scene"]
 
 from isaacsim import SimulationApp
 sim_app = SimulationApp({"headless": not args.gui})

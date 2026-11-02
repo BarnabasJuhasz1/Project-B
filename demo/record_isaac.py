@@ -78,7 +78,10 @@ def _trace_path(text):
 parser = argparse.ArgumentParser()
 parser.add_argument("controller", nargs="?", help="path to a controller .py")
 parser.add_argument("--out", default=None)
-parser.add_argument("--scene", default="scenes/demo-patrol.usd")
+parser.add_argument("--scene", default=None,
+                    help="default: the maze's own scene (demo/mazes.py)")
+parser.add_argument("--maze", default="patrol",
+                    help="demo/mazes.py name; default the original maze")
 parser.add_argument("--fps", type=float, default=10.0)
 parser.add_argument("--res", default="1280x720")
 parser.add_argument("--no-record", action="store_true")
@@ -141,7 +144,12 @@ if args.stack:
 if not args.controller:
     sys.exit("a controller path is required unless --stack is used")
 
-from demo.world import HOME, GOAL, OPEN_WORLD, BLOCKED_WORLD
+from demo.world import HOME, GOAL
+from demo import mazes
+_MAZE = mazes.get(args.maze)                  # refuses an unknown name pre-boot
+OPEN_WORLD, BLOCKED_WORLD = _MAZE["open"], _MAZE["blocked"]
+if args.scene is None:
+    args.scene = _MAZE["scene"]
 from demo.rollout import (LEG_TARGETS, LEG_BLOCKED, TIME_LIMIT, ARRIVE_RADIUS,
                           N_BEAMS, RANGE_MAX, MAX_LIN, MAX_ANG,
                           PatrolScenario, load_controller)
@@ -156,6 +164,7 @@ if args.dry_run:
     load_controller(args.controller)          # the import gate, sim-free
     print("[record] DRY RUN " + json.dumps({
         "controller": args.controller, "seed": args.seed,
+        "maze": args.maze, "scene": args.scene,
         "spawn": [round(v, 4) for v in SPAWN],
         "trace": args.trace, "record": not args.no_record,
         "door_never_shuts": args.door_never_shuts,
@@ -334,7 +343,7 @@ def main():
     load_samples.append(os.getloadavg()[0])
     summary = {
         "controller": args.controller, "controller_sha": controller_sha,
-        "seed": args.seed,
+        "seed": args.seed, "maze": args.maze, "scene": args.scene,
         "start_offset": [args.start_dx, args.start_dy, args.start_dyaw],
         "spawn": [round(v, 4) for v in SPAWN],
         "settled": [round(settled[0], 4), round(settled[1], 4),

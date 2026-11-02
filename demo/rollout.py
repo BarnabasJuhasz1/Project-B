@@ -137,7 +137,7 @@ def load_controller(path):
 
 
 def rollout(controller, seed=0, dt=CONTROL_DT, record=False, time_limit=None,
-            start_offset=(0.0, 0.0, 0.0), noise=None):
+            start_offset=(0.0, 0.0, 0.0), noise=None, maze=None):
     """Drive one patrol episode. Returns a result dict (+ a trace if asked).
 
     ⚠️ `time_limit` is the budget for the WHOLE EPISODE, not per leg. The
@@ -154,7 +154,16 @@ def rollout(controller, seed=0, dt=CONTROL_DT, record=False, time_limit=None,
     once per step and ADDED to the Twist that is integrated -- never to what
     the controller is told it commanded, and never to its observation. Exp E
     (prereg/expE.md) uses it to inject the tracking error measured under
-    physics (`demo/tracking.py`). None, the default, is the original rollout."""
+    physics (`demo/tracking.py`). None, the default, is the original rollout.
+
+    `maze` names a `demo/mazes.py` entry (Exp F). None is the original maze,
+    so every existing call is unchanged."""
+    if maze is None:
+        open_world, blocked_world = OPEN_WORLD, BLOCKED_WORLD
+    else:
+        from demo import mazes
+        m = mazes.get(maze)
+        open_world, blocked_world = m["open"], m["blocked"]
     limit = TIME_LIMIT if time_limit is None else float(time_limit)
     scenario = PatrolScenario(seed=seed, time_limit=limit)
     angles = scenario.beam_angles()
@@ -172,7 +181,7 @@ def rollout(controller, seed=0, dt=CONTROL_DT, record=False, time_limit=None,
         t = step * dt
         if leg >= len(LEG_TARGETS):
             break
-        world = BLOCKED_WORLD if LEG_BLOCKED[leg] else OPEN_WORLD
+        world = blocked_world if LEG_BLOCKED[leg] else open_world
         target = LEG_TARGETS[leg]
 
         gap = float(clearance((x, y), world)) - ROBOT_RADIUS
