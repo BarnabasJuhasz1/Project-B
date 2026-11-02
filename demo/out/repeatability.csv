@@ -1,0 +1,18 @@
+arm,k,legs,mean,stable
+arm0,k0,"[4, 4, 4]",4,True
+arm0,k1,"[4, 4, 4]",4,True
+arm0,k2,"[3, 3, 3]",3,True
+arm0,k3,"[4, 4, 4]",4,True
+arm0,k4,"[4, 4, 4]",4,True
+arm0,k5,"[2, 2, 2]",2,True
+arm0,k6,"[4, 4, 4]",4,True
+arm0,k7,"[3, 3, 3]",3,True
+armB,k0,"[2, 2, 2]",2,True
+armB,k1,"[4, 4, 4]",4,True
+armB,k2,"[4, 4, 4]",4,True
+armB,k3,"[4, 4, 4]",4,True
+armB,k4,"[4, 4, 4]",4,True
+armB,k5,"[2, 1, 2]",1.6666666666666667,False
+armB,k6,"[4, 4, 4]",4,True
+armB,k7,"[4, 4, 4]",4,True
+(base),reference,"[2, 2, 2]",2,True

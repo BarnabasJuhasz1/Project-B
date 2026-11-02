@@ -81,3 +81,9 @@ out/
 # rebuildable with scripts/export_world.py rather than committed. scenes/lab42_v1.usd
 # IS committed — it is hand-authored and there is no generator for it.
 scenes/generated/
+
+# demo/: the D* paper as handed to armB. NOT redistributed (licence; Mindfire
+# plan R10). Their SHA-256 are committed in demo/PAPER.md -- armB's prompt hash
+# 4045efb3e514b981 is only reproducible from a paper.txt with that hash.
+demo/paper.pdf
+demo/paper.txt
