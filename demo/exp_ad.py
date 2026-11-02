@@ -317,7 +317,8 @@ def main(argv=None):
             print(f"{tag} QUARANTINED #{i}: profile moved {before}->{after}; "
                   f"PAUSED. Resumable, it reruns.", flush=True)
             return 2
-        if not cpu_limit_ok(a.experiment, row.get("cpu_max")):
+        # a row with no result (the simulator died) carries no cpu_max to check
+        if row.get("legs") is not None and not cpu_limit_ok(a.experiment, row.get("cpu_max")):
             row["note"] = f"CPU LIMIT NOT SEEN BY THE EPISODE: {row.get('cpu_max')!r}"
             q = out.parent / "physics_quarantine.csv"
             write_rows(q, read_rows(q) + [row])
