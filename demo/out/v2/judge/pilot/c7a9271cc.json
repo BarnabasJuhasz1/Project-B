@@ -1,0 +1,141 @@
+{
+ "blind_id": "c7a9271cc",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "a99ad66536cd0861db314838b9559bf930b5e635766736d2e600286e35ce49ba",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.075832,
+ "payload": {
+  "duration_api_ms": 10533,
+  "stop_reason": "end_turn",
+  "session_id": "4c6240c9-77cc-4f46-b92f-81dc0d097452",
+  "total_cost_usd": 0.075832,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 15557,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 1360,
+   "output_tokens_details": {
+    "thinking_tokens": 561
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 15557,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1360,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 15557,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 15557
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 1360,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 15557,
+    "webSearchRequests": 0,
+    "costUSD": 0.075832,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 561,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"blind_id\": \"c7a9271cc\",\n  \"planner_type\": \"full_periodic\",\n  \"map\": \"persistent_grid\",\n  \"velocity_selection\": \"path_following\",\n  \"stuck_handling\": \"explicit_recovery\",\n  \"claims_dstar\": \"no\",\n  \"dstar_variant\": \"na\",\n  \"ds_open_keyed_on_k\": \"na\",\n  \"ds_h_and_k\": \"na\",\n  \"ds_raise_lower\": \"na\",\n  \"ds_modify_cost\": \"na\",\n  \"ds_stop_rule\": \"na\",\n  \"ds_backpointers\": \"na\",\n  \"notes\": \"planner_type: _plan_tick/_start_wave/_promote. A min-plus wavefront cost-to-go field is rebuilt from scratch: _start_wave allocates Dw filled with _BIG and _seed_goal seeds the goal. The relaxation is time-sliced (PLAN_BUDGET) over several steps, then _promote sets Dw=None so the next step restarts from scratch. No values are reused after a cost change. The rubric puts a sliced search that restarts on completion in full_periodic. The budget gate and the convergence/iteration-cap gate also fit full_periodic. _on_goal_change reuses a cached field per goal (field_cache) but does not repair. map: self.log log-odds grid is written by _update_map, kept on the instance, and not cleared on goal change. velocity_selection: _step scores 61 candidate headings with a cost that samples the global field Dact at two straight-line lookahead points (_sample). Each heading is a geometric projection, not a forward-simulated (v,w) twist over a horizon. The command is then built from the chosen heading (phi -> vx, vy, wz). By the rubric's rule that heading offsets without forward simulation count as path_following, I coded path_following. It consults the field, so it is not reactive. This is the least clear-cut label. stuck_handling: the stuck watchdog in _step triggers _recover, which has back-up (mode 1), spin in place (mode 2) and dither near the goal (mode 3). That is explicit_recovery, which outranks the timeout-style _mark_stuck_spot. claims_dstar: no D*, D-star, Stentz, LPA*, rhs, k_m or RAISE/LOWER vocabulary appears. self.k is only a step counter. All checklist items are na.\"\n}\n```",
+  "ttft_ms": 5502,
+  "type": "result",
+  "duration_ms": 10582,
+  "uuid": "7169c807-1b2f-4d70-a39b-56d8faf526a9",
+  "ttft_stream_ms": 1459,
+  "time_to_request_ms": 47,
+  "first_content_frame_ms": 1459,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "c7a9271cc",
+  "planner_type": "full_periodic",
+  "map": "persistent_grid",
+  "velocity_selection": "path_following",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "no",
+  "dstar_variant": "na",
+  "ds_open_keyed_on_k": "na",
+  "ds_h_and_k": "na",
+  "ds_raise_lower": "na",
+  "ds_modify_cost": "na",
+  "ds_stop_rule": "na",
+  "ds_backpointers": "na",
+  "notes": "planner_type: _plan_tick/_start_wave/_promote. A min-plus wavefront cost-to-go field is rebuilt from scratch: _start_wave allocates Dw filled with _BIG and _seed_goal seeds the goal. The relaxation is time-sliced (PLAN_BUDGET) over several steps, then _promote sets Dw=None so the next step restarts from scratch. No values are reused after a cost change. The rubric puts a sliced search that restarts on completion in full_periodic. The budget gate and the convergence/iteration-cap gate also fit full_periodic. _on_goal_change reuses a cached field per goal (field_cache) but does not repair. map: self.log log-odds grid is written by _update_map, kept on the instance, and not cleared on goal change. velocity_selection: _step scores 61 candidate headings with a cost that samples the global field Dact at two straight-line lookahead points (_sample). Each heading is a geometric projection, not a forward-simulated (v,w) twist over a horizon. The command is then built from the chosen heading (phi -> vx, vy, wz). By the rubric's rule that heading offsets without forward simulation count as path_following, I coded path_following. It consults the field, so it is not reactive. This is the least clear-cut label. stuck_handling: the stuck watchdog in _step triggers _recover, which has back-up (mode 1), spin in place (mode 2) and dither near the goal (mode 3). That is explicit_recovery, which outranks the timeout-style _mark_stuck_spot. claims_dstar: no D*, D-star, Stentz, LPA*, rhs, k_m or RAISE/LOWER vocabulary appears. self.k is only a step counter. All checklist items are na."
+ },
+ "parse_error": null
+}

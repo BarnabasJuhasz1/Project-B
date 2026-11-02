@@ -1,0 +1,141 @@
+{
+ "blind_id": "cf90a0a80",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "7345be022e07377087b0b22c6f60220986d2565ef99a7bdd77ad4fbeff4ec4b0",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.074838,
+ "payload": {
+  "duration_api_ms": 14039,
+  "stop_reason": "end_turn",
+  "session_id": "c621f204-bbbe-44ab-a389-ee2f9d3c5612",
+  "total_cost_usd": 0.074838,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 14286,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 1769,
+   "output_tokens_details": {
+    "thinking_tokens": 794
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 14286,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1769,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 14286,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 14286
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 1769,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 14286,
+    "webSearchRequests": 0,
+    "costUSD": 0.074838,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 794,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "{\"blind_id\":\"cf90a0a80\",\"planner_type\":\"full_periodic\",\"map\":\"persistent_grid\",\"velocity_selection\":\"path_following\",\"stuck_handling\":\"explicit_recovery\",\"claims_dstar\":\"yes\",\"dstar_variant\":\"other\",\"ds_open_keyed_on_k\":\"no\",\"ds_h_and_k\":\"partial\",\"ds_raise_lower\":\"no\",\"ds_modify_cost\":\"no\",\"ds_stop_rule\":\"partial\",\"ds_backpointers\":\"no\",\"notes\":\"planner_type: _get_field/_work_field/_sweep keep one cost-to-goal field (h) per goal, grown by Jacobi relaxation from the goal, with no OPEN list. Cost decreases (newly cleared space, decayed penalties) only continue the sweeps. Any new obstacle, penalty or goal change sets f['dirty'] in _rebuild_cost/_add_penalty/_step. _work_field then calls _reset_field, which wipes PD to INF and recomputes from scratch. That reset is gated by the map-changed flag, plus settled or a 1.5 s timer, so the file is full_periodic. It is not incremental, because raises are never repaired locally. A goal switch also marks fields dirty (reinit_on_goal_switch). map: self.log log-odds grid is updated in _update_map and persists across steps. velocity_selection: _step takes the heading from the field via a lookahead ring (argmin of field value + R), so steering follows the cost-to-go field. It then picks among 36 candidate headings by a static score with straight-ray free_dist; there is no forward simulation, so path_following. stuck_handling: the contact branch (recover_until) backs away from the nearest beam with its own command. The escape_until mode steers toward the most open direction after a stall, and _add_penalty adds a planning-level penalty. The dedicated manoeuvres make it explicit_recovery. D* claim: comments and identifiers use RAISE, LOWER, h, 'Property 2' and 'Sec. 2.2'. The code is neither Stentz-1994 nor D* Lite, so dstar_variant is other. ds_open_keyed_on_k: no, there is no OPEN list or k. ds_h_and_k: partial, only h (PD) is stored. ds_raise_lower: no, RAISE is handled by discarding the field in _work_field and LOWER by extra relaxation sweeps, with no PROCESS-STATE propagation. ds_modify_cost: no, _rebuild_cost marks the whole field dirty rather than re-inserting affected states. ds_stop_rule: partial, _sweep stops on global convergence (delta <= 1e-4) or a time deadline, and publishes when h at the robot is stable for a few checks (a Property 2 analogue), not k_min >= h(robot). ds_backpointers: no, there are no b pointers; the heading is argmin of field over a lookahead ring.\"}",
+  "ttft_ms": 7820,
+  "type": "result",
+  "duration_ms": 14079,
+  "uuid": "b0a6f0b8-4201-4822-a3f6-3a00e2e0850e",
+  "ttft_stream_ms": 1160,
+  "time_to_request_ms": 37,
+  "first_content_frame_ms": 1160,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "cf90a0a80",
+  "planner_type": "full_periodic",
+  "map": "persistent_grid",
+  "velocity_selection": "path_following",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "yes",
+  "dstar_variant": "other",
+  "ds_open_keyed_on_k": "no",
+  "ds_h_and_k": "partial",
+  "ds_raise_lower": "no",
+  "ds_modify_cost": "no",
+  "ds_stop_rule": "partial",
+  "ds_backpointers": "no",
+  "notes": "planner_type: _get_field/_work_field/_sweep keep one cost-to-goal field (h) per goal, grown by Jacobi relaxation from the goal, with no OPEN list. Cost decreases (newly cleared space, decayed penalties) only continue the sweeps. Any new obstacle, penalty or goal change sets f['dirty'] in _rebuild_cost/_add_penalty/_step. _work_field then calls _reset_field, which wipes PD to INF and recomputes from scratch. That reset is gated by the map-changed flag, plus settled or a 1.5 s timer, so the file is full_periodic. It is not incremental, because raises are never repaired locally. A goal switch also marks fields dirty (reinit_on_goal_switch). map: self.log log-odds grid is updated in _update_map and persists across steps. velocity_selection: _step takes the heading from the field via a lookahead ring (argmin of field value + R), so steering follows the cost-to-go field. It then picks among 36 candidate headings by a static score with straight-ray free_dist; there is no forward simulation, so path_following. stuck_handling: the contact branch (recover_until) backs away from the nearest beam with its own command. The escape_until mode steers toward the most open direction after a stall, and _add_penalty adds a planning-level penalty. The dedicated manoeuvres make it explicit_recovery. D* claim: comments and identifiers use RAISE, LOWER, h, 'Property 2' and 'Sec. 2.2'. The code is neither Stentz-1994 nor D* Lite, so dstar_variant is other. ds_open_keyed_on_k: no, there is no OPEN list or k. ds_h_and_k: partial, only h (PD) is stored. ds_raise_lower: no, RAISE is handled by discarding the field in _work_field and LOWER by extra relaxation sweeps, with no PROCESS-STATE propagation. ds_modify_cost: no, _rebuild_cost marks the whole field dirty rather than re-inserting affected states. ds_stop_rule: partial, _sweep stops on global convergence (delta <= 1e-4) or a time deadline, and publishes when h at the robot is stable for a few checks (a Property 2 analogue), not k_min >= h(robot). ds_backpointers: no, there are no b pointers; the heading is argmin of field over a lookahead ring."
+ },
+ "parse_error": null
+}

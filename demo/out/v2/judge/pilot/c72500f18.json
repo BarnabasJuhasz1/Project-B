@@ -1,0 +1,141 @@
+{
+ "blind_id": "c72500f18",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "34f5012243aa924f4f3155d8776aec211411d2063f3e8235e03a92bf64b8a601",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.080486,
+ "payload": {
+  "duration_api_ms": 8572,
+  "stop_reason": "end_turn",
+  "session_id": "cb02fd79-3ed4-4d02-88d2-099c9344ff03",
+  "total_cost_usd": 0.080486,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 17398,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 1089,
+   "output_tokens_details": {
+    "thinking_tokens": 357
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 17398,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1089,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 17398,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 17398
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 1089,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 17398,
+    "webSearchRequests": 0,
+    "costUSD": 0.080486,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 357,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"blind_id\": \"c72500f18\",\n  \"planner_type\": \"full_periodic\",\n  \"map\": \"persistent_grid\",\n  \"velocity_selection\": \"path_following\",\n  \"stuck_handling\": \"explicit_recovery\",\n  \"claims_dstar\": \"no\",\n  \"dstar_variant\": \"na\",\n  \"ds_open_keyed_on_k\": \"na\",\n  \"ds_h_and_k\": \"na\",\n  \"ds_raise_lower\": \"na\",\n  \"ds_modify_cost\": \"na\",\n  \"ds_stop_rule\": \"na\",\n  \"ds_backpointers\": \"na\",\n  \"notes\": \"planner_type: _plan_tick builds a fresh cost-to-go field Dbuild (all _BIG, goal=0) and runs _relax (Bellman-Ford style sweeps) over several steps. When the field is stable or max_iters is reached it is swapped in and Dbuild=None, so the next tick restarts from scratch. This is a sliced search that restarts on completion, which the rubric codes as full_periodic. The only reuse of old values is the per-goal cache self.fields on goal switch. That cache is not a repair of changed costs, and the build still starts from scratch. _trigger_recovery also discards the field. map: self.logodds is a log-odds grid updated by _integrate and kept on the instance, so persistent_grid. It is not cleared on goal switch. velocity_selection: on the nominal path _plan_dir descends the cost-to-go field with a 1.0 m carrot lookahead to get phi_des. _step then scores 48 candidate headings (alignment, clearance, hysteresis) with no forward simulation, so path_following and not rollout_scored. stuck_handling: _trigger_recovery sets recover_until, which gives a dedicated rotate/creep command branch in _step. _on_contact sets evade_until, which gives a back-away command. It also adds blockpen, but explicit_recovery takes precedence over timeout. claims_dstar: no D*, Stentz, LPA*, rhs, k_m, RAISE or LOWER vocabulary appears. The D and Dbuild identifiers are plain distance fields, so every checklist item is na.\"\n}\n```",
+  "ttft_ms": 3940,
+  "type": "result",
+  "duration_ms": 8619,
+  "uuid": "c38d020c-c39b-4428-ab82-2c2fda166dff",
+  "ttft_stream_ms": 1272,
+  "time_to_request_ms": 46,
+  "first_content_frame_ms": 1272,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "c72500f18",
+  "planner_type": "full_periodic",
+  "map": "persistent_grid",
+  "velocity_selection": "path_following",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "no",
+  "dstar_variant": "na",
+  "ds_open_keyed_on_k": "na",
+  "ds_h_and_k": "na",
+  "ds_raise_lower": "na",
+  "ds_modify_cost": "na",
+  "ds_stop_rule": "na",
+  "ds_backpointers": "na",
+  "notes": "planner_type: _plan_tick builds a fresh cost-to-go field Dbuild (all _BIG, goal=0) and runs _relax (Bellman-Ford style sweeps) over several steps. When the field is stable or max_iters is reached it is swapped in and Dbuild=None, so the next tick restarts from scratch. This is a sliced search that restarts on completion, which the rubric codes as full_periodic. The only reuse of old values is the per-goal cache self.fields on goal switch. That cache is not a repair of changed costs, and the build still starts from scratch. _trigger_recovery also discards the field. map: self.logodds is a log-odds grid updated by _integrate and kept on the instance, so persistent_grid. It is not cleared on goal switch. velocity_selection: on the nominal path _plan_dir descends the cost-to-go field with a 1.0 m carrot lookahead to get phi_des. _step then scores 48 candidate headings (alignment, clearance, hysteresis) with no forward simulation, so path_following and not rollout_scored. stuck_handling: _trigger_recovery sets recover_until, which gives a dedicated rotate/creep command branch in _step. _on_contact sets evade_until, which gives a back-away command. It also adds blockpen, but explicit_recovery takes precedence over timeout. claims_dstar: no D*, Stentz, LPA*, rhs, k_m, RAISE or LOWER vocabulary appears. The D and Dbuild identifiers are plain distance fields, so every checklist item is na."
+ },
+ "parse_error": null
+}

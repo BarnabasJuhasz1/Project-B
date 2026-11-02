@@ -1,0 +1,141 @@
+{
+ "blind_id": "c6127d860",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "c6b70df20b47497a68776825db9c65f5295fafa23ecc008e95337ac49970b767",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.072818,
+ "payload": {
+  "duration_api_ms": 8478,
+  "stop_reason": "end_turn",
+  "session_id": "e92bbaed-e28b-4c46-af3d-26e80f5d3390",
+  "total_cost_usd": 0.072818,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 15451,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 1101,
+   "output_tokens_details": {
+    "thinking_tokens": 218
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 15451,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1101,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 15451,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 15451
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 1101,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 15451,
+    "webSearchRequests": 0,
+    "costUSD": 0.072818,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 218,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"blind_id\": \"c6127d860\",\n  \"planner_type\": \"full_periodic\",\n  \"map\": \"persistent_grid\",\n  \"velocity_selection\": \"rollout_scored\",\n  \"stuck_handling\": \"explicit_recovery\",\n  \"claims_dstar\": \"no\",\n  \"dstar_variant\": \"na\",\n  \"ds_open_keyed_on_k\": \"na\",\n  \"ds_h_and_k\": \"na\",\n  \"ds_raise_lower\": \"na\",\n  \"ds_modify_cost\": \"na\",\n  \"ds_stop_rule\": \"na\",\n  \"ds_backpointers\": \"na\",\n  \"notes\": \"planner_type: _replan() discards Dfield/Cplan/path and rebuilds the cost grid (_make_cost) and the cost-to-go field from scratch (_sweep, a fast-sweeping min-plus pass, not a priority-queue search). It is gated in _step by `self.k >= self.next_plan`, which is a timer (plan_period) plus forced replans from the stall and livelock detectors, and the goal switch only sets next_plan. Any gate puts this in full_periodic, so it is not full_every_step. No search state survives between replans, so it is not incremental. map: self.L is a log-odds occupancy grid written by _update_map from lidar and kept on the instance across steps; self.pen is a persistent penalty grid. The grid is kept across goal switches (the goal-switch block in _step does not clear L), so the note grid_cleared_on_goal_switch does not apply. Only pen is scaled by 0.30 on a goal switch. The goal-switch reset of path/Dfield and next_plan in _step is a new search for the new leg (reinit_on_goal_switch). velocity_selection: in _step, the 'dynamic window' block builds candidate (vx,vy,wz) twists (_build_candidates precomputes K=5 forward-simulated arc positions cX/cY over a 0.22 s step). It scores them against obstacle distance, carrot distance and the cost-to-go field, then takes the argmin. The rubric's rollout_scored line covers scoring against a global field. stuck_handling: the 'recovery override' block in _step issues dedicated back-up and rotate-in-place commands, triggered by the stall detector (stuck_count/recover_until) and by contact. Explicit recovery outranks the timeout-style penalties (_add_penalty, next_plan reset). claims_dstar: no identifier or comment names D*, Stentz, LPA*, RAISE/LOWER, rhs or k_m. 'Dfield' is a distance field, not a D* reference, so all checklist items are na.\"\n}\n```",
+  "ttft_ms": 2943,
+  "type": "result",
+  "duration_ms": 8515,
+  "uuid": "0a7decaf-7d56-408a-b5a1-5baa8439637f",
+  "ttft_stream_ms": 1168,
+  "time_to_request_ms": 36,
+  "first_content_frame_ms": 1168,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "c6127d860",
+  "planner_type": "full_periodic",
+  "map": "persistent_grid",
+  "velocity_selection": "rollout_scored",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "no",
+  "dstar_variant": "na",
+  "ds_open_keyed_on_k": "na",
+  "ds_h_and_k": "na",
+  "ds_raise_lower": "na",
+  "ds_modify_cost": "na",
+  "ds_stop_rule": "na",
+  "ds_backpointers": "na",
+  "notes": "planner_type: _replan() discards Dfield/Cplan/path and rebuilds the cost grid (_make_cost) and the cost-to-go field from scratch (_sweep, a fast-sweeping min-plus pass, not a priority-queue search). It is gated in _step by `self.k >= self.next_plan`, which is a timer (plan_period) plus forced replans from the stall and livelock detectors, and the goal switch only sets next_plan. Any gate puts this in full_periodic, so it is not full_every_step. No search state survives between replans, so it is not incremental. map: self.L is a log-odds occupancy grid written by _update_map from lidar and kept on the instance across steps; self.pen is a persistent penalty grid. The grid is kept across goal switches (the goal-switch block in _step does not clear L), so the note grid_cleared_on_goal_switch does not apply. Only pen is scaled by 0.30 on a goal switch. The goal-switch reset of path/Dfield and next_plan in _step is a new search for the new leg (reinit_on_goal_switch). velocity_selection: in _step, the 'dynamic window' block builds candidate (vx,vy,wz) twists (_build_candidates precomputes K=5 forward-simulated arc positions cX/cY over a 0.22 s step). It scores them against obstacle distance, carrot distance and the cost-to-go field, then takes the argmin. The rubric's rollout_scored line covers scoring against a global field. stuck_handling: the 'recovery override' block in _step issues dedicated back-up and rotate-in-place commands, triggered by the stall detector (stuck_count/recover_until) and by contact. Explicit recovery outranks the timeout-style penalties (_add_penalty, next_plan reset). claims_dstar: no identifier or comment names D*, Stentz, LPA*, RAISE/LOWER, rhs or k_m. 'Dfield' is a distance field, not a D* reference, so all checklist items are na."
+ },
+ "parse_error": null
+}

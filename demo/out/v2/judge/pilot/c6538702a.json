@@ -1,0 +1,141 @@
+{
+ "blind_id": "c6538702a",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "aa9b5c189161e52bd23dfe7856bca90c48e6992a98d28b5f4a6537a7770d2cad",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.07425999999999999,
+ "payload": {
+  "duration_api_ms": 15493,
+  "stop_reason": "end_turn",
+  "session_id": "b677f474-8f21-42c1-b9f4-9dc3bf5cd54b",
+  "total_cost_usd": 0.07425999999999999,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13704,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 1944,
+   "output_tokens_details": {
+    "thinking_tokens": 898
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 13704,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1944,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 13704,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 13704
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 1944,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 13704,
+    "webSearchRequests": 0,
+    "costUSD": 0.07425999999999999,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 898,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"blind_id\": \"c6538702a\",\n  \"planner_type\": \"incremental_only\",\n  \"map\": \"persistent_grid\",\n  \"velocity_selection\": \"path_following\",\n  \"stuck_handling\": \"explicit_recovery\",\n  \"claims_dstar\": \"yes\",\n  \"dstar_variant\": \"stentz1994\",\n  \"ds_open_keyed_on_k\": \"no\",\n  \"ds_h_and_k\": \"partial\",\n  \"ds_raise_lower\": \"partial\",\n  \"ds_modify_cost\": \"partial\",\n  \"ds_stop_rule\": \"no\",\n  \"ds_backpointers\": \"yes\",\n  \"notes\": \"planner_type: _ensure_field creates a per-goal h field, and _repair/_relax then keep updating that same h array across steps (_step calls _repair every step) as _build_cost changes the costs. Previous values are reused, so this is incremental. The field is never discarded and recomputed from scratch on stuck, no-path or timer triggers. The stuck branch in _step only stamps visit/obstacle costs. The only new-field path is a new goal key, plus LRU eviction in _ensure_field, so it counts as reinit_on_goal_switch (fields cached per endpoint, so the return trip reuses the old field). It is a hand-rolled Bellman-sweep equivalent that relaxes the whole grid rather than only affected states. map: logodds/seen/visit grids on the instance, written in _integrate_scan; no grid clearing on goal switch. velocity_selection: _lookahead traces steepest descent on h to a carrot point, and _local scores about 26 candidate headings by free distance along a ray (fd) without forward-simulating them, so it is path_following (heading offsets, not rollouts). stuck_handling: _step has an escape manoeuvre (back up, then rotate, driven by escape_until and escape_phase) triggered by the stalled/wedged tests; _local also has a boxed-in rotate-and-creep-back branch. This outranks the timeout-style cost stamping. D*: claims_dstar is yes from comments naming MODIFY-COST, Sec. 5.2, RAISE/LOWER, backpointers and Fig. 5/Property 2. The h vocabulary is Stentz-style but there is no k and no OPEN list. Checklist: ds_open_keyed_on_k is no because there is no OPEN list (_relax is a dense Bellman sweep). ds_h_and_k is partial because only h is stored, with no k. ds_raise_lower is partial because _relax docstring says raises and lowers alike, merged into one min-sweep with no k<h / k=h distinction. ds_modify_cost is partial because _integrate_scan, _build_cost and _stamp_obstacle change arc costs, but nothing re-inserts the affected states; the next sweep picks the change up everywhere. ds_stop_rule is no because _repair runs a fixed iteration count or time budget with no k_min >= h(robot) test. ds_backpointers is yes because _lookahead recomputes steepest-descent successors from h, which is the argmin analogue and is what drives the robot.\"\n}\n```",
+  "ttft_ms": 8606,
+  "type": "result",
+  "duration_ms": 15541,
+  "uuid": "b1c4a711-0a68-4c51-ae1c-3bd3bba8f106",
+  "ttft_stream_ms": 1160,
+  "time_to_request_ms": 45,
+  "first_content_frame_ms": 1160,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "c6538702a",
+  "planner_type": "incremental_only",
+  "map": "persistent_grid",
+  "velocity_selection": "path_following",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "yes",
+  "dstar_variant": "stentz1994",
+  "ds_open_keyed_on_k": "no",
+  "ds_h_and_k": "partial",
+  "ds_raise_lower": "partial",
+  "ds_modify_cost": "partial",
+  "ds_stop_rule": "no",
+  "ds_backpointers": "yes",
+  "notes": "planner_type: _ensure_field creates a per-goal h field, and _repair/_relax then keep updating that same h array across steps (_step calls _repair every step) as _build_cost changes the costs. Previous values are reused, so this is incremental. The field is never discarded and recomputed from scratch on stuck, no-path or timer triggers. The stuck branch in _step only stamps visit/obstacle costs. The only new-field path is a new goal key, plus LRU eviction in _ensure_field, so it counts as reinit_on_goal_switch (fields cached per endpoint, so the return trip reuses the old field). It is a hand-rolled Bellman-sweep equivalent that relaxes the whole grid rather than only affected states. map: logodds/seen/visit grids on the instance, written in _integrate_scan; no grid clearing on goal switch. velocity_selection: _lookahead traces steepest descent on h to a carrot point, and _local scores about 26 candidate headings by free distance along a ray (fd) without forward-simulating them, so it is path_following (heading offsets, not rollouts). stuck_handling: _step has an escape manoeuvre (back up, then rotate, driven by escape_until and escape_phase) triggered by the stalled/wedged tests; _local also has a boxed-in rotate-and-creep-back branch. This outranks the timeout-style cost stamping. D*: claims_dstar is yes from comments naming MODIFY-COST, Sec. 5.2, RAISE/LOWER, backpointers and Fig. 5/Property 2. The h vocabulary is Stentz-style but there is no k and no OPEN list. Checklist: ds_open_keyed_on_k is no because there is no OPEN list (_relax is a dense Bellman sweep). ds_h_and_k is partial because only h is stored, with no k. ds_raise_lower is partial because _relax docstring says raises and lowers alike, merged into one min-sweep with no k<h / k=h distinction. ds_modify_cost is partial because _integrate_scan, _build_cost and _stamp_obstacle change arc costs, but nothing re-inserts the affected states; the next sweep picks the change up everywhere. ds_stop_rule is no because _repair runs a fixed iteration count or time budget with no k_min >= h(robot) test. ds_backpointers is yes because _lookahead recomputes steepest-descent successors from h, which is the argmin analogue and is what drives the robot."
+ },
+ "parse_error": null
+}

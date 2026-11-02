@@ -1,0 +1,141 @@
+{
+ "blind_id": "cef0231d9",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "8747156f946873ebe43be1ec7811ee92746391e26e5b800908720b163e0b9b87",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.07654,
+ "payload": {
+  "duration_api_ms": 14773,
+  "stop_reason": "end_turn",
+  "session_id": "e38bfb98-1baa-40e4-9553-145e337f02ad",
+  "total_cost_usd": 0.07654,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 14269,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 1946,
+   "output_tokens_details": {
+    "thinking_tokens": 955
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 14269,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1946,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 14269,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 14269
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 1946,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 14269,
+    "webSearchRequests": 0,
+    "costUSD": 0.07654,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 955,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"blind_id\": \"cef0231d9\",\n  \"planner_type\": \"incremental_only\",\n  \"map\": \"persistent_grid\",\n  \"velocity_selection\": \"path_following\",\n  \"stuck_handling\": \"explicit_recovery\",\n  \"claims_dstar\": \"yes\",\n  \"dstar_variant\": \"other\",\n  \"ds_open_keyed_on_k\": \"no\",\n  \"ds_h_and_k\": \"partial\",\n  \"ds_raise_lower\": \"partial\",\n  \"ds_modify_cost\": \"partial\",\n  \"ds_stop_rule\": \"no\",\n  \"ds_backpointers\": \"yes\",\n  \"notes\": \"planner_type: self.h is kept across steps and updated by _vi(), a vectorised full-Bellman sweep, a few iterations per step in _step. There is no code path that discards h and recomputes, so incremental_only. The only reset is the new h in _switch_goal, which may reload cached h; note reinit_on_goal_switch. A stall calls _rebuild_cost and, every third time, _vi_burst, but neither clears h, so neither counts as a fallback. The repair is a whole-grid sweep, not an affected-states-only repair, which I accept as a hand-rolled equivalent. map: self.lo (log-odds) and self.seen are filled by _integrate and persist on the instance; the grid is not cleared on goal switch. velocity_selection: on the nominal path _carrot() follows steepest descent on h to a carrot point, and _drive() then picks among 48 heading candidates by a static score (clearance, goal bearing, previous heading) with no forward simulation, so path_following. stuck_handling: _step sets recovering/rec_target via contact and stall detection, and _drive then overrides the heading and caps speed (v<=0.32), a dedicated recovery mode. The stall branch also raises self.pen costs (timeout style), but explicit_recovery wins on precedence. D* checklist: the comments use PROCESS-STATE, MODIFY-COST, RAISE and LOWER, so claims_dstar is yes. The file has only h, with no k and no OPEN list, and is neither Stentz-1994 nor D* Lite, so variant is other. ds_open_keyed_on_k = no: there is no priority queue (_vi). ds_h_and_k = partial: h only, no k (_vi). ds_raise_lower = partial: RAISE and LOWER are merged into one Bellman assignment, as the _vi comment itself says. ds_modify_cost = partial: _integrate and _rebuild_cost update costs, but nothing re-inserts changed states, and the rebuild runs on a timer (every 8 steps) or on stall. ds_stop_rule = no: _vi and _vi_burst run fixed sweep counts or a time deadline, with no k_min >= h(robot) test. ds_backpointers = yes: _carrot recomputes argmin of h + arc cost each step, the functional analogue of backpointers.\"\n}\n```",
+  "ttft_ms": 8654,
+  "type": "result",
+  "duration_ms": 14822,
+  "uuid": "254b8e5b-919f-4b0d-9624-056d7e7ecb1c",
+  "ttft_stream_ms": 1358,
+  "time_to_request_ms": 46,
+  "first_content_frame_ms": 1358,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "cef0231d9",
+  "planner_type": "incremental_only",
+  "map": "persistent_grid",
+  "velocity_selection": "path_following",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "yes",
+  "dstar_variant": "other",
+  "ds_open_keyed_on_k": "no",
+  "ds_h_and_k": "partial",
+  "ds_raise_lower": "partial",
+  "ds_modify_cost": "partial",
+  "ds_stop_rule": "no",
+  "ds_backpointers": "yes",
+  "notes": "planner_type: self.h is kept across steps and updated by _vi(), a vectorised full-Bellman sweep, a few iterations per step in _step. There is no code path that discards h and recomputes, so incremental_only. The only reset is the new h in _switch_goal, which may reload cached h; note reinit_on_goal_switch. A stall calls _rebuild_cost and, every third time, _vi_burst, but neither clears h, so neither counts as a fallback. The repair is a whole-grid sweep, not an affected-states-only repair, which I accept as a hand-rolled equivalent. map: self.lo (log-odds) and self.seen are filled by _integrate and persist on the instance; the grid is not cleared on goal switch. velocity_selection: on the nominal path _carrot() follows steepest descent on h to a carrot point, and _drive() then picks among 48 heading candidates by a static score (clearance, goal bearing, previous heading) with no forward simulation, so path_following. stuck_handling: _step sets recovering/rec_target via contact and stall detection, and _drive then overrides the heading and caps speed (v<=0.32), a dedicated recovery mode. The stall branch also raises self.pen costs (timeout style), but explicit_recovery wins on precedence. D* checklist: the comments use PROCESS-STATE, MODIFY-COST, RAISE and LOWER, so claims_dstar is yes. The file has only h, with no k and no OPEN list, and is neither Stentz-1994 nor D* Lite, so variant is other. ds_open_keyed_on_k = no: there is no priority queue (_vi). ds_h_and_k = partial: h only, no k (_vi). ds_raise_lower = partial: RAISE and LOWER are merged into one Bellman assignment, as the _vi comment itself says. ds_modify_cost = partial: _integrate and _rebuild_cost update costs, but nothing re-inserts changed states, and the rebuild runs on a timer (every 8 steps) or on stall. ds_stop_rule = no: _vi and _vi_burst run fixed sweep counts or a time deadline, with no k_min >= h(robot) test. ds_backpointers = yes: _carrot recomputes argmin of h + arc cost each step, the functional analogue of backpointers."
+ },
+ "parse_error": null
+}

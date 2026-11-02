@@ -1,0 +1,141 @@
+{
+ "blind_id": "ce52dcec0",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "0be27a9de46c14fdc1692700608483fe7cef3e4b2907568efb26a55cda62b4f4",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.0114375,
+ "payload": {
+  "duration_api_ms": 6688,
+  "stop_reason": "end_turn",
+  "session_id": "f7665640-01df-4935-80e6-387fec31c25b",
+  "total_cost_usd": 0.0114375,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 335,
+   "cache_read_input_tokens": 14535,
+   "output_tokens": 864,
+   "output_tokens_details": {
+    "thinking_tokens": 273
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 335,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 864,
+     "cache_read_input_tokens": 14535,
+     "cache_creation_input_tokens": 335,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 335
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 864,
+    "cacheReadInputTokens": 14535,
+    "cacheCreationInputTokens": 335,
+    "webSearchRequests": 0,
+    "costUSD": 0.0114375,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 273,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "{\"blind_id\":\"ce52dcec0\",\"planner_type\":\"full_periodic\",\"map\":\"persistent_grid\",\"velocity_selection\":\"path_following\",\"stuck_handling\":\"explicit_recovery\",\"claims_dstar\":\"no\",\"dstar_variant\":\"na\",\"ds_open_keyed_on_k\":\"na\",\"ds_h_and_k\":\"na\",\"ds_raise_lower\":\"na\",\"ds_modify_cost\":\"na\",\"ds_stop_rule\":\"na\",\"ds_backpointers\":\"na\",\"notes\":\"planner_type: _plan_start builds a fresh cost grid and a fresh Dijkstra (new pd/heap) from the goal, and _plan_run slices it over steps. _step gates it with PLAN_PERIOD, force_replan (goal switch, pose jump, stuck, _carrot hitting an INF cell) and pl_active. No state is reused across searches, so this is full_periodic. map: self.lo log-odds grid updated in _update_map and kept on the instance; the grid is not cleared on goal switch. velocity_selection: nominal path in _step takes a lookahead point from _carrot, which descends the cost-to-go field, then picks a heading among 72 candidate directions by heading, clearance and previous-direction score. Nothing is forward-simulated (_clearance is a geometric corridor check), so this is path_following, not rollout_scored. Near-goal dither only moves the target. stuck_handling: _step stall/contact detection switches to mode 'back' then 'spin', each with its own commands, so explicit_recovery wins over the timeout-style _add_penalty. claims_dstar: no D* identifiers or vocabulary; the only search is Dijkstra, so all checklist items are na. reinit_on_goal_switch does not apply because the planner is not incremental.\"}",
+  "ttft_ms": 3146,
+  "type": "result",
+  "duration_ms": 6736,
+  "uuid": "8caca7e4-1f3f-4993-afaf-eb736d176a7a",
+  "ttft_stream_ms": 1251,
+  "time_to_request_ms": 45,
+  "first_content_frame_ms": 1251,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "ce52dcec0",
+  "planner_type": "full_periodic",
+  "map": "persistent_grid",
+  "velocity_selection": "path_following",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "no",
+  "dstar_variant": "na",
+  "ds_open_keyed_on_k": "na",
+  "ds_h_and_k": "na",
+  "ds_raise_lower": "na",
+  "ds_modify_cost": "na",
+  "ds_stop_rule": "na",
+  "ds_backpointers": "na",
+  "notes": "planner_type: _plan_start builds a fresh cost grid and a fresh Dijkstra (new pd/heap) from the goal, and _plan_run slices it over steps. _step gates it with PLAN_PERIOD, force_replan (goal switch, pose jump, stuck, _carrot hitting an INF cell) and pl_active. No state is reused across searches, so this is full_periodic. map: self.lo log-odds grid updated in _update_map and kept on the instance; the grid is not cleared on goal switch. velocity_selection: nominal path in _step takes a lookahead point from _carrot, which descends the cost-to-go field, then picks a heading among 72 candidate directions by heading, clearance and previous-direction score. Nothing is forward-simulated (_clearance is a geometric corridor check), so this is path_following, not rollout_scored. Near-goal dither only moves the target. stuck_handling: _step stall/contact detection switches to mode 'back' then 'spin', each with its own commands, so explicit_recovery wins over the timeout-style _add_penalty. claims_dstar: no D* identifiers or vocabulary; the only search is Dijkstra, so all checklist items are na. reinit_on_goal_switch does not apply because the planner is not incremental."
+ },
+ "parse_error": null
+}

@@ -1,0 +1,141 @@
+{
+ "blind_id": "c3192fda1",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "c64721b695d485cc6c53603e0b7ff26a46300a1eadd586e600d6fec89d328bf4",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.088604,
+ "payload": {
+  "duration_api_ms": 13045,
+  "stop_reason": "end_turn",
+  "session_id": "578ae6a8-3985-44e5-b47b-d444e69f9c1b",
+  "total_cost_usd": 0.088604,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 17950,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 1680,
+   "output_tokens_details": {
+    "thinking_tokens": 640
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 17950,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1680,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 17950,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 17950
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 1680,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 17950,
+    "webSearchRequests": 0,
+    "costUSD": 0.088604,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 640,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"blind_id\": \"c3192fda1\",\n  \"planner_type\": \"incremental_with_fallback\",\n  \"map\": \"persistent_grid\",\n  \"velocity_selection\": \"path_following\",\n  \"stuck_handling\": \"explicit_recovery\",\n  \"claims_dstar\": \"yes\",\n  \"dstar_variant\": \"stentz1994\",\n  \"ds_open_keyed_on_k\": \"yes\",\n  \"ds_h_and_k\": \"yes\",\n  \"ds_raise_lower\": \"yes\",\n  \"ds_modify_cost\": \"yes\",\n  \"ds_stop_rule\": \"partial\",\n  \"ds_backpointers\": \"yes\",\n  \"notes\": \"planner_type: _DStar trees persist across steps (self.planners). _drain_dirty -> cell_cost_changed repairs only affected states, and _run_planner calls process_state to repair. This is the nominal path. In _step, when pl.trace reports a corrupted backpointer sequence, pl.reset_tree() throws the search state away and rebuilds it (rate-limited by last_hard_reset). That is an inconsistency-triggered from-scratch fallback, so incremental_with_fallback. _get_planner creates a new tree for a new goal, and the cache keeps up to 3 trees; this is reinit_on_goal_switch and is excluded from the fallback test. Initialisation in reset() is also excluded. map: _update_map and _recompute_cost keep a log-odds grid (self.lo) and a cost grid (self.cost2d) on the instance across steps. The goal switch in _step only clears hist and escape_until, so the grid is not cleared on a goal switch. velocity_selection: the heading target th_des comes from the _step backpointer trace plus _los lookahead. The beam scoring that follows (score over sang with cos(dev) and clearance) ranks existing lidar beams against that heading. It does not forward-simulate any twist over a horizon, so it is path_following with a safety layer (_gate), not rollout_scored. stuck_handling: livelock detection and the contact handler in _step set escape_until, and the _escape method issues its own back-up and spin commands. That is a dedicated manoeuvre. explicit_recovery outranks the _raise_visited cost-raise, which alone would be timeout. D* checklist (Stentz 1994, by the paper's names): the heap in insert/get_kmin is keyed on (k, x). h, k, b and tag t are stored per state. process_state separates the RAISE case (k_old < h) from LOWER (h <= k_old) and handles them in separate branches, following the paper's L4-L25. cell_cost_changed re-inserts CLOSED states for the MODIFY-COST step, and _drain_dirty feeds it the changed cells and their neighbours. ds_stop_rule is partial: _run_planner implements 'k_min >= h(robot)' or OPEN empty, but also stops on max_exp and a wall-clock budget (0.013 s or 0.0055 s), so repair can end before the stopping rule holds. Backpointers b are set in process_state and followed by trace to drive the robot.\"\n}\n```",
+  "ttft_ms": 6423,
+  "type": "result",
+  "duration_ms": 13090,
+  "uuid": "6b27c831-95d8-4ec8-83d3-4f8571d12737",
+  "ttft_stream_ms": 1426,
+  "time_to_request_ms": 43,
+  "first_content_frame_ms": 1427,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "c3192fda1",
+  "planner_type": "incremental_with_fallback",
+  "map": "persistent_grid",
+  "velocity_selection": "path_following",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "yes",
+  "dstar_variant": "stentz1994",
+  "ds_open_keyed_on_k": "yes",
+  "ds_h_and_k": "yes",
+  "ds_raise_lower": "yes",
+  "ds_modify_cost": "yes",
+  "ds_stop_rule": "partial",
+  "ds_backpointers": "yes",
+  "notes": "planner_type: _DStar trees persist across steps (self.planners). _drain_dirty -> cell_cost_changed repairs only affected states, and _run_planner calls process_state to repair. This is the nominal path. In _step, when pl.trace reports a corrupted backpointer sequence, pl.reset_tree() throws the search state away and rebuilds it (rate-limited by last_hard_reset). That is an inconsistency-triggered from-scratch fallback, so incremental_with_fallback. _get_planner creates a new tree for a new goal, and the cache keeps up to 3 trees; this is reinit_on_goal_switch and is excluded from the fallback test. Initialisation in reset() is also excluded. map: _update_map and _recompute_cost keep a log-odds grid (self.lo) and a cost grid (self.cost2d) on the instance across steps. The goal switch in _step only clears hist and escape_until, so the grid is not cleared on a goal switch. velocity_selection: the heading target th_des comes from the _step backpointer trace plus _los lookahead. The beam scoring that follows (score over sang with cos(dev) and clearance) ranks existing lidar beams against that heading. It does not forward-simulate any twist over a horizon, so it is path_following with a safety layer (_gate), not rollout_scored. stuck_handling: livelock detection and the contact handler in _step set escape_until, and the _escape method issues its own back-up and spin commands. That is a dedicated manoeuvre. explicit_recovery outranks the _raise_visited cost-raise, which alone would be timeout. D* checklist (Stentz 1994, by the paper's names): the heap in insert/get_kmin is keyed on (k, x). h, k, b and tag t are stored per state. process_state separates the RAISE case (k_old < h) from LOWER (h <= k_old) and handles them in separate branches, following the paper's L4-L25. cell_cost_changed re-inserts CLOSED states for the MODIFY-COST step, and _drain_dirty feeds it the changed cells and their neighbours. ds_stop_rule is partial: _run_planner implements 'k_min >= h(robot)' or OPEN empty, but also stops on max_exp and a wall-clock budget (0.013 s or 0.0055 s), so repair can end before the stopping rule holds. Backpointers b are set in process_state and followed by trace to drive the robot."
+ },
+ "parse_error": null
+}

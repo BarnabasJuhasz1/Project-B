@@ -1,0 +1,141 @@
+{
+ "blind_id": "c1b404045",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "ed97d50bd1234f6037891f808a7094e4d7b50b73bb3fa6e797e3e23a8fec6910",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.078488,
+ "payload": {
+  "duration_api_ms": 11048,
+  "stop_reason": "end_turn",
+  "session_id": "704f8da0-ec2c-408b-be28-257b9ab45e39",
+  "total_cost_usd": 0.078488,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 16201,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 1368,
+   "output_tokens_details": {
+    "thinking_tokens": 614
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 16201,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1368,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 16201,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 16201
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 1368,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 16201,
+    "webSearchRequests": 0,
+    "costUSD": 0.078488,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 614,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "{\"blind_id\":\"c1b404045\",\"planner_type\":\"incremental_only\",\"map\":\"persistent_grid\",\"velocity_selection\":\"path_following\",\"stuck_handling\":\"explicit_recovery\",\"claims_dstar\":\"yes\",\"dstar_variant\":\"stentz1994\",\"ds_open_keyed_on_k\":\"yes\",\"ds_h_and_k\":\"yes\",\"ds_raise_lower\":\"yes\",\"ds_modify_cost\":\"yes\",\"ds_stop_rule\":\"partial\",\"ds_backpointers\":\"yes\",\"notes\":\"planner_type: _DStar keeps h/k/b/OPEN across steps. _drive repairs it every step with pl.replan, and _seed_all feeds it the changed cells. The only new _DStar instance is created in _planner_for, when the goal key changes or a cached planner is evicted. That is reinit_on_goal_switch, which the rubric excludes from fallback. The stuck path (add_penalty then _seed_all) is an incremental repair, not a restart. The only discard-and-recompute route is the eviction of the least-recently-used planner, which comes back only as a goal switch. map: _GridMap holds a log-odds grid on the instance (update_scan, _transitions) and is not cleared on goal switch. velocity_selection: the nominal path is _carrot, which follows the D* backpointer path from pl.path, and then _choose_dir. _choose_dir scores 72 heading candidates by alignment, clearance and smoothness with no forward simulation, so it is path_following, not rollout_scored. stuck_handling: _start_recovery and the recovery block in _drive send their own commands (back up, rotate in place). That outranks the planning-level add_penalty step. D* checklist: Stentz 1994 form. insert() and min_state() order the heap on (k, x). process_state() separates RAISE (kold < h) from LOWER (kold >= h) and propagates each. seed() is MODIFY-COST: it re-inserts closed states with k = h. replan() stops when k_min >= h(robot) or OPEN is empty, but it also returns on a wall-clock deadline (perf_counter budget), which can end repair before the stopping rule holds, so ds_stop_rule is partial. Backpointers b[] are set in process_state and followed by path().\"}",
+  "ttft_ms": 6411,
+  "type": "result",
+  "duration_ms": 11087,
+  "uuid": "5f6eca48-0e24-4de9-aaaf-a92246aa27a0",
+  "ttft_stream_ms": 1374,
+  "time_to_request_ms": 38,
+  "first_content_frame_ms": 1374,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "c1b404045",
+  "planner_type": "incremental_only",
+  "map": "persistent_grid",
+  "velocity_selection": "path_following",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "yes",
+  "dstar_variant": "stentz1994",
+  "ds_open_keyed_on_k": "yes",
+  "ds_h_and_k": "yes",
+  "ds_raise_lower": "yes",
+  "ds_modify_cost": "yes",
+  "ds_stop_rule": "partial",
+  "ds_backpointers": "yes",
+  "notes": "planner_type: _DStar keeps h/k/b/OPEN across steps. _drive repairs it every step with pl.replan, and _seed_all feeds it the changed cells. The only new _DStar instance is created in _planner_for, when the goal key changes or a cached planner is evicted. That is reinit_on_goal_switch, which the rubric excludes from fallback. The stuck path (add_penalty then _seed_all) is an incremental repair, not a restart. The only discard-and-recompute route is the eviction of the least-recently-used planner, which comes back only as a goal switch. map: _GridMap holds a log-odds grid on the instance (update_scan, _transitions) and is not cleared on goal switch. velocity_selection: the nominal path is _carrot, which follows the D* backpointer path from pl.path, and then _choose_dir. _choose_dir scores 72 heading candidates by alignment, clearance and smoothness with no forward simulation, so it is path_following, not rollout_scored. stuck_handling: _start_recovery and the recovery block in _drive send their own commands (back up, rotate in place). That outranks the planning-level add_penalty step. D* checklist: Stentz 1994 form. insert() and min_state() order the heap on (k, x). process_state() separates RAISE (kold < h) from LOWER (kold >= h) and propagates each. seed() is MODIFY-COST: it re-inserts closed states with k = h. replan() stops when k_min >= h(robot) or OPEN is empty, but it also returns on a wall-clock deadline (perf_counter budget), which can end repair before the stopping rule holds, so ds_stop_rule is partial. Backpointers b[] are set in process_state and followed by path()."
+ },
+ "parse_error": null
+}

@@ -1,0 +1,141 @@
+{
+ "blind_id": "c53162f95",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "2ffd62c13e210140d83b99daef671a8016a005fda834343d22f6b3182d5d2430",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.07811799999999999,
+ "payload": {
+  "duration_api_ms": 14379,
+  "stop_reason": "end_turn",
+  "session_id": "20e48e50-9bbd-4281-a902-300dc1abd0c2",
+  "total_cost_usd": 0.07811799999999999,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 15031,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 1799,
+   "output_tokens_details": {
+    "thinking_tokens": 711
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 15031,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1799,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 15031,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 15031
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 1799,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 15031,
+    "webSearchRequests": 0,
+    "costUSD": 0.07811799999999999,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 711,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"blind_id\": \"c53162f95\",\n  \"planner_type\": \"incremental_only\",\n  \"map\": \"persistent_grid\",\n  \"velocity_selection\": \"path_following\",\n  \"stuck_handling\": \"explicit_recovery\",\n  \"claims_dstar\": \"yes\",\n  \"dstar_variant\": \"stentz1994\",\n  \"ds_open_keyed_on_k\": \"no\",\n  \"ds_h_and_k\": \"partial\",\n  \"ds_raise_lower\": \"partial\",\n  \"ds_modify_cost\": \"partial\",\n  \"ds_stop_rule\": \"no\",\n  \"ds_backpointers\": \"partial\",\n  \"notes\": \"planner_type: per-goal h fields persist in self.fields across steps. _step runs _sweep every step, which repairs the stored h in place: a raise pass sets inconsistent cells to inf, then a lower pass relaxes. Stuck only adds sweep budget (burst, raise_debt) and scars; it never discards a field. _new_field is called only from reset() and when obs.goal gives an unseen key, so that is reinit_on_goal_switch, which is excluded from fallback. The 'eviction when more than 4 fields' branch in _new_field is also goal-keyed. The map is persistent_grid: self.logodds is a log-odds grid updated by _update_map and kept across steps; _rebuild_cost derives the cost grid from it. self.scar is persistent too. velocity_selection: on the nominal path, _path_points does greedy descent of h (backpointer-style), _lookahead picks a carrot, and _choose_dir scores 60 heading candidates by heading error, smoothness and static clearance, with no forward simulation. That makes it path_following, not rollout_scored. stuck_handling: _step sets recover_until after a displacement test and then issues a dedicated back-up and spin command (the 'recovery' block). There is also an emergency back-off when rmin < 0.30 and an all_blocked back-off. explicit_recovery outranks the timeout-style scarring. D* checklist, coded as Stentz 1994 because the code uses h, RAISE and LOWER vocabulary but no k: (1) There is no OPEN list or k. State is a dense array h, relaxed by vectorised Bellman sweeps (_nmin and _sweep), so open_keyed_on_k = no. (2) Only h is stored, with no k, so h_and_k = partial. (3) _sweep has separate raise (invalidate when h < nmin) and lower (h = min(h, nmin)) phases, not PROCESS-STATE's k<h versus k=h propagation, so raise_lower = partial. (4) _rebuild_cost recomputes the whole cost grid and sets raise_debt only when the lethal set changes. Nothing is re-inserted on OPEN, and non-lethal cost changes get no raise pass, so modify_cost = partial. (5) Repair uses a fixed per-step sweep budget (SWEEPS_ACTIVE + credits) and has no k_min >= h(robot) test, so stop_rule = no. (6) _path_points follows the argmin of h plus a tiny tie-break matrix (_dmat) rather than c + h, recomputed from the repaired field each step, so backpointers = partial.\"\n}\n```",
+  "ttft_ms": 7536,
+  "type": "result",
+  "duration_ms": 14418,
+  "uuid": "b2f17198-dd74-4eb0-a6af-0d3e1618fbaa",
+  "ttft_stream_ms": 1393,
+  "time_to_request_ms": 37,
+  "first_content_frame_ms": 1393,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "c53162f95",
+  "planner_type": "incremental_only",
+  "map": "persistent_grid",
+  "velocity_selection": "path_following",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "yes",
+  "dstar_variant": "stentz1994",
+  "ds_open_keyed_on_k": "no",
+  "ds_h_and_k": "partial",
+  "ds_raise_lower": "partial",
+  "ds_modify_cost": "partial",
+  "ds_stop_rule": "no",
+  "ds_backpointers": "partial",
+  "notes": "planner_type: per-goal h fields persist in self.fields across steps. _step runs _sweep every step, which repairs the stored h in place: a raise pass sets inconsistent cells to inf, then a lower pass relaxes. Stuck only adds sweep budget (burst, raise_debt) and scars; it never discards a field. _new_field is called only from reset() and when obs.goal gives an unseen key, so that is reinit_on_goal_switch, which is excluded from fallback. The 'eviction when more than 4 fields' branch in _new_field is also goal-keyed. The map is persistent_grid: self.logodds is a log-odds grid updated by _update_map and kept across steps; _rebuild_cost derives the cost grid from it. self.scar is persistent too. velocity_selection: on the nominal path, _path_points does greedy descent of h (backpointer-style), _lookahead picks a carrot, and _choose_dir scores 60 heading candidates by heading error, smoothness and static clearance, with no forward simulation. That makes it path_following, not rollout_scored. stuck_handling: _step sets recover_until after a displacement test and then issues a dedicated back-up and spin command (the 'recovery' block). There is also an emergency back-off when rmin < 0.30 and an all_blocked back-off. explicit_recovery outranks the timeout-style scarring. D* checklist, coded as Stentz 1994 because the code uses h, RAISE and LOWER vocabulary but no k: (1) There is no OPEN list or k. State is a dense array h, relaxed by vectorised Bellman sweeps (_nmin and _sweep), so open_keyed_on_k = no. (2) Only h is stored, with no k, so h_and_k = partial. (3) _sweep has separate raise (invalidate when h < nmin) and lower (h = min(h, nmin)) phases, not PROCESS-STATE's k<h versus k=h propagation, so raise_lower = partial. (4) _rebuild_cost recomputes the whole cost grid and sets raise_debt only when the lethal set changes. Nothing is re-inserted on OPEN, and non-lethal cost changes get no raise pass, so modify_cost = partial. (5) Repair uses a fixed per-step sweep budget (SWEEPS_ACTIVE + credits) and has no k_min >= h(robot) test, so stop_rule = no. (6) _path_points follows the argmin of h plus a tiny tie-break matrix (_dmat) rather than c + h, recomputed from the repaired field each step, so backpointers = partial."
+ },
+ "parse_error": null
+}

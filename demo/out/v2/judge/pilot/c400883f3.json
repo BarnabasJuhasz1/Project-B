@@ -1,0 +1,141 @@
+{
+ "blind_id": "c400883f3",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "37376575ff2ee0522dc0496ffd81f96c3f7f8f3ad56151a537be7f04b5ca7dbb",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.071144,
+ "payload": {
+  "duration_api_ms": 5809,
+  "stop_reason": "end_turn",
+  "session_id": "cffc085f-b3dd-4e3f-bce6-74bf5fedf362",
+  "total_cost_usd": 0.071144,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 16015,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 708,
+   "output_tokens_details": {
+    "thinking_tokens": 0
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 16015,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 708,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 16015,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 16015
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 708,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 16015,
+    "webSearchRequests": 0,
+    "costUSD": 0.071144,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 0,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "{\"blind_id\":\"c400883f3\",\"planner_type\":\"full_periodic\",\"map\":\"persistent_grid\",\"velocity_selection\":\"rollout_scored\",\"stuck_handling\":\"explicit_recovery\",\"claims_dstar\":\"no\",\"dstar_variant\":\"na\",\"ds_open_keyed_on_k\":\"na\",\"ds_h_and_k\":\"na\",\"ds_raise_lower\":\"na\",\"ds_modify_cost\":\"na\",\"ds_stop_rule\":\"na\",\"ds_backpointers\":\"na\",\"notes\":\"planner_type: _replan rebuilds the whole cost-to-go field from scratch via _solve (relaxation sweeps, goal pinned at 0, no state reused). It is gated in _control by `force_plan or (k - plan_k) >= REPLAN_EVERY` (12 steps), so full_periodic. force_plan is also set by _new_leg and by the stuck branch. map: self.lo is a log-odds grid updated in _update_map and kept on the instance across steps (reset() creates it; _new_leg only decays self.pen, it does not clear lo). A second grid, self.pen, holds remembered dead-end penalties. velocity_selection: _control scores the precomputed rollout candidates (_build_candidates, K sampled twists, 4 substeps over HORIZON 0.8 s) against lidar clearance and the value field, then takes argmin of cost. This is rollout_scored. The value field is used only inside the scoring, and _descend supplies the target. stuck_handling: the stuck branch in _control triggers on a progress window, no improvement in best_v, or contact count. It starts the scripted recovery (rec_t1/rec_t2): back up, rotate toward _escape_dir, then drive. It also adds penalties and forces a replan. A dedicated manoeuvre exists, so explicit_recovery takes precedence over timeout. claims_dstar: no D*, Stentz, LPA*, rhs, k_m, RAISE or LOWER vocabulary appears anywhere in the file, so all checklist items are na. Goal switch is handled in _new_leg and is not a fallback, since the planner is not incremental.\"}",
+  "ttft_ms": 5992,
+  "type": "result",
+  "duration_ms": 6010,
+  "uuid": "df8f751d-9af1-4a63-bc7a-87dcd0aed553",
+  "ttft_stream_ms": 1396,
+  "time_to_request_ms": 200,
+  "first_content_frame_ms": 1396,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "c400883f3",
+  "planner_type": "full_periodic",
+  "map": "persistent_grid",
+  "velocity_selection": "rollout_scored",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "no",
+  "dstar_variant": "na",
+  "ds_open_keyed_on_k": "na",
+  "ds_h_and_k": "na",
+  "ds_raise_lower": "na",
+  "ds_modify_cost": "na",
+  "ds_stop_rule": "na",
+  "ds_backpointers": "na",
+  "notes": "planner_type: _replan rebuilds the whole cost-to-go field from scratch via _solve (relaxation sweeps, goal pinned at 0, no state reused). It is gated in _control by `force_plan or (k - plan_k) >= REPLAN_EVERY` (12 steps), so full_periodic. force_plan is also set by _new_leg and by the stuck branch. map: self.lo is a log-odds grid updated in _update_map and kept on the instance across steps (reset() creates it; _new_leg only decays self.pen, it does not clear lo). A second grid, self.pen, holds remembered dead-end penalties. velocity_selection: _control scores the precomputed rollout candidates (_build_candidates, K sampled twists, 4 substeps over HORIZON 0.8 s) against lidar clearance and the value field, then takes argmin of cost. This is rollout_scored. The value field is used only inside the scoring, and _descend supplies the target. stuck_handling: the stuck branch in _control triggers on a progress window, no improvement in best_v, or contact count. It starts the scripted recovery (rec_t1/rec_t2): back up, rotate toward _escape_dir, then drive. It also adds penalties and forces a replan. A dedicated manoeuvre exists, so explicit_recovery takes precedence over timeout. claims_dstar: no D*, Stentz, LPA*, rhs, k_m, RAISE or LOWER vocabulary appears anywhere in the file, so all checklist items are na. Goal switch is handled in _new_leg and is not a fallback, since the planner is not incremental."
+ },
+ "parse_error": null
+}

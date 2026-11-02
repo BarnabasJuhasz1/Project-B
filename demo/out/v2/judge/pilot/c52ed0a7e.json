@@ -1,0 +1,141 @@
+{
+ "blind_id": "c52ed0a7e",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "6d6909e95d2aa13247506969491c15853348d946df301d4ca4b7327b98d34fb7",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.08199000000000001,
+ "payload": {
+  "duration_api_ms": 5366,
+  "stop_reason": "end_turn",
+  "session_id": "9ec3eed1-6dc1-4156-b10b-68dc8eb79efc",
+  "total_cost_usd": 0.08199000000000001,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 18939,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 623,
+   "output_tokens_details": {
+    "thinking_tokens": 0
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 18939,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 623,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 18939,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 18939
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 623,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 18939,
+    "webSearchRequests": 0,
+    "costUSD": 0.08199000000000001,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 0,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "{\"blind_id\":\"c52ed0a7e\",\"planner_type\":\"full_periodic\",\"map\":\"persistent_grid\",\"velocity_selection\":\"rollout_scored\",\"stuck_handling\":\"explicit_recovery\",\"claims_dstar\":\"no\",\"dstar_variant\":\"na\",\"ds_open_keyed_on_k\":\"na\",\"ds_h_and_k\":\"na\",\"ds_raise_lower\":\"na\",\"ds_modify_cost\":\"na\",\"ds_stop_rule\":\"na\",\"ds_backpointers\":\"na\",\"notes\":\"planner_type: _plan rebuilds a wavefront distance field D from scratch (np.full BIG, seed at goal, _relax loop) and is gated in _step by force_replan or step_i - last_plan_step >= period (PLAN_EVERY=20 / PLAN_EVERY_FAIL=8), plus a wall-clock budget; no state is reused across plans, so full_periodic. map: self.log log-odds grid updated in _map_update and kept on the instance across steps (also self.pen penalty grid); reset() allocates it once, not cleared on goal switch. velocity_selection: _choose forward-simulates 126 candidate (vx,vy,wz) arcs (rx/ry/rth precomputed over horizon T up to 1.2 s), scores clearance, progress and the global D field, and picks the argmax, so rollout_scored. stuck_handling: _start_recovery sets mode 'rec' and drives rec_u for rec_T seconds, plus the R_PANIC branch in _step backs off and rotates, so explicit_recovery wins over timeout-style force_replan and _stamp. claims_dstar: no D*/Stentz/LPA*/rhs/k_m/RAISE/LOWER vocabulary; 'D' is a wavefront distance array and _relax is a Bellman-Ford style sweep, so all checklist items na.\"}",
+  "ttft_ms": 5381,
+  "type": "result",
+  "duration_ms": 5412,
+  "uuid": "d17ff60c-7df8-45ce-91f6-34222f35a1e1",
+  "ttft_stream_ms": 1461,
+  "time_to_request_ms": 44,
+  "first_content_frame_ms": 1461,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "c52ed0a7e",
+  "planner_type": "full_periodic",
+  "map": "persistent_grid",
+  "velocity_selection": "rollout_scored",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "no",
+  "dstar_variant": "na",
+  "ds_open_keyed_on_k": "na",
+  "ds_h_and_k": "na",
+  "ds_raise_lower": "na",
+  "ds_modify_cost": "na",
+  "ds_stop_rule": "na",
+  "ds_backpointers": "na",
+  "notes": "planner_type: _plan rebuilds a wavefront distance field D from scratch (np.full BIG, seed at goal, _relax loop) and is gated in _step by force_replan or step_i - last_plan_step >= period (PLAN_EVERY=20 / PLAN_EVERY_FAIL=8), plus a wall-clock budget; no state is reused across plans, so full_periodic. map: self.log log-odds grid updated in _map_update and kept on the instance across steps (also self.pen penalty grid); reset() allocates it once, not cleared on goal switch. velocity_selection: _choose forward-simulates 126 candidate (vx,vy,wz) arcs (rx/ry/rth precomputed over horizon T up to 1.2 s), scores clearance, progress and the global D field, and picks the argmax, so rollout_scored. stuck_handling: _start_recovery sets mode 'rec' and drives rec_u for rec_T seconds, plus the R_PANIC branch in _step backs off and rotates, so explicit_recovery wins over timeout-style force_replan and _stamp. claims_dstar: no D*/Stentz/LPA*/rhs/k_m/RAISE/LOWER vocabulary; 'D' is a wavefront distance array and _relax is a Bellman-Ford style sweep, so all checklist items na."
+ },
+ "parse_error": null
+}

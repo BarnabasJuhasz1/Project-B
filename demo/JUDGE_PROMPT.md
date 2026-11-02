@@ -1,8 +1,11 @@
 <!--
 demo/JUDGE_PROMPT.md — the fixed prompt for Exp 4's SECOND RATER (an LLM judge).
 
-PREPARED, NOT RUN. No call has been made with it. Running it is a paid API call
-and needs the user's go-ahead (Mindfire_Experiment_Plan.md §4.2, §4.4).
+RUN ON THE PILOT 2026-11-02 (user-approved, claude-sonnet-5-5) by
+demo/run_judge.py; records in demo/out/v2/judge/pilot/. Every further run is a
+paid API call and needs the user's go-ahead (Mindfire_Experiment_Plan.md §4.2,
+§4.4). This comment is stripped before rendering, so editing it does not change
+any recorded prompt hash.
 
 How it is meant to be used, once approved:
   - one call per BLINDED file (demo/out/v2/blind/<set>/<blind_id>.py), fresh

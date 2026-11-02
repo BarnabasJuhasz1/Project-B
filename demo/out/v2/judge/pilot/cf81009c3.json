@@ -1,0 +1,141 @@
+{
+ "blind_id": "cf81009c3",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "f6895c9c1c91539d4fa00a6569e0bf8a8a17e965711f2a82451d019f756d3f84",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.08244,
+ "payload": {
+  "duration_api_ms": 11204,
+  "stop_reason": "end_turn",
+  "session_id": "529df9e2-e352-4514-8c04-bc5b84b0aa9f",
+  "total_cost_usd": 0.08244,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 17009,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 1440,
+   "output_tokens_details": {
+    "thinking_tokens": 524
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 17009,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1440,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 17009,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 17009
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 1440,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 17009,
+    "webSearchRequests": 0,
+    "costUSD": 0.08244,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 524,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "{\"blind_id\":\"cf81009c3\",\"planner_type\":\"incremental_with_fallback\",\"map\":\"persistent_grid\",\"velocity_selection\":\"path_following\",\"stuck_handling\":\"explicit_recovery\",\"claims_dstar\":\"yes\",\"dstar_variant\":\"stentz1994\",\"ds_open_keyed_on_k\":\"yes\",\"ds_h_and_k\":\"yes\",\"ds_raise_lower\":\"yes\",\"ds_modify_cost\":\"yes\",\"ds_stop_rule\":\"partial\",\"ds_backpointers\":\"yes\",\"notes\":\"planner_type: _DStar instances persist per goal key in self.planners and are repaired by repair()/process_state() after cost changes (_apply_changes). Switching goals reuses or creates one per key (reinit_on_goal_switch, excluded). Fallback: in _drive, every 37 steps, if cost[p.goal] >= LETHAL_T and a different free goal cell exists, a new _DStar is built from scratch, discarding the old state. This is not a goal switch, so it counts as a fallback. maybe_prune only rebuilds the heap and keeps h/k/b, so it is not a fallback. map: score/occ/seen/cost arrays are written from lidar in _sense and kept on the instance (_recompute_cost). Penalties are cleared on goal flip via _clear_penalties, but the grid itself is never cleared. velocity_selection: _drive follows a carrot chosen by _carrot from the backpointer path (_path). Slow-down and local repulsion are safety layers on top. There is no forward simulation. stuck_handling: _drive's stall branch calls _penalize, which is timeout-style, but it also sets escape_dir/escape_until, which drives a dedicated escape heading. A contact branch sets escape_dir = yaw + pi to back up. explicit_recovery wins by precedence. D*: Stentz 1994 vocabulary (h, k, t NEW/OPEN/CLOSED, b, RAISE/LOWER, L1..L25). ds_open_keyed_on_k: insert() keeps k as the min of old k and new h, and the heap is ordered on (k, y). ds_raise_lower: process_state separates kold < h (RAISE) from h <= kold (LOWER) and propagates each. ds_modify_cost: _apply_changes reinserts CLOSED states (the changed cells and their neighbours) on OPEN, as in MODIFY-COST. ds_stop_rule: repair() stops at kmin >= h[start] or when OPEN is empty, so the rule is present. It can also stop early on max_exp (90000) or the wall-clock budget (10 or 40 ms), hence partial. ds_backpointers: b is set in process_state and followed by _path to drive.\"}",
+  "ttft_ms": 5496,
+  "type": "result",
+  "duration_ms": 11260,
+  "uuid": "1bb32029-523a-439f-8de9-ca327e85c4cf",
+  "ttft_stream_ms": 1477,
+  "time_to_request_ms": 54,
+  "first_content_frame_ms": 1477,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "cf81009c3",
+  "planner_type": "incremental_with_fallback",
+  "map": "persistent_grid",
+  "velocity_selection": "path_following",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "yes",
+  "dstar_variant": "stentz1994",
+  "ds_open_keyed_on_k": "yes",
+  "ds_h_and_k": "yes",
+  "ds_raise_lower": "yes",
+  "ds_modify_cost": "yes",
+  "ds_stop_rule": "partial",
+  "ds_backpointers": "yes",
+  "notes": "planner_type: _DStar instances persist per goal key in self.planners and are repaired by repair()/process_state() after cost changes (_apply_changes). Switching goals reuses or creates one per key (reinit_on_goal_switch, excluded). Fallback: in _drive, every 37 steps, if cost[p.goal] >= LETHAL_T and a different free goal cell exists, a new _DStar is built from scratch, discarding the old state. This is not a goal switch, so it counts as a fallback. maybe_prune only rebuilds the heap and keeps h/k/b, so it is not a fallback. map: score/occ/seen/cost arrays are written from lidar in _sense and kept on the instance (_recompute_cost). Penalties are cleared on goal flip via _clear_penalties, but the grid itself is never cleared. velocity_selection: _drive follows a carrot chosen by _carrot from the backpointer path (_path). Slow-down and local repulsion are safety layers on top. There is no forward simulation. stuck_handling: _drive's stall branch calls _penalize, which is timeout-style, but it also sets escape_dir/escape_until, which drives a dedicated escape heading. A contact branch sets escape_dir = yaw + pi to back up. explicit_recovery wins by precedence. D*: Stentz 1994 vocabulary (h, k, t NEW/OPEN/CLOSED, b, RAISE/LOWER, L1..L25). ds_open_keyed_on_k: insert() keeps k as the min of old k and new h, and the heap is ordered on (k, y). ds_raise_lower: process_state separates kold < h (RAISE) from h <= kold (LOWER) and propagates each. ds_modify_cost: _apply_changes reinserts CLOSED states (the changed cells and their neighbours) on OPEN, as in MODIFY-COST. ds_stop_rule: repair() stops at kmin >= h[start] or when OPEN is empty, so the rule is present. It can also stop early on max_exp (90000) or the wall-clock budget (10 or 40 ms), hence partial. ds_backpointers: b is set in process_state and followed by _path to drive."
+ },
+ "parse_error": null
+}

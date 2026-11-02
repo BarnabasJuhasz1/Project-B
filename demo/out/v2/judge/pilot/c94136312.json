@@ -1,0 +1,141 @@
+{
+ "blind_id": "c94136312",
+ "model": "claude-sonnet-5-5",
+ "cli_version": "2.1.302 (Claude Code)",
+ "prompt_sha256": "1c8acd435ae52c7a26c9283036b4c81fe7ba35b9806fbc684ea06090eec470d1",
+ "argv": [
+  "claude",
+  "-p",
+  "--model",
+  "claude-sonnet-5-5",
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--no-session-persistence",
+  "--system-prompt",
+  "You are a careful reviewer applying a fixed coding rubric to source code. Follow the instructions in the message exactly and reply with a single JSON object.",
+  "--output-format",
+  "json",
+  "--max-budget-usd",
+  "0.6"
+ ],
+ "cost_usd": 0.07412,
+ "payload": {
+  "duration_api_ms": 5504,
+  "stop_reason": "end_turn",
+  "session_id": "d8751e20-3dda-40e2-8f48-6b3a709985c7",
+  "total_cost_usd": 0.07412,
+  "usage": {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 16979,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 620,
+   "output_tokens_details": {
+    "thinking_tokens": 0
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 16979,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 620,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 16979,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 16979
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 2,
+    "outputTokens": 620,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 16979,
+    "webSearchRequests": 0,
+    "costUSD": 0.07412,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 0,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "{\"blind_id\":\"c94136312\",\"planner_type\":\"full_periodic\",\"map\":\"persistent_grid\",\"velocity_selection\":\"rollout_scored\",\"stuck_handling\":\"explicit_recovery\",\"claims_dstar\":\"no\",\"dstar_variant\":\"na\",\"ds_open_keyed_on_k\":\"na\",\"ds_h_and_k\":\"na\",\"ds_raise_lower\":\"na\",\"ds_modify_cost\":\"na\",\"ds_stop_rule\":\"na\",\"ds_backpointers\":\"na\",\"notes\":\"planner_type: _plan_tick/_start_plan rebuild the cost grid and reset the value field D from scratch (goal cells = 0, rest = BIG), then _relax runs value-iteration sweeps sliced over several steps. A new search starts only when the PLAN_PERIOD timer (0.7 s) expires or _force_plan is set (by _enter_recovery or _new_leg). That is gated and restarts from scratch each time, so full_periodic, not incremental. map: self.logodds is a persistent log-odds grid written in _update_map and kept across steps; it is not cleared on goal switch (_new_leg only resets D). velocity_selection: _choose forward-simulates 80 candidate twists over a 1.3 s horizon (precomputed trajectories in _build_candidates), scores them against clearance and the global cost field D, and sends the best; so rollout_scored. stuck_handling: _is_stuck and the 16 s no-progress test trigger _enter_recovery; _recover_cmd backs up and rotates in place, and _bump_cmd backs away after contact. These are dedicated manoeuvres, so explicit_recovery beats timeout. claims_dstar: no D*, Stentz, LPA*, rhs, RAISE/LOWER or k_m vocabulary appears. The planner is value iteration over a grid, so all checklist items are na.\"}",
+  "ttft_ms": 5530,
+  "type": "result",
+  "duration_ms": 5551,
+  "uuid": "cf9b8c9d-e1f9-495f-aae3-a47f79167ffe",
+  "ttft_stream_ms": 1970,
+  "time_to_request_ms": 44,
+  "first_content_frame_ms": 1970,
+  "queued_turn_count": 0,
+  "result_index": 0
+ },
+ "parsed": {
+  "blind_id": "c94136312",
+  "planner_type": "full_periodic",
+  "map": "persistent_grid",
+  "velocity_selection": "rollout_scored",
+  "stuck_handling": "explicit_recovery",
+  "claims_dstar": "no",
+  "dstar_variant": "na",
+  "ds_open_keyed_on_k": "na",
+  "ds_h_and_k": "na",
+  "ds_raise_lower": "na",
+  "ds_modify_cost": "na",
+  "ds_stop_rule": "na",
+  "ds_backpointers": "na",
+  "notes": "planner_type: _plan_tick/_start_plan rebuild the cost grid and reset the value field D from scratch (goal cells = 0, rest = BIG), then _relax runs value-iteration sweeps sliced over several steps. A new search starts only when the PLAN_PERIOD timer (0.7 s) expires or _force_plan is set (by _enter_recovery or _new_leg). That is gated and restarts from scratch each time, so full_periodic, not incremental. map: self.logodds is a persistent log-odds grid written in _update_map and kept across steps; it is not cleared on goal switch (_new_leg only resets D). velocity_selection: _choose forward-simulates 80 candidate twists over a 1.3 s horizon (precomputed trajectories in _build_candidates), scores them against clearance and the global cost field D, and sends the best; so rollout_scored. stuck_handling: _is_stuck and the 16 s no-progress test trigger _enter_recovery; _recover_cmd backs up and rotates in place, and _bump_cmd backs away after contact. These are dedicated manoeuvres, so explicit_recovery beats timeout. claims_dstar: no D*, Stentz, LPA*, rhs, RAISE/LOWER or k_m vocabulary appears. The planner is value iteration over a grid, so all checklist items are na."
+ },
+ "parse_error": null
+}
