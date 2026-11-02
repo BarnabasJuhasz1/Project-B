@@ -19,6 +19,10 @@ from demo import power as PW           # noqa: E402
 
 PILOT = HERE / "fixtures" / "pilot_physics.csv"
 PILOT_SHA256 = "e4986fc6129da6ab6e23ea3fd510d8c7f1d6e3069c348f97beac27b78d050e55"
+PILOT_KIN = HERE / "fixtures" / "pilot_kinematic_repeatability.csv"
+PILOT_KIN_SHA256 = "950228ac3f2ffa9173d3ac940ddc586d9a53576f2beb3d987027a3a61610bd76"
+# Transcribed from Mindfire_Step0_Verification.md §5 (the 16 pilot session logs).
+PILOT_TOOLS = HERE / "fixtures" / "pilot_tool_use.csv"
 
 
 # --- the pilot --------------------------------------------------------------------
@@ -32,15 +36,45 @@ def test_pilot_fixture_is_the_committed_physics_csv():
         assert orig.read_bytes() == PILOT.read_bytes()
 
 
-def test_pilot_reproduces_7_of_8_vs_2_of_8_p_0041():
-    r = A.pilot(PILOT)
+def test_kinematic_fixture_is_the_committed_repeatability_csv():
+    assert hashlib.sha256(PILOT_KIN.read_bytes()).hexdigest() == PILOT_KIN_SHA256
+    orig = HERE / "out" / "repeatability.csv"
+    if orig.exists():
+        assert orig.read_bytes() == PILOT_KIN.read_bytes()
+
+
+def test_pilot_physics_reproduces_7_of_8_vs_2_of_8_p_0041():
+    r = A.pilot(PILOT, PILOT_KIN)["physics"]
     assert (r["arms"]["arm0"]["x"], r["arms"]["arm0"]["n"]) == (7, 8)
     assert (r["arms"]["armB"]["x"], r["arms"]["armB"]["n"]) == (2, 8)
     assert r["p"] == pytest.approx(0.0406, abs=5e-4)
     assert r["mean_legs"]["arm0"] == pytest.approx(3.75)
     assert r["mean_legs"]["armB"] == pytest.approx(2.375)
-    # The legs >= 3 rule physics_sweep.py prints agrees on this data (plan §0).
+    # legs >= 3 happens to agree on physics (step 0, check 6)
     assert r["legs_ge_3"] == {"arm0": 7, "armB": 2}
+
+
+def test_pilot_kinematic_is_5_of_8_vs_6_of_8_under_legs_eq_4():
+    """Step 0 check 6: the report's kinematic 7/8 vs 6/8 counted legs >= 3.
+    Under all-4-legs it is 5/8 vs 6/8 (arm0 k2 and k7 stop at 3); p = 1.000."""
+    r = A.pilot(PILOT, PILOT_KIN)["kinematic"]
+    assert (r["arms"]["arm0"]["x"], r["arms"]["armB"]["x"]) == (5, 6)
+    assert r["arms"]["arm0"]["n"] == r["arms"]["armB"]["n"] == 8
+    assert r["p"] == pytest.approx(1.0)
+    assert r["legs_ge_3"] == {"arm0": 7, "armB": 6}     # the report's old numbers
+
+
+def test_pilot_tool_use_is_5_of_8_vs_0_of_8():
+    """Step 0 check 5: tools attempted in 5/8 arm0 calls, 0/8 armB calls."""
+    t = A.pilot(PILOT, PILOT_KIN, PILOT_TOOLS)["tool_use"]
+    assert (t["per_arm"]["arm0"]["used"], t["per_arm"]["armB"]["used"]) == (5, 0)
+    assert t["fisher"]["arm0 vs armB"] == pytest.approx(0.0256, abs=5e-4)
+    assert t["per_arm"]["arm0"]["cli"] == ["2.1.278"] and not t["missing"]
+
+
+def test_format_pilot_runs():
+    text = A.format_pilot(A.pilot(PILOT, PILOT_KIN, PILOT_TOOLS))
+    assert "KINEMATIC" in text and "5/8" in text and "TOOL USE" in text
 
 
 # --- intervals and tests, against published values ---------------------------------
@@ -84,6 +118,11 @@ def _eps(legs):
     return {r: {"legs": l, "leg_times": [20.0] * l, "contacts": 1.0,
                 "path_m": 80.0, "track_v_med": 0.05, "note": ""}
             for r, l in enumerate(legs)}
+
+
+def test_one_rep_verdict_is_that_rep():
+    assert A.verdict(_eps([4]), n_reps=1)["success"] is True
+    assert A.verdict(_eps([3]), n_reps=1)["success"] is False
 
 
 @pytest.mark.parametrize("legs,ok", [([4, 4, 4], True), ([4, 4, 2], True),
@@ -298,6 +337,37 @@ def test_exp4_labels_kappa_e10_and_association(tmp_path):
     assert x["assoc_armB"]["p"] < 1e-3
     assert 0.9 < x["kappa"]["planner_type"][0] < 1.0
     assert len(x["unlabelled"]) == 16                     # the pilot, uncoded here
+
+
+def test_tool_use_covariate_and_tool_free_sensitivity(tmp_path):
+    phys = write_physics(tmp_path / "physics.csv", 24, {"arm0": 22, "armB": 6, "armX": 22})
+    tu = tmp_path / "tool_use.csv"
+    with open(tu, "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=["arm", "k", "tool_calls",
+                                           "tools_executed", "cli_version"])
+        w.writeheader()
+        for arm in A.ARMS:
+            for i in range(24 if arm != "arm0" else 23):      # one record missing
+                kk = A.FRESH_START[arm] + i
+                w.writerow({"arm": arm, "k": f"k{kk}",
+                            "tool_calls": 2 if (arm == "arm0" and i % 3 == 0) else 0,
+                            "tools_executed": 0, "cli_version": "2.1.302"})
+    o = A.analyse(24, phys, reference=PILOT, transcripts=tmp_path, tool_use=tu)
+    t = o["tool_use"]["fresh"]
+    assert t["per_arm"]["arm0"]["used"] == 8 and t["per_arm"]["arm0"]["n"] == 23
+    assert t["per_arm"]["armB"]["used"] == 0
+    assert t["missing"] == ["arm0 k31"]                 # listed, not assumed tool-free
+    su, sn = t["per_arm"]["arm0"]["succ_used"], t["per_arm"]["arm0"]["succ_none"]
+    assert su[1] + sn[1] == 23
+    sens = o["tool_use"]["tool_free_sensitivity"]
+    assert sens["H1"]["x"][3] == 23 - 8                  # arm0 tool-free calls
+    assert "TOOL USE" in A.format_report(o)
+
+
+def test_missing_tool_use_file_is_reported_not_ignored(tmp_path):
+    o = run(tmp_path, 24, {"arm0": 22, "armB": 6, "armX": 22})
+    assert o["tool_use"] is None
+    assert "unavailable: no tool_use.csv" in A.format_report(o)
 
 
 def test_unknown_planner_label_is_refused(tmp_path):

@@ -20,9 +20,21 @@ Power: `demo/power.py`. Tests of both: `demo/test_analyse.py`.
 
 The **pilot**: 16 controllers (`demo/arms/{arm0,armB}/k0..k7.py`), one physics
 episode each (`demo/out/physics.csv`, 2026-10-03). Success = all four trips:
-**arm0 7/8, armB 2/8, Fisher exact two-sided p = 0.0406** (reproduced by
-`python demo/analyse.py --pilot`). Under the kinematic simulator the same 16 gave
-7/8 vs 6/8, p = 1.000.
+**arm0 7/8, armB 2/8, Fisher exact two-sided p = 0.0406**. Under the kinematic
+simulator (`demo/out/repeatability.csv`, 3 reps on the fixed world) the same 16
+give **5/8 vs 6/8**, p = 1.000. Both are reproduced by
+`python demo/analyse.py --pilot`, with success = all four legs throughout.
+
+⚠️ The final report's kinematic row (7/8 vs 6/8) counted **legs ≥ 3**, while its
+caption says "all 4 trips" (`Mindfire_Step0_Verification.md`, check 6). The
+physics row is the same under both rules. This document uses **legs = 4** only.
+
+⚠️ Pilot generation was **arm-asymmetric in tool use**: the CLI offered its
+default tool set, and the model attempted tool calls in **5 of 8 arm0** calls
+and **0 of 8 armB** calls (Fisher p = 0.026, descriptive). All write attempts
+were denied; only `ls`/`find` of the empty scratch directory ran (4 calls). No
+code was executed and nothing beyond "the directory is empty" reached the model
+(step 0, check 5). Disclosed, not controlled.
 
 ⚠️ The pilot was **not** pre-registered, and the physics comparison was chosen
 **after** the kinematic result came out null (forking paths). It generated the
@@ -48,7 +60,9 @@ is **not** used to make the tests one-sided.
 | arms | `arm0` (task only), `armB` (task + Stentz 1994, `paper.txt`), `armX` (task + length-matched Feng et al. 2015, `controls/feng2015.txt`) |
 | prompts | `prompt.md` and `task.md` **unchanged**; the three renders byte-identical outside the paper block (`render.check()`) |
 | prompt hashes | arm0 `c6a5b5e6eac0def5`, armB `4045efb3e514b981`, armX **`<to be filled from the armX build>`** |
-| model | `claude-opus-5` via `ClaudeCliBackend`, CLI version recorded per transcript. If not served: all three arms generated with the successor, pilot reported separately and never pooled (plan R2) |
+| model | `claude-opus-5` via `ClaudeCliBackend`. If not served: all three arms generated with the successor, pilot reported separately and never pooled (plan R2) |
+| CLI | pilot ran on Claude Code **2.1.278**; installed now is **2.1.302**. ⚠️ **DECISION FOR BARNA: pin a version for the campaign or not** (§11). Either way `claude --version` is recorded for every call, in `tool_use.csv` |
+| tool policy | pilot: no `--tools`/`--allowedTools`/`--max-turns`/`--permission-mode`, so the default tool set was offered and anything needing approval was denied. ⚠️ **DECISION FOR BARNA: the same flags (poolable with the pilot) or `--tools ""` for all three arms (strictly prompt → code, no pooling)** (§11). Identical across the three arms either way |
 | **k per arm (fresh)** | ⚠️ **DECISION FOR BARNA: 24 or 30** (§11). Recommended **30**. Written into `analyse.K_CONFIRMATORY` at the freeze |
 | fresh k indices | arm0 `k8..k(7+k)`, armB `k8..k(7+k)`, armX `k0..k(k-1)` (`analyse.FRESH_START`) |
 | generation order | all 3k jobs shuffled with a fixed seed **`<shuffle seed, to be fixed>`**, `--jobs 6`, 1800 s timeout |
@@ -87,7 +101,9 @@ power of H1 under Holm over H1–H3 with armX = arm0 (the content scenario).
 - **Unit of analysis: the controller** (one independent generation call).
   Episodes of one controller are never treated as independent samples.
 - **Episode success:** all **4** trips completed within the 180 s budget
-  (`legs == 4`). `physics_sweep.py`'s printed `legs >= 3` is **not** the rule.
+  (`legs == 4`). The "solved" that `physics_sweep.py`, `run.py` and
+  `repeatability.py` print is `legs >= 3` and is **not** the rule, for physics
+  or kinematic.
 - **Controller success (primary outcome):** episode success in **at least 2 of
   its 3** physics reps.
 
@@ -106,6 +122,27 @@ power of H1 under Holm over H1–H3 with armX = arm0 (the content scenario).
 | pilot 16 | excluded from H1–H3; enter S5 (pooled), Exp 3 and Exp 4 |
 
 No controller is excluded for any reason based on its outcome.
+
+## 5a. Tool use per generation call: a recorded covariate
+
+Recorded for **every** generation call, pilot and fresh, at generation time:
+the CLI session log of each call is copied out (the CLI prunes logs after
+about 30 days), and `demo/out/v2/tool_use.csv` gets one row per call:
+
+    arm, k, tool_calls, tools_executed, cli_version
+
+`tool_calls` = tool calls the model attempted, denied or not; `tools_executed`
+= those that ran. The pilot's 16 rows are `demo/fixtures/pilot_tool_use.csv`,
+transcribed from the step-0 verification. `analyse.py` reports, per arm, the
+calls with ≥ 1 attempt and ≥ 1 execution, the CLI versions seen, pairwise
+Fisher on the attempt rate (**descriptive**), and success split by tool use.
+It also re-runs H1–H3 on the tool-free calls only (**exploratory**, unadjusted),
+which asks whether the arm difference is the tool asymmetry. A call with no
+tool-use record is listed as missing, never assumed tool-free.
+
+Tool use is **not** an exclusion criterion and does not enter the primary test.
+If `--tools ""` is chosen (§11), every fresh row is 0 by construction and the
+section reduces to the pilot disclosure.
 
 ## 6. Primary analysis (`analyse.primary`)
 
@@ -139,7 +176,9 @@ On the fresh controllers, for each of the three contrasts:
   Fisher.
 
 Plus **S5**: arm0 vs armB pooled, pilot + fresh (8 + k each), primary outcome,
-Fisher. One Holm correction over every test computed (up to 13). A test that
+Fisher. ⚠️ S5 is valid only if the campaign keeps the pilot's CLI flags (§11,
+decision 3). If tools are disabled, or the model changed (R2), S5 is not run
+and is reported as such. One Holm correction over every test computed (up to 13). A test that
 cannot be computed is listed as unavailable, never dropped silently.
 
 ## 8. Exp 3 analyses — descriptive (`analyse.exp3`)
@@ -201,10 +240,21 @@ labels; the two raters give Cohen's κ per dimension.
    interpretation table needs H1 first anyway). At k = 30, shrunk effect: H1
    power 0.78 vs 0.65, content reading 0.58 vs 0.51. **Keep the plan unless you
    choose otherwise;** switching is a change to `analyse.holm` usage plus a test.
-3. The generation **shuffle seed** and the **armX prompt hash** (from the armX
+3. **Tool policy** (step 0, check 5). (a) Keep the pilot's flags for all three
+   arms, so the fresh samples pool with the pilot (S5) and tool use is disclosed
+   per §5a — step 0's recommendation; or (b) `--tools ""` for all three arms, so
+   generation is strictly prompt → code, giving up S5 and any pooling with the
+   pilot 16.
+4. **CLI version pinning** (step 0, check 4). The pilot ran on 2.1.278; 2.1.302
+   is installed. Pin one version for the whole campaign (disable auto-update)
+   or not. A different CLI can change the ~11.6k-token overhead (and so the
+   25,314-token armB target the armX token match is gated on, plan R3) and the
+   default tool set. Step 0 recommends pinning and re-measuring arm0/armB input
+   tokens from the first new transcripts before trusting the ±1 % gate.
+5. The generation **shuffle seed** and the **armX prompt hash** (from the armX
    build).
-4. Container or local for the v2 sweep (plan §3.3), stated before it starts.
-5. Approve this document, then commit and tag it **before the first generation
+6. Container or local for the v2 sweep (plan §3.3), stated before it starts.
+7. Approve this document, then commit and tag it **before the first generation
    call**. Optional OSF mirror.
 
 ## 12. Amendments

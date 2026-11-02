@@ -31,7 +31,12 @@ What it computes, in the order the pre-registration lists it:
                              incremental repair); Fisher on success for
                              incremental_only vs has-a-full-replan-path, over all
                              controllers and within armB; Cohen's kappa.
-    PILOT (not pre-registered) 7/8 vs 2/8 on demo/out/physics.csv, one rep.
+    TOOL USE (disclosure)    per arm: calls that attempted / executed a CLI
+                             tool, CLI versions, success split by tool use, and
+                             an EXPLORATORY tool-free re-run of H1-H3.
+    PILOT (not pre-registered) legs == 4: physics 7/8 vs 2/8 (physics.csv, 1
+                             rep); kinematic 5/8 vs 6/8 (repeatability.csv, 3
+                             reps); tool attempts 5/8 vs 0/8.
 
 ⚠️ THE UNIT IS THE CONTROLLER. Reps of one controller are not independent and
 never enter a Fisher test as separate samples.
@@ -50,10 +55,12 @@ Inputs (all under demo/out/v2/ unless overridden):
                      velocity_selection, stuck_handling, ...  -- Exp 4
                      If a `rater` column exists: rows with rater == "consensus"
                      are the labels, the other two raters give kappa.
+    tool_use.csv     arm, k, tool_calls, tools_executed, cli_version -- one row
+                     per generation call, from its CLI session log (step 5)
     demo/transcripts/<arm>__k<k>__FAILED.json  a generation failure: counted as
                      a 0-trip controller in every rep (stays in the denominator).
 
-    python demo/analyse.py --pilot                 # reproduce 7/8 vs 2/8, p = 0.041
+    python demo/analyse.py --pilot                 # physics 7/8 vs 2/8 (p 0.041), kinematic 5/8 vs 6/8
     python demo/analyse.py --k 24                  # the confirmatory analysis
     python demo/analyse.py --k 24 --json out.json  # + a machine-readable copy
     python demo/analyse.py --k 24 --allow-incomplete   # a partial sweep, EXPLORATORY
@@ -249,8 +256,11 @@ def expected(k, sample):
 
 # --- the controller verdict ---------------------------------------------------
 
-def verdict(eps, n_reps=N_REPS, majority=MAJORITY):
-    """{rep: episode} -> controller record. success = legs == 4 in >= 2 of 3."""
+def verdict(eps, n_reps=N_REPS, majority=None):
+    """{rep: episode} -> controller record. success = legs == 4 in >= 2 of 3
+    (a strict majority of n_reps in general; 1 of 1 for the one-rep pilot)."""
+    if majority is None:
+        majority = MAJORITY if n_reps == N_REPS else n_reps // 2 + 1
     reps = sorted(eps)
     ok = [eps[r]["legs"] >= LEGS_FOR_SUCCESS for r in reps]
     legs = [eps[r]["legs"] for r in reps]
@@ -516,18 +526,30 @@ def exp4(labels, ctrl):
             "assoc_armB": assoc("armB"), "unlabelled": unlabelled}
 
 
-def pilot(path=DEMO / "out" / "physics.csv"):
-    """The pilot: one rep per controller, success = legs == 4. NOT pre-registered."""
-    eps = episodes(read_rows(path), single_rep=True)
-    ctrl, _ = controllers(eps, expected(None, "pilot"), n_reps=1)
+def pilot_kinematic_episodes(path):
+    """demo/out/repeatability.csv (one row per controller, `legs` a list of
+    the 3 kinematic reps on the FIXED world) -> {(arm, k): {rep: episode}}.
+    ⚠️ demo/out/results.csv is the FIRST, defective world and is never used."""
+    out = {}
+    for r in read_rows(path):
+        k = _k(r["k"])
+        if k is None or r["arm"] not in ARMS:
+            continue
+        out[(r["arm"], k)] = {i: {"legs": int(l), "leg_times": [],
+                                  "contacts": None, "path_m": None,
+                                  "track_v_med": None, "note": ""}
+                              for i, l in enumerate(json.loads(r["legs"]))}
+    return out
+
+
+def _pilot_compare(eps, n_reps):
+    ctrl, _ = controllers(eps, expected(None, "pilot"), n_reps=n_reps)
     g = {a: [v for (arm, _), v in sorted(ctrl.items()) if arm == a]
          for a in PILOT_ARMS}
-    for vs in g.values():                # one rep: success is that rep
-        for v in vs:
-            v["success"] = v["rep_success"][0]
     s = arm_summary(g)
     A, B = s["armB"], s["arm0"]
-    legs3 = {a: sum(int(np.round(v["mean_legs"])) >= 3 for v in g[a]) for a in g}
+    legs3 = {a: sum(min(eps[(a, k)][r]["legs"] for r in eps[(a, k)]) >= 3
+                    for k in PILOT_KS) for a in PILOT_ARMS}
     return {"arms": s,
             "diff": A["rate"] - B["rate"],
             "newcombe": newcombe(A["x"], A["n"], B["x"], B["n"]),
@@ -536,11 +558,91 @@ def pilot(path=DEMO / "out" / "physics.csv"):
             "mean_legs": {a: float(np.mean([v["mean_legs"] for v in g[a]])) for a in g}}
 
 
+def pilot(path=DEMO / "out" / "physics.csv",
+          kinematic=DEMO / "out" / "repeatability.csv", tool_use=None):
+    """The pilot, success = legs == 4 throughout. NOT pre-registered.
+    physics: one rep, success is that rep. kinematic: 3 reps, the same
+    majority rule as v2 (only armB k5 is unstable, [2, 1, 2], and fails either
+    way). Gives physics 7/8 vs 2/8 and kinematic 5/8 vs 6/8 -- the report's
+    kinematic 7/8 counted legs >= 3 (Mindfire_Step0_Verification.md check 6)."""
+    out = {"physics": _pilot_compare(episodes(read_rows(path), single_rep=True), 1)}
+    if kinematic and pathlib.Path(kinematic).exists():
+        out["kinematic"] = _pilot_compare(pilot_kinematic_episodes(kinematic), N_REPS)
+    if tool_use and pathlib.Path(tool_use).exists():
+        out["tool_use"] = tool_use_summary(read_tool_use(tool_use),
+                                           expected(None, "pilot"))
+    return out
+
+
+# --- tool use per generation call: a recorded covariate, never a test of H1-H3 --
+
+def read_tool_use(path):
+    """arm, k, tool_calls, tools_executed [, cli_version] -> {(arm, k): row}.
+    tool_calls = tool calls the model ATTEMPTED in the CLI session (denied or
+    not); tools_executed = those that actually ran."""
+    out = {}
+    for r in read_rows(path):
+        k = _k(r["k"])
+        if k is None:
+            continue
+        out[(r["arm"], k)] = {"tool_calls": int(r["tool_calls"]),
+                              "tools_executed": int(r.get("tools_executed") or 0),
+                              "cli_version": r.get("cli_version", "")}
+    return out
+
+
+def tool_use_summary(tools, keys, ctrl=None):
+    """Per arm: calls with >= 1 attempted tool call; pairwise Fisher
+    (descriptive); CLI versions seen; and, given controller verdicts, success
+    split by tool use. Missing calls are listed, never assumed tool-free."""
+    per, missing = {}, []
+    for key in keys:
+        if key not in tools:
+            missing.append(f"{key[0]} k{key[1]}")
+            continue
+        d = per.setdefault(key[0], {"used": 0, "n": 0, "executed": 0,
+                                    "cli": set(), "succ_used": [0, 0],
+                                    "succ_none": [0, 0]})
+        t = tools[key]
+        used = t["tool_calls"] > 0
+        d["used"] += used; d["n"] += 1
+        d["executed"] += t["tools_executed"] > 0
+        d["cli"].add(t["cli_version"])
+        if ctrl and key in ctrl:
+            bucket = d["succ_used" if used else "succ_none"]
+            bucket[0] += ctrl[key]["success"]; bucket[1] += 1
+    for d in per.values():
+        d["cli"] = sorted(d["cli"])
+    tests = {}
+    arms = sorted(per)
+    for i, a in enumerate(arms):
+        for b in arms[i + 1:]:
+            tests[f"{a} vs {b}"] = fisher(per[a]["used"], per[a]["n"],
+                                          per[b]["used"], per[b]["n"])
+    return {"per_arm": per, "fisher": tests, "missing": missing}
+
+
+def tool_free_sensitivity(fresh, tools):
+    """EXPLORATORY: H1-H3 Fisher (unadjusted) among controllers whose call
+    attempted no tool. Answers 'is the arm difference the tool asymmetry?'."""
+    keep = {c: v for c, v in fresh.items()
+            if c in tools and tools[c]["tool_calls"] == 0}
+    s = arm_summary(by_arm(keep))
+    res = {}
+    for h, a, b in CONTRASTS:
+        if a in s and b in s:
+            A, B = s[a], s[b]
+            res[h] = {"x": (A["x"], A["n"], B["x"], B["n"]),
+                      "p": fisher(A["x"], A["n"], B["x"], B["n"])}
+    return res
+
+
 # --- the run ----------------------------------------------------------------------
 
 def analyse(k, physics, kinematic=None, labels=None, code_key=None,
             reference=DEMO / "out" / "physics.csv",
-            transcripts=DEMO / "transcripts", allow_incomplete=False):
+            transcripts=DEMO / "transcripts", allow_incomplete=False,
+            tool_use=None):
     failed = generation_failures(transcripts) if transcripts else set()
     eps = episodes(read_rows(physics))
     fresh, problems = controllers(eps, expected(k, "fresh"), failed,
@@ -573,6 +675,14 @@ def analyse(k, physics, kinematic=None, labels=None, code_key=None,
     if labels and pathlib.Path(labels).exists():
         lab, kappa = read_labels(labels, code_key)
         out["exp4"] = {**exp4(lab, {**pilot_ctrl, **fresh}), "kappa": kappa}
+    if tool_use and pathlib.Path(tool_use).exists():
+        tools = read_tool_use(tool_use)
+        out["tool_use"] = {
+            "fresh": tool_use_summary(tools, expected(k, "fresh"), fresh),
+            "pilot": tool_use_summary(tools, expected(k, "pilot"), pilot_ctrl),
+            "tool_free_sensitivity": tool_free_sensitivity(fresh, tools)}
+    else:
+        out["tool_use"] = None
     return out
 
 
@@ -586,17 +696,40 @@ def _rate(s):
     return f"{s['x']:>3}/{s['n']:<3} {s['rate']:.3f}  Wilson [{s['wilson'][0]:.3f}, {s['wilson'][1]:.3f}]"
 
 
+def _format_tools(t, L, indent="  "):
+    for a, d in sorted(t["per_arm"].items()):
+        line = (f"{indent}{a:6} tool calls attempted in {d['used']}/{d['n']} calls,"
+                f" executed in {d['executed']}/{d['n']}  CLI {','.join(d['cli'])}")
+        if d["succ_used"][1] + d["succ_none"][1]:
+            line += (f"  success with tools {d['succ_used'][0]}/{d['succ_used'][1]},"
+                     f" without {d['succ_none'][0]}/{d['succ_none'][1]}")
+        L.append(line)
+    for name, p in t["fisher"].items():
+        L.append(f"{indent}tool-use rate {name}: Fisher p {p:.4f} (descriptive)")
+    if t["missing"]:
+        L.append(f"{indent}⚠ no tool-use record for {len(t['missing'])} call(s)")
+
+
 def format_pilot(r):
-    lines = ["PILOT (demo/out/physics.csv; 1 rep; legs == 4) -- NOT PRE-REGISTERED,",
-             "found after the kinematic-vs-physics flip. Hypothesis-generating only.",
-             "-" * 72]
-    for a in PILOT_ARMS:
-        lines.append(f"  {a:6} {_rate(r['arms'][a])}  mean legs {r['mean_legs'][a]:.2f}")
-    lines.append(f"  armB - arm0 = {r['diff']:+.3f}  Newcombe {_ci(r['newcombe'])}")
-    lines.append(f"  Fisher exact two-sided p = {r['p']:.4f}")
-    lines.append(f"  (legs >= 3 would give arm0 {r['legs_ge_3']['arm0']}/8, "
-                 f"armB {r['legs_ge_3']['armB']}/8)")
-    return "\n".join(lines)
+    L = ["PILOT -- NOT PRE-REGISTERED, found after the kinematic-vs-physics flip.",
+         "Hypothesis-generating only. Success = all 4 legs (legs == 4).",
+         "-" * 72]
+    for tag, src in (("physics", "demo/out/physics.csv, 1 rep"),
+                     ("kinematic", "demo/out/repeatability.csv, majority of 3 reps")):
+        if tag not in r:
+            continue
+        x = r[tag]
+        L.append(f"{tag.upper()} ({src})")
+        for a in PILOT_ARMS:
+            L.append(f"  {a:6} {_rate(x['arms'][a])}  mean legs {x['mean_legs'][a]:.2f}")
+        L.append(f"  armB - arm0 = {x['diff']:+.3f}  Newcombe {_ci(x['newcombe'])}"
+                 f"  Fisher exact two-sided p = {x['p']:.4f}")
+        L.append(f"  (legs >= 3, NOT the rule: arm0 {x['legs_ge_3']['arm0']}/8, "
+                 f"armB {x['legs_ge_3']['armB']}/8)")
+    if "tool_use" in r:
+        L.append("TOOL USE PER GENERATION CALL (disclosure, not a test of H1-H3)")
+        _format_tools(r["tool_use"], L)
+    return "\n".join(L)
 
 
 def format_report(o):
@@ -656,6 +789,17 @@ def format_report(o):
             L.append(f"  kappa {col}: {kp:.3f} (n = {n})")
         if x["unlabelled"]:
             L.append(f"  unlabelled controllers: {len(x['unlabelled'])}")
+    L.append("-" * 72)
+    L.append("TOOL USE PER GENERATION CALL (recorded covariate; disclosure)")
+    t = o.get("tool_use")
+    if t is None:
+        L.append("  ⚠ unavailable: no tool_use.csv -- PREREG-v2.md §5a requires one")
+    else:
+        L.append(" fresh:"); _format_tools(t["fresh"], L)
+        L.append(" pilot:"); _format_tools(t["pilot"], L)
+        for h, v in t["tool_free_sensitivity"].items():
+            L.append(f"  EXPLORATORY tool-free {h}: {v['x'][0]}/{v['x'][1]} vs "
+                     f"{v['x'][2]}/{v['x'][3]}  Fisher p {v['p']:.4f}")
     return "\n".join(L)
 
 
@@ -665,6 +809,9 @@ def main(argv=None):
     ap.add_argument("--pilot", action="store_true",
                     help="reproduce the pilot (7/8 vs 2/8) and stop")
     ap.add_argument("--pilot-csv", default=str(DEMO / "out" / "physics.csv"))
+    ap.add_argument("--pilot-kinematic", default=str(DEMO / "out" / "repeatability.csv"))
+    ap.add_argument("--pilot-tools", default=str(DEMO / "fixtures" / "pilot_tool_use.csv"))
+    ap.add_argument("--tool-use", default=str(v2 / "tool_use.csv"))
     ap.add_argument("--k", type=int, default=K_CONFIRMATORY)
     ap.add_argument("--physics", default=str(v2 / "physics.csv"))
     ap.add_argument("--kinematic", default=str(v2 / "kinematic.csv"))
@@ -678,7 +825,7 @@ def main(argv=None):
     if a.pilot or not pathlib.Path(a.physics).exists():
         if not a.pilot:
             print(f"[analyse] no confirmatory data at {a.physics}; pilot only.\n")
-        r = pilot(a.pilot_csv)
+        r = pilot(a.pilot_csv, a.pilot_kinematic, a.pilot_tools)
         print(format_pilot(r))
         if a.json:
             pathlib.Path(a.json).write_text(json.dumps(r, indent=2, default=str))
@@ -687,6 +834,7 @@ def main(argv=None):
         ap.error("k is not fixed in K_CONFIRMATORY yet; pass --k (PREREG-v2.md §3)")
     o = analyse(a.k, a.physics, a.kinematic, a.labels, a.code_key,
                 reference=a.pilot_csv, transcripts=a.transcripts,
+                tool_use=a.tool_use,
                 allow_incomplete=a.allow_incomplete)
     print(format_report(o))
     if a.k != K_CONFIRMATORY:
