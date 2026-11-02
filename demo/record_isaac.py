@@ -28,6 +28,12 @@ row per control step (`demo/exp3.py` TRACE_COLUMNS). The `RESULT` line is
 unchanged so old parsers still work; a `RESULT_JSON` line follows it with the
 episode summary (contacts, path, step timing, tracking error, load average).
 
+⚠️ **EXP A / EXP D (prereg/expA.md, prereg/expD.md).** `--door-never-shuts` is
+the open-maze control: the door stays open on all four legs. The summary also
+carries `cpu_max`, this process's cgroup CPU limit, so an Exp D episode proves
+the slow-machine limit was active while it ran. Neither touches the default
+path.
+
 ⚠️ **HOW THE DOOR IS TOGGLED.** `/World/Door` is translated 50 m below the floor
 for legs 0-1 and back to its authored height for legs 2-3. Moving it removes
 both its collision and its appearance in one operation, so the physics scene and
@@ -92,6 +98,10 @@ parser.add_argument("--start-dyaw", type=_offset(math.pi), default=0.0,
                     help="rad added to the spawn yaw 0.6")
 parser.add_argument("--trace", type=_trace_path, default=None,
                     help="per-step trace, gzip CSV (demo/exp3.py)")
+# ---- Exp A (prereg/expA.md). Default off = the original door schedule.
+parser.add_argument("--door-never-shuts", action="store_true",
+                    help="OPEN-MAZE CONTROL: the door stays open on every "
+                         "leg, so the short route is never blocked")
 parser.add_argument("--dry-run", action="store_true",
                     help="validate flags, load the controller, print the "
                          "spawn pose and exit before the simulator boots")
@@ -136,7 +146,7 @@ from demo.rollout import (LEG_TARGETS, LEG_BLOCKED, TIME_LIMIT, ARRIVE_RADIUS,
                           N_BEAMS, RANGE_MAX, MAX_LIN, MAX_ANG,
                           PatrolScenario, load_controller)
 from core.scene_spec import GO2_START
-from demo import exp3
+from demo import exp3, exp_ad
 
 SPAWN_YAW = 0.6
 SPAWN = (HOME[0] + args.start_dx, HOME[1] + args.start_dy,
@@ -147,7 +157,9 @@ if args.dry_run:
     print("[record] DRY RUN " + json.dumps({
         "controller": args.controller, "seed": args.seed,
         "spawn": [round(v, 4) for v in SPAWN],
-        "trace": args.trace, "record": not args.no_record}))
+        "trace": args.trace, "record": not args.no_record,
+        "door_never_shuts": args.door_never_shuts,
+        "cpu_max": exp_ad.cgroup_cpu_max()}))
     sys.exit(0)
 
 from isaacsim import SimulationApp
@@ -245,8 +257,11 @@ def main():
     next_load = 5.0
 
     while t < TIME_LIMIT and leg < len(LEG_TARGETS):
-        if LEG_BLOCKED[leg] != door_shut:
-            door_shut = LEG_BLOCKED[leg]
+        # Exp A: with --door-never-shuts the schedule is all-open, so the door
+        # prim stays 50 m below the floor and the lidar sees OPEN_WORLD.
+        blocked = LEG_BLOCKED[leg] and not args.door_never_shuts
+        if blocked != door_shut:
+            door_shut = blocked
             set_door(door_shut)
             log(f"t={t:6.1f}s  leg {leg}: door {'SHUT' if door_shut else 'open'}")
 
@@ -334,6 +349,8 @@ def main():
         "load1_max": round(max(load_samples), 2),
         "wall_seconds_in_process": round(time.time() - wall0, 1),
         "trace": args.trace,
+        "door_never_shuts": args.door_never_shuts,
+        "cpu_max": exp_ad.cgroup_cpu_max(),
     }
     print(exp3.RESULT_JSON_PREFIX + json.dumps(summary), flush=True)
     sim_app.close()
