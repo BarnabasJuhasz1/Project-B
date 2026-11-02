@@ -207,5 +207,123 @@
       "verified": "CLI 2.1.302 accepts it; the cut-979 calibration session contains no MCP content",
       "disclosure": "PREPRINT MUST DISCLOSE: the 16 pilot calls (CLI 2.1.278) ran WITHOUT this flag (their session logs show no connectors loaded); the campaign runs WITH it."
     }
+  },
+  "expG": {
+    "prereg": "prereg/expG.md (commit 3068301, pushed before the first call)",
+    "date": "2026-11-02",
+    "cli_version": "2.1.302 (Claude Code)",
+    "model": "claude-opus-5",
+    "path": "demo/generate.py -> ClaudeCliBackend (--setting-sources '' --system-prompt <fixed> --output-format json --max-budget-usd 2.5 --strict-mcp-config), timeout 1800 s",
+    "batches": [
+      "k0-k3, 4 in flight",
+      "k4-k6, 3 in flight (cost gate: 6.26 + 3 x 2.50 <= 16)",
+      "k7, 1 (10.55 + 2.50 <= 16)"
+    ],
+    "prompt_sha256_16": "a848cebd7806d2cc",
+    "calls": [
+      {
+        "k": "k0",
+        "cost_usd": 1.6555,
+        "turn1_input_tokens": 26870,
+        "turn1_vs_armB": 0.0153,
+        "turns": 1,
+        "tools": [],
+        "mcp_lines_in_session": 0,
+        "output_tokens": 55472,
+        "elapsed_s": 688.2,
+        "session_id": "02be935f-d247-4168-97fa-7cbf5dc79822"
+      },
+      {
+        "k": "k1",
+        "cost_usd": 1.399,
+        "turn1_input_tokens": 26872,
+        "turn1_vs_armB": 0.0154,
+        "turns": 1,
+        "tools": [],
+        "mcp_lines_in_session": 0,
+        "output_tokens": 45213,
+        "elapsed_s": 566.8,
+        "session_id": "325ed9c2-9f27-4b56-afc5-136f64ca1bb2"
+      },
+      {
+        "k": "k2",
+        "cost_usd": 1.2238,
+        "turn1_input_tokens": 26870,
+        "turn1_vs_armB": 0.0153,
+        "turns": 1,
+        "tools": [],
+        "mcp_lines_in_session": 0,
+        "output_tokens": 38203,
+        "elapsed_s": 488.6,
+        "session_id": "c9eb89d2-6bb2-41d0-99e2-8fa0816b1158"
+      },
+      {
+        "k": "k3",
+        "cost_usd": 1.9866,
+        "turn1_input_tokens": 26870,
+        "turn1_vs_armB": 0.0153,
+        "turns": 4,
+        "tools": [
+          "Bash",
+          "Bash",
+          "Write"
+        ],
+        "mcp_lines_in_session": 0,
+        "output_tokens": 55913,
+        "elapsed_s": 652.4,
+        "session_id": "c22c3910-bd24-42c2-95f4-e483c2cf2b07"
+      },
+      {
+        "k": "k4",
+        "cost_usd": 1.2564,
+        "turn1_input_tokens": 26870,
+        "turn1_vs_armB": 0.0153,
+        "turns": 1,
+        "tools": [],
+        "mcp_lines_in_session": 0,
+        "output_tokens": 39508,
+        "elapsed_s": 502.0,
+        "session_id": "eca276c2-b04d-46e3-91a7-e102c55423ee"
+      },
+      {
+        "k": "k5",
+        "cost_usd": 1.4372,
+        "turn1_input_tokens": 26869,
+        "turn1_vs_armB": 0.0153,
+        "turns": 1,
+        "tools": [],
+        "mcp_lines_in_session": 0,
+        "output_tokens": 46740,
+        "elapsed_s": 591.3,
+        "session_id": "fc19c6cb-5f97-4e87-ab79-4b2b1516f1de"
+      },
+      {
+        "k": "k6",
+        "cost_usd": 1.5889,
+        "turn1_input_tokens": 26872,
+        "turn1_vs_armB": 0.0154,
+        "turns": 1,
+        "tools": [],
+        "mcp_lines_in_session": 0,
+        "output_tokens": 52806,
+        "elapsed_s": 626.7,
+        "session_id": "c6599473-65cf-4e54-8a4f-8ff044c9b93b"
+      },
+      {
+        "k": "k7",
+        "cost_usd": 1.3774,
+        "turn1_input_tokens": 26871,
+        "turn1_vs_armB": 0.0154,
+        "turns": 1,
+        "tools": [],
+        "mcp_lines_in_session": 0,
+        "output_tokens": 47414,
+        "elapsed_s": 573.0,
+        "session_id": "5713b460-c5b8-41ac-893f-294312e05f76"
+      }
+    ],
+    "total_cost_usd": 11.9248,
+    "r3_gate": "every first-turn count 26,870-26,872 = +1.5 % vs armB 26,464, inside +-3 %",
+    "r4_tools": "see calls[].tools; tool use happened inside the scratch directory, and none of the calls loaded MCP"
   }
 }

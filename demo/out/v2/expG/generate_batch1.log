@@ -1,0 +1,8 @@
+[gen] arm equivalence: OK — arm0, armB, armX identical outside the paper block (3686 chars)
+[gen] armX: prompt 42,975 chars
+[gen] 4 calls, 4 at a time, timeout 1800s
+[gen] armX k0: generated in 688.2s, $1.66 -> /home/juhasz/Desktop/Vault/Life/Projects/MAIN/Project_B/Repo/demo/arms/armX/k0.py
+[gen] armX k1: generated in 566.8s, $1.40 -> /home/juhasz/Desktop/Vault/Life/Projects/MAIN/Project_B/Repo/demo/arms/armX/k1.py
+[gen] armX k2: generated in 488.6s, $1.22 -> /home/juhasz/Desktop/Vault/Life/Projects/MAIN/Project_B/Repo/demo/arms/armX/k2.py
+[gen] armX k3: generated in 652.4s, $1.99 -> /home/juhasz/Desktop/Vault/Life/Projects/MAIN/Project_B/Repo/demo/arms/armX/k3.py
+[gen] done. 4/4 produced a controller.
