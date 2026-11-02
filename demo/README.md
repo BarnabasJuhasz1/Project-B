@@ -408,3 +408,21 @@ profile change; all five are kept in `physics_lowpower.csv` and were rerun under
 - Tracking error (median per-step |commanded − realised| displacement, 50 Hz):
   arm0 1.50 mm [IQR 1.35, 1.60], armB 1.55 mm [1.33, 2.18]; Mann–Whitney at
   controller level p = 0.574.
+
+### Exp E result (2026-11-02): kinematic + measured tracking noise, `demo/out/v2/EXPE.md`
+
+Pre-registered in `prereg/expE.md` (committed 9cc821a before the run). AR(1)
+noise fitted on all 51 Exp 3 traces (`expE_noise_model.json`; stationary sd
+≈ 0.13 m/s vx, 0.10 m/s vy, 0.49 rad/s wz, yaw bias +0.14 rad/s), 3 seeded
+reps per controller, run alone under the Isaac lock.
+
+| condition | arm0 maj-of-3 | armB maj-of-3 | Fisher p | agrees with physics (of 16) |
+|---|---|---|---|---|
+| noise | 6/8 | 4/8 | 0.608 | 12 |
+| none | 5/8 | 4/8 | 1.000 | 13 |
+| physics (Exp 3) | 4/8 | 2/8 | 0.608 | — |
+
+**Pass criterion NOT MET.** The noise moves the kinematic result in the
+physics direction but does not reproduce it, and agrees with physics no
+better than noiseless kinematics (12 vs 13 of 16). This stationary noise model
+is coarse (prereg limitations), so the null does not rule out tracking.

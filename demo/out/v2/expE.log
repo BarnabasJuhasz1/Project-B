@@ -1,0 +1,124 @@
+[expE] queued 2026-11-02T21:43:06Z on /tmp/mindfire-isaac.lock (prereg: no Isaac alongside)
+[expE] lock acquired 2026-11-02T22:13:32Z  23:13:32 up  5:38,  1 user,  load average: 2,94, 3,49, 4,53
+[expE] noise arm0    k0         rep 0 legs 4/4 
+[expE] noise arm0    k0         rep 1 legs 4/4 
+[expE] noise arm0    k0         rep 2 legs 4/4 
+[expE] noise arm0    k1         rep 0 legs 4/4 
+[expE] noise arm0    k1         rep 1 legs 3/4 
+[expE] noise arm0    k1         rep 2 legs 4/4 
+[expE] noise arm0    k2         rep 0 legs 4/4 
+[expE] noise arm0    k2         rep 1 legs 3/4 
+[expE] noise arm0    k2         rep 2 legs 4/4 
+[expE] noise arm0    k3         rep 0 legs 4/4 
+[expE] noise arm0    k3         rep 1 legs 4/4 
+[expE] noise arm0    k3         rep 2 legs 4/4 
+[expE] noise arm0    k4         rep 0 legs 4/4 
+[expE] noise arm0    k4         rep 1 legs 4/4 
+[expE] noise arm0    k4         rep 2 legs 4/4 
+[expE] noise arm0    k5         rep 0 legs 3/4 
+[expE] noise arm0    k5         rep 1 legs 4/4 
+[expE] noise arm0    k5         rep 2 legs 2/4 
+[expE] noise arm0    k6         rep 0 legs 4/4 
+[expE] noise arm0    k6         rep 1 legs 4/4 
+[expE] noise arm0    k6         rep 2 legs 4/4 
+[expE] noise arm0    k7         rep 0 legs 2/4 
+[expE] noise arm0    k7         rep 1 legs 3/4 
+[expE] noise arm0    k7         rep 2 legs 2/4 
+[expE] noise armB    k0         rep 0 legs 2/4 
+[expE] noise armB    k0         rep 1 legs 2/4 
+[expE] noise armB    k0         rep 2 legs 2/4 
+[expE] noise armB    k1         rep 0 legs 3/4 
+[expE] noise armB    k1         rep 1 legs 3/4 
+[expE] noise armB    k1         rep 2 legs 4/4 
+[expE] noise armB    k2         rep 0 legs 4/4 
+[expE] noise armB    k2         rep 1 legs 4/4 
+[expE] noise armB    k2         rep 2 legs 4/4 
+[expE] noise armB    k3         rep 0 legs 4/4 
+[expE] noise armB    k3         rep 1 legs 4/4 
+[expE] noise armB    k3         rep 2 legs 4/4 
+[expE] noise armB    k4         rep 0 legs 4/4 
+[expE] noise armB    k4         rep 1 legs 4/4 
+[expE] noise armB    k4         rep 2 legs 4/4 
+[expE] noise armB    k5         rep 0 legs 2/4 
+[expE] noise armB    k5         rep 1 legs 2/4 
+[expE] noise armB    k5         rep 2 legs 2/4 
+[expE] noise armB    k6         rep 0 legs 3/4 
+[expE] noise armB    k6         rep 1 legs 4/4 
+[expE] noise armB    k6         rep 2 legs 3/4 
+[expE] noise armB    k7         rep 0 legs 4/4 
+[expE] noise armB    k7         rep 1 legs 4/4 
+[expE] noise armB    k7         rep 2 legs 4/4 
+[expE] noise (base)  reference  rep 0 legs 2/4 
+[expE] noise (base)  reference  rep 1 legs 2/4 
+[expE] noise (base)  reference  rep 2 legs 2/4 
+[expE] none  arm0    k0         rep 0 legs 4/4 
+[expE] none  arm0    k0         rep 1 legs 4/4 
+[expE] none  arm0    k0         rep 2 legs 4/4 
+[expE] none  arm0    k1         rep 0 legs 4/4 
+[expE] none  arm0    k1         rep 1 legs 4/4 
+[expE] none  arm0    k1         rep 2 legs 2/4 
+[expE] none  arm0    k2         rep 0 legs 3/4 
+[expE] none  arm0    k2         rep 1 legs 2/4 
+[expE] none  arm0    k2         rep 2 legs 4/4 
+[expE] none  arm0    k3         rep 0 legs 4/4 
+[expE] none  arm0    k3         rep 1 legs 4/4 
+[expE] none  arm0    k3         rep 2 legs 4/4 
+[expE] none  arm0    k4         rep 0 legs 4/4 
+[expE] none  arm0    k4         rep 1 legs 4/4 
+[expE] none  arm0    k4         rep 2 legs 4/4 
+[expE] none  arm0    k5         rep 0 legs 2/4 
+[expE] none  arm0    k5         rep 1 legs 2/4 
+[expE] none  arm0    k5         rep 2 legs 2/4 
+[expE] none  arm0    k6         rep 0 legs 4/4 
+[expE] none  arm0    k6         rep 1 legs 4/4 
+[expE] none  arm0    k6         rep 2 legs 4/4 
+[expE] none  arm0    k7         rep 0 legs 3/4 
+[expE] none  arm0    k7         rep 1 legs 2/4 
+[expE] none  arm0    k7         rep 2 legs 2/4 
+[expE] none  armB    k0         rep 0 legs 2/4 
+[expE] none  armB    k0         rep 1 legs 2/4 
+[expE] none  armB    k0         rep 2 legs 2/4 
+[expE] none  armB    k1         rep 0 legs 4/4 
+[expE] none  armB    k1         rep 1 legs 1/4 
+[expE] none  armB    k1         rep 2 legs 2/4 
+[expE] none  armB    k2         rep 0 legs 4/4 
+[expE] none  armB    k2         rep 1 legs 4/4 
+[expE] none  armB    k2         rep 2 legs 4/4 
+[expE] none  armB    k3         rep 0 legs 4/4 
+[expE] none  armB    k3         rep 1 legs 4/4 
+[expE] none  armB    k3         rep 2 legs 4/4 
+[expE] none  armB    k4         rep 0 legs 4/4 
+[expE] none  armB    k4         rep 1 legs 4/4 
+[expE] none  armB    k4         rep 2 legs 4/4 
+[expE] none  armB    k5         rep 0 legs 2/4 
+[expE] none  armB    k5         rep 1 legs 2/4 
+[expE] none  armB    k5         rep 2 legs 2/4 
+[expE] none  armB    k6         rep 0 legs 4/4 
+[expE] none  armB    k6         rep 1 legs 4/4 
+[expE] none  armB    k6         rep 2 legs 4/4 
+[expE] none  armB    k7         rep 0 legs 4/4 
+[expE] none  armB    k7         rep 1 legs 2/4 
+[expE] none  armB    k7         rep 2 legs 3/4 
+[expE] none  (base)  reference  rep 0 legs 2/4 
+[expE] none  (base)  reference  rep 1 legs 2/4 
+[expE] none  (base)  reference  rep 2 legs 2/4 
+# Exp E — kinematic rollout with measured tracking noise
+
+Pre-registered: prereg/expE.md. Success = all four trips. Primary = majority of 3 reps per controller, Fisher exact two-sided, arm0 vs armB, condition `noise`.
+
+| condition | arm0 maj-of-3 | armB maj-of-3 | Fisher p | arm0 episodes | armB episodes | agree with physics maj (16) |
+|---|---|---|---|---|---|---|
+| noise | 6/8 | 4/8 | 0.608 | 17/24 | 14/24 | 12/16 |
+| none | 5/8 | 4/8 | 1.000 | 15/24 | 14/24 | 13/16 |
+| physics (Exp 3) | 4/8 | 2/8 | 0.608 | | | 16/16 |
+
+**Pass criterion (prereg): arm0 > armB and p < 0.05 in `noise` → NOT MET.**
+
+Per controller, legs in rep 0/1/2:
+
+- noise **arm0**: k0 4/4/4, k1 4/3/4, k2 4/3/4, k3 4/4/4, k4 4/4/4, k5 3/4/2, k6 4/4/4, k7 2/3/2
+- noise **armB**: k0 2/2/2, k1 3/3/4, k2 4/4/4, k3 4/4/4, k4 4/4/4, k5 2/2/2, k6 3/4/3, k7 4/4/4
+- noise **(base)**: reference 2/2/2
+- none **arm0**: k0 4/4/4, k1 4/4/2, k2 3/2/4, k3 4/4/4, k4 4/4/4, k5 2/2/2, k6 4/4/4, k7 3/2/2
+- none **armB**: k0 2/2/2, k1 4/1/2, k2 4/4/4, k3 4/4/4, k4 4/4/4, k5 2/2/2, k6 4/4/4, k7 4/2/3
+- none **(base)**: reference 2/2/2
