@@ -40,10 +40,12 @@
       "claude-legacy": -0.0001,
       "qwen2.5": 0.0099
     },
-    "armX_measured": null,
+    "armX_measured": 26872,
     "method": "cut 979 is NOT measured. Estimate = calibration at cut 813 (overhead-corrected) + Claude-per-proxy-token on Feng, see recut_from_calibration.py and MANIFEST.md",
-    "tolerance": 0.005,
-    "cli_version_note": "arm0/armB anchors include CLI overhead (~11.6k tokens) that may differ by CLI version; the block difference cancels it, absolute counts do not. Compare armX only against counts taken under the same CLI version."
+    "tolerance": 0.03,
+    "cli_version_note": "arm0/armB anchors include CLI overhead (~11.6k tokens) that may differ by CLI version; the block difference cancels it, absolute counts do not. Compare armX only against counts taken under the same CLI version.",
+    "armX_measured_rel": 0.0154,
+    "tolerance_note": "was 0.005 (plan §2.2); Barna 2026-11-02: approximately the same size is enough, re-cut only beyond about +-3 %"
   },
   "keyword_scan": {
     "terms": [
@@ -120,13 +122,31 @@
         "cost_usd": 2.011639,
         "elapsed_s": 690.2,
         "transcript": "demo/transcripts/calibration/calibration__armX__2c56254bc6d40d86.json"
+      },
+      "armX_cut979": {
+        "prompt_sha256_16": "a848cebd7806d2cc",
+        "cut_lines": 979,
+        "flags_added": [
+          "--strict-mcp-config"
+        ],
+        "input_tokens_turn1": 26872,
+        "turn1_breakdown": {
+          "input": 2,
+          "cache_creation": 26870,
+          "cache_read": 0
+        },
+        "cost_usd_estimate": 1.19,
+        "status": "interrupted after turn 1 (harness timeout); turn-1 usage from the session log",
+        "mcp_loaded": false,
+        "transcript": "demo/transcripts/calibration/calibration__armX__a848cebd7806d2cc.json"
       }
     },
     "total_cost_usd": 3.815094,
     "turn1_source": "per-request usage in the CLI session logs (~/.claude/projects/-tmp-gen-clean-*/<session_id>.jsonl); the --output-format json usage sums all turns",
     "measured_turn1_input_tokens": {
       "armB": 26464,
-      "armX_cut813": 28265
+      "armX_cut813": 28265,
+      "armX_cut979": 26872
     },
     "cut_lines_measured": 813,
     "claude_block_tokens_armB": 12766,
@@ -158,7 +178,16 @@
         "qwen2.5": -0.0575
       }
     },
-    "verdict": "cut 813 is NOT within +-0.5 % (about -6 % after removing the extra overhead; -1.9 % to -6.6 % for r in [1.0, 1.48]). Re-cut once, to 979 (recut_from_calibration.py). No second calibration call made."
+    "verdict": "cut 813 is NOT within +-0.5 % (about -6 % after removing the extra overhead; -1.9 % to -6.6 % for r in [1.0, 1.48]). Re-cut once, to 979 (recut_from_calibration.py). No second calibration call made.",
+    "verification_979": {
+      "armX": 26872,
+      "armB": 26464,
+      "difference": 408,
+      "rel": 0.0154,
+      "caveat": "armB was measured WITHOUT --strict-mcp-config (it loaded no connectors either; environment blocks equal in length), so the comparison is like for like",
+      "decision": "keep cut 979: Barna, 'approximately same size' is enough; re-cut only beyond about +-3 %"
+    },
+    "total_cost_usd_estimate_all_three": 5.01
   },
   "cut_history": [
     {
@@ -168,5 +197,15 @@
       "prompt_sha256_16": "2c56254bc6d40d86",
       "why_replaced": "calibrated about -6 % short of armB (2026-11-02)"
     }
-  ]
+  ],
+  "cli_flags": {
+    "strict_mcp_config": {
+      "added": "2026-11-02, Barna's decision",
+      "where": "generate/backends.py ClaudeCliBackend argv, so demo/generate.py and demo/controls/calibrate.py (and every other ClaudeCliBackend caller)",
+      "effect": "no MCP servers and no claude.ai connectors load (no --mcp-config is passed)",
+      "prompt_hashes_changed": false,
+      "verified": "CLI 2.1.302 accepts it; the cut-979 calibration session contains no MCP content",
+      "disclosure": "PREPRINT MUST DISCLOSE: the 16 pilot calls (CLI 2.1.278) ran WITHOUT this flag (their session logs show no connectors loaded); the campaign runs WITH it."
+    }
+  }
 }

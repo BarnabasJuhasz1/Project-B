@@ -22,7 +22,7 @@ from the repo and nothing else:
 |---|---|
 | **arm0** | a detailed description of the task, and nothing else |
 | **armB** | the **identical** description, plus Stentz (1994) *"Optimal and Efficient Path Planning for Partially-Known Environments"* (D\*) in full |
-| **armX** | ⚠️ **added 2026-11-02, Mindfire Exp 1, no samples yet.** The identical description and the **same paper block**, holding Feng et al. (2015) on acoustic gas thermometry, truncated to match armB's length. The off-topic control: length and distraction, not relevance. Text regenerated, never committed; calibrated once (2026-11-02) and re-cut to 979 lines, estimated **+0.5 %** of armB in tokens but **not yet measured** at that cut. See `demo/controls/MANIFEST.md` |
+| **armX** | ⚠️ **added 2026-11-02, Mindfire Exp 1, no samples yet.** The identical description and the **same paper block**, holding Feng et al. (2015) on acoustic gas thermometry, truncated to match armB's length. The off-topic control: length and distraction, not relevance. Text regenerated, never committed; re-cut to 979 lines and measured at **+1.5 %** of armB in tokens (26,872 vs 26,464, CLI 2.1.302, 2026-11-02; ±3 % accepted by Barna). See `demo/controls/MANIFEST.md` |
 
 ⚠️ **Neither arm is told that the route gets blocked.** That is the point: the
 question is whether the paper leads the model to build something that copes with

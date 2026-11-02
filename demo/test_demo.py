@@ -66,12 +66,17 @@ def test_manifest_pins_the_pilot_hashes_and_armx():
     assert _prompt_hash("armX") == m["prompt_sha256_16"]["armX"]
 
 
-def test_armx_tokens_within_half_a_percent_of_armb():
-    """⚠️ Until a Claude count exists this passes on an OFFLINE ESTIMATE
-    (proxy tokenizers, see controls/MANIFEST.md), not a measurement. Once the
-    calibration count is recorded as `armX_measured`, that is what is tested."""
-    t = json.loads(MANIFEST.read_text(encoding="utf-8"))["claude_input_tokens"]
-    x = t["armX_measured"] if t["armX_measured"] is not None else t["armX_estimate"]
+def test_armx_tokens_match_armb_within_tolerance():
+    """The MEASURED turn-1 count of the current armX prompt (calibration,
+    CLI 2.1.302), against armB's. Tolerance is the manifest's: +-0.5 % in the
+    plan, relaxed to +-3 % by Barna on 2026-11-02 ("approximately same size")."""
+    m = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    t = m["claude_input_tokens"]
+    assert t["armX_measured"] is not None, "no Claude count of armX recorded"
+    measured = m["calibration"]["calls"]["armX_cut979"]
+    assert measured["prompt_sha256_16"] == m["prompt_sha256_16"]["armX"], \
+        "the count is of a different armX prompt than the one renders now"
+    x = t["armX_measured"]
     assert abs(x / t["armB"] - 1) <= t["tolerance"], (x, t["armB"])
 
 

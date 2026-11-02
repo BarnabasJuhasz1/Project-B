@@ -1,0 +1,25 @@
+{
+  "arm": "armX",
+  "purpose": "calibration -- NOT a sample, in no denominator",
+  "prompt_sha256_16": "a848cebd7806d2cc",
+  "prompt_chars": 42975,
+  "cut_lines": 979,
+  "cli_version": "2.1.302 (Claude Code)",
+  "model": "claude-opus-5",
+  "flags_added": [
+    "--strict-mcp-config"
+  ],
+  "status": "INTERRUPTED after turn 1: the calling shell's 10-minute limit killed calibrate.py and the CLI while turn 2 was in flight, so no --output-format json payload and no response were written. Turn-1 usage recovered from the CLI session log.",
+  "session_id": "e31c42de-0c2d-42b5-b178-764a18b0a770",
+  "session_log": "~/.claude/projects/-tmp-gen-clean-u5-ucoiz/e31c42de-0c2d-42b5-b178-764a18b0a770.jsonl",
+  "turn1_usage": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 26870,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 36871
+  },
+  "input_tokens_turn1": 26872,
+  "mcp_check": "0 occurrences of 'mcp' in the session log; environment block 11,272 chars, identical in length to the armB calibration call's",
+  "cost_usd_estimate": 1.19,
+  "cost_note": "turn 1 at the rates the two earlier calibration payloads imply ($5/M input, 2x for 1h cache writes, 0.1x reads, 5x output; reproduces both to the cent), plus an unknown small charge for the interrupted turn 2 (~$0.03 of cache read plus whatever output streamed)"
+}

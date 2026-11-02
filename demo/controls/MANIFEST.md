@@ -86,14 +86,48 @@ paragraph boundary wins, because one lands inside the tolerance. The sentence
 cut at 973 is better centred (+0.31 %) and is the alternative if Barna
 prefers it.
 
-⚠️ **The connector race is a hazard for the campaign.** Pilot sessions loaded
-no MCP connectors (checked: 0 of 16 session logs). Under 2.1.302 one of two
-calibration calls did, which gives that call ~3.4k extra tokens and **Gmail
-and Docs tools**, and it may differ by arm and by call. The R3 check (first
-armX transcripts vs armB) must therefore compare **turn-1** counts from the
-session logs, with the overhead inspected, and never the json totals.
-Whether to suppress the connectors (e.g. `--strict-mcp-config`), at the cost
-of a flag the pilot did not have, is a decision for Barna.
+⚠️ **The connector race was a hazard for the campaign, and it is now
+blocked.** Pilot sessions loaded no MCP connectors (checked: 0 of 16 session
+logs). Under 2.1.302 one of the two calibration calls did, which gave that call
+~3.4k extra tokens plus **Gmail and Docs tools**, and that could differ by arm
+and by call. See the next section.
+
+## `--strict-mcp-config` (2026-11-02, Barna's decision) — DISCLOSE IN THE PREPRINT
+
+`generate/backends.py`'s `ClaudeCliBackend` now passes `--strict-mcp-config`
+and **no** `--mcp-config`, so no MCP server and no claude.ai connector loads in
+any generation or calibration call (`demo/generate.py`, `calibrate.py`, and
+every other `ClaudeCliBackend` caller). Checked on CLI 2.1.302: the flag is
+accepted, and the cut-979 session log contains **no** MCP content (its
+environment block is 11,272 chars, the same as the connector-free armB call's).
+The flag is not part of the prompt: the arm0, armB and armX prompt hashes do not
+move.
+
+⚠️ **For the write-up:** the 16 pilot calls (CLI 2.1.278) ran **without** this
+flag (and loaded no connectors); the campaign runs **with** it. Together with
+the CLI version change, this is a difference in apparatus between the pilot and
+the confirmatory samples.
+
+## Verification of cut 979 (2026-11-02, one approved call)
+
+| call | prompt | flag | turn-1 input tokens | cost |
+|---|---|---|---|---|
+| armB (from above) | `4045efb3e514b981` | none, no connectors loaded | **26,464** | $1.80 |
+| **armX, cut 979** | **`a848cebd7806d2cc`** | `--strict-mcp-config` | **26,872** | ~$1.19 (estimated) |
+
+**armX − armB = +408 tokens, +1.54 %.** The proxy estimate was +0.5 %, so the
+proxies were off by about 1 point, inside the ±1 % stated for them. Barna,
+2026-11-02: *"cut point is enough to be close, it doesnt need to match exactly,
+just make it approximately same size."* So the tolerance is now **±3 %** (it was
+±0.5 %), **cut 979 is kept**, and the test checks the measured count against
+it.
+
+⚠️ The call was **interrupted after its first turn**: the calling shell's
+10-minute limit killed it while turn 2 was in flight. Turn 1 is the whole
+measurement, so nothing was lost, and its usage comes from the CLI's session
+log. No json payload or response exists. The cost is turn 1 at the rates the
+two earlier payloads imply, plus a small unknown charge for the partial turn 2.
+**Calibration total, all three calls: about $5.00.**
 
 ## The original offline estimate (superseded by the calibration above)
 
@@ -149,20 +183,18 @@ between two whitespace-merging tokenizers, not with Claude:
 - **Stated range: roughly −17 % to +10 %**, point estimate +0.4 %, plus an
   unquantified CLI-version term on any absolute comparison. The ±0.5 %
   target is therefore **not demonstrated**, and
-  `test_armx_tokens_within_half_a_percent_of_armb` currently passes on the
-  **estimate** — it switches to the measured number once
-  `claude_input_tokens.armX_measured` is filled in.
+  the test then ran on the estimate. It now runs on the measured count
+  (`test_armx_tokens_match_armb_within_tolerance`).
 
-## What is left (not spent; needs approval)
+## What is left
 
-- **Verify cut 979 with one more count** (one armX call, ~$2, or the free
-  `count_tokens` endpoint with Barna's key). Only that turns the +0.5 %
-  estimate into a measurement. Record it as `claude_input_tokens.armX_measured`,
-  with the turn-1 count and the MCP overhead checked, as above.
 - Per R3, check the first real armX transcripts' **turn-1** input tokens
-  against the **fresh armB samples from the same campaign and CLI version**,
-  not the pilot's 25,315 from 2.1.278 and not the json totals. Stop and
-  re-truncate if they deviate by more than 1 %.
+  against the **fresh armB samples from the same campaign and CLI version**
+  (both now under `--strict-mcp-config`), not the pilot's 25,315 from 2.1.278
+  and not the json totals. Stop and re-truncate if they deviate by more than
+  ±3 %, the tolerance now in force.
+- ⚠️ Run long calls **in the background**: a foreground shell limit is what cut
+  the cut-979 call short.
 
 ## Reproduce
 

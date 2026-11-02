@@ -237,6 +237,15 @@ class ClaudeCliBackend(Backend):
                 "--setting-sources", "",
                 "--system-prompt", self.system_prompt or SYSTEM_PROMPT,
                 "--output-format", "json",
+                # ⚠️ ADDED 2026-11-02 (Barna's decision). With no --mcp-config
+                # this loads NO MCP servers and NO claude.ai connectors. Under
+                # CLI 2.1.302 one of two calibration calls loaded the account's
+                # connectors (Docs, Gmail) and the other did not: ~3.4k extra
+                # input tokens and extra tools, varying per call. Not part of
+                # the prompt, so no prompt hash moves -- but every call before
+                # this date (the demo pilot included) ran WITHOUT it, which the
+                # write-up must disclose. See demo/controls/MANIFEST.md.
+                "--strict-mcp-config",
             ]
             # The runaway backstop. None disables it, which is what a
             # deliberately unbounded call looks like on the command line.

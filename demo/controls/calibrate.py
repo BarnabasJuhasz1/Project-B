@@ -4,7 +4,8 @@ demo/controls/calibrate.py
 THE CALIBRATION COUNT for armX (MANIFEST.md, "Needs Barna's approval";
 approved 2026-11-02, "yes to 1-4"). One call per named arm, with the EXACT
 prompt `render(arm)` and the EXACT backend `generate.py` uses
-(`ClaudeCliBackend(timeout=1800)`: same model, flags, system prompt and
+(`ClaudeCliBackend(timeout=1800)`: same model, flags -- including
+`--strict-mcp-config` since 2026-11-02 --, system prompt and
 budget cap), so the CLI's reported input tokens are the arm's real count under
 the installed CLI version.
 
