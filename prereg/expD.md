@@ -55,3 +55,7 @@ H-D: controllers that bound their per-step planning with the wall clock lose tri
 - The CPU limit slows the simulator and the controller together (they share the process); sim time is unaffected, wall time per step is not.
 - Arm and clock-limitation are almost confounded (7/8 vs 2/8), so Test 1 and Test 2 cannot fully separate "armB" from "clock-limited".
 - Exp 3 rep 0 differed from the pilot in 6 of 17 controllers at normal speed, mostly clock-limited ones; the noise-floor comparison is reported for that reason.
+
+## Amendment 2026-11-02 (during the sweep, before any result was analysed)
+
+Episode #9 (armB k6) deadlocked at simulator start-up: 0.48 s of CPU in 9 minutes, 64 MB resident, blocked on a futex before Isaac Sim booted. That is the same start-up hang seen 3 times in Exp A. The hung process was killed by hand. The runner recorded no result, and the CPU check then stopped the sweep because a dead process reports no `cpu.max`. That bug is fixed (`ea8d12b`); the row is kept in `demo/out/expD/physics_quarantine.csv`. The episode is **rerun once** on resume, under the same CPU limit, and the runner timeout drops to 1200 s. A rerun that also fails is reported as missing, not as 0 trips, because a hang is a simulator failure and not a controller outcome. Nothing else changes.
