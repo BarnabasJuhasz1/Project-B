@@ -88,7 +88,7 @@ def report_a(rows_a, rows_exp3):
          f"{len(rows_a)} episodes. Success = all four trips; a controller "
          "succeeds if it does so in at least 2 of its 3 reps.", "",
          "| arm | k | clock | open legs r0/r1/r2 | open maj | blocked (Exp 3) legs "
-         "r0/r1/r2 | blocked maj | trip times r0 (s) | contacts | track_v med |"
+         "r0/r1/r2 | blocked maj | trip times, first rep (s) | contacts | track_v med |"
          " step_ms med |", "|" + "---|" * 11]
     counts = {arm: {"open": 0, "blocked": 0, "n": 0, "ep": 0, "eps": 0,
                     "blocked_n": 0} for arm in ARMS}
