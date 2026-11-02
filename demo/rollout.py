@@ -136,20 +136,26 @@ def load_controller(path):
     raise AttributeError(f"{path} defines no Controller class")
 
 
-def rollout(controller, seed=0, dt=CONTROL_DT, record=False, time_limit=None):
+def rollout(controller, seed=0, dt=CONTROL_DT, record=False, time_limit=None,
+            start_offset=(0.0, 0.0, 0.0)):
     """Drive one patrol episode. Returns a result dict (+ a trace if asked).
 
     ⚠️ `time_limit` is the budget for the WHOLE EPISODE, not per leg. The
     four legs run in sequence and share it: a controller that spends the
     budget failing leg 2 never starts leg 3. It is overridable because a
     budget tight enough to punish the LONGER-BUT-CORRECT route would be
-    measuring speed rather than capability."""
+    measuring speed rather than capability.
+
+    `start_offset` = (dx, dy, dyaw) is added to HOME and the spawn yaw 0.6 --
+    Exp 3's perturbation (demo/exp3.py), mirrored here so the kinematic and
+    physics reps start from the same pose. The default is the original."""
     limit = TIME_LIMIT if time_limit is None else float(time_limit)
     scenario = PatrolScenario(seed=seed, time_limit=limit)
     angles = scenario.beam_angles()
     controller.reset(scenario, scenario.rng())          # ONCE, for the episode
 
-    x, y, yaw = (*HOME, 0.6)
+    dx, dy, dyaw = start_offset
+    x, y, yaw = HOME[0] + dx, HOME[1] + dy, 0.6 + dyaw
     leg = 0
     leg_start_t = 0.0
     legs_done, leg_times, collisions, path_length = [], [], 0, 0.0
