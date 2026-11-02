@@ -1,0 +1,90 @@
+--- demo/arms/armB/k6.py
++++ demo/interventions/expC/armB/k6.py
+@@ -634,3 +634,87 @@
+         blocked = diff < gamma[:, None]
+         fd = np.where(blocked, rr[:, None], 99.0).min(axis=0)
+         return np.minimum(fd, self.range_max)
++
++
++# ==== EXP C INTERVENTION: NOT MODEL-WRITTEN ================================
++# Appended by demo/expC.py to a byte-identical copy of demo/arms/armB/k6.py
++# (sha256 69411dd5e493f37363e7429ea600477122d89288cdcc95552698787c05dea2ef).
++# Everything ABOVE this banner is the model's file, unchanged.
++# Everything below is ours and identical in every patched copy except the body
++# of _expc_full_replan. This file is NOT an armB sample and never enters an arm
++# count. See demo/expC.py and prereg/expC.md.
++import math as _expc_math
++import time as _expc_time
++
++_EXPC_PROGRESS_M = 0.5
++_EXPC_WINDOW_S = 10.0
++_EXPC_GOAL_SWITCH_M = 0.5
++
++
++class _ExpCNoProgress:
++    """True when the straight-line distance to the current target has not
++    reached a new best, lower by _EXPC_PROGRESS_M, for _EXPC_WINDOW_S sim
++    seconds. Restarts on a new target and after every firing."""
++
++    def __init__(self):
++        self.goal = None
++        self.best = None
++        self.t_best = None
++
++    def update(self, t, x, y, gx, gy):
++        d = _expc_math.hypot(gx - x, gy - y)
++        if (self.goal is None or _expc_math.hypot(
++                gx - self.goal[0], gy - self.goal[1]) > _EXPC_GOAL_SWITCH_M):
++            self.goal, self.best, self.t_best = (gx, gy), d, t
++            return False
++        if d <= self.best - _EXPC_PROGRESS_M:
++            self.best, self.t_best = d, t
++            return False
++        if t - self.t_best >= _EXPC_WINDOW_S:
++            self.best, self.t_best = d, t
++            return True
++        return False
++
++
++_ExpCModelController = Controller
++
++
++class Controller(_ExpCModelController):
++    """The model's controller plus the full-replan fallback. Nothing else."""
++
++    def reset(self, scenario, rng):
++        super().reset(scenario, rng)
++        self._expc_monitor = _ExpCNoProgress()
++        self.expc_fallback_fires = []
++        self.expc_errors = []
++
++    def step(self, obs):
++        fired = False
++        try:
++            p, g = obs.pose_estimate, obs.goal
++            fired = self._expc_monitor.update(
++                float(obs.t), float(p[0]), float(p[1]), float(g[0]), float(g[1]))
++        except Exception as exc:
++            self.expc_errors.append(repr(exc)[:160])
++        if not fired:
++            return super().step(obs)
++        t0 = _expc_time.perf_counter()
++        try:
++            self._expc_full_replan()
++        except Exception as exc:
++            self.expc_errors.append(repr(exc)[:160])
++        cmd = super().step(obs)
++        self.expc_fallback_fires.append({
++            "t": round(float(obs.t), 2),
++            "goal": [round(float(obs.goal[0]), 2), round(float(obs.goal[1]), 2)],
++            "dist": round(self._expc_monitor.best, 3),
++            "step_ms": round((_expc_time.perf_counter() - t0) * 1000.0, 2)})
++        return cmd
++
++    def _expc_full_replan(self):
++        # Drop the cached route; keep the map. Per-controller (expC.HOOKS).
++        self.hcache = {}
++        if self.h is not None:
++            self.h = np.full((self.ny, self.nx), np.float32(_BIG), dtype=np.float32)
++            self.h[self.gj, self.gi] = np.float32(0.0)
++            self.pending_burst = True

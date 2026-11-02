@@ -335,6 +335,12 @@ def main():
         "wall_seconds_in_process": round(time.time() - wall0, 1),
         "trace": args.trace,
     }
+    # Exp C (demo/expC.py): a patched copy logs its fallback firings on the
+    # instance. Read once, after the episode; absent for every other file.
+    fires = getattr(controller, "expc_fallback_fires", None)
+    if fires is not None:
+        summary["fallback"] = {"fires": fires,
+                               "errors": getattr(controller, "expc_errors", [])}
     print(exp3.RESULT_JSON_PREFIX + json.dumps(summary), flush=True)
     sim_app.close()
 
