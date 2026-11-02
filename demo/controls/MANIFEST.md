@@ -82,7 +82,18 @@ between two whitespace-merging tokenizers, not with Claude:
   of Feng's; GPT-2 spends 50 % and 34 %. A tokenizer pricing long space runs
   like GPT-2 puts armX **~17 % short**; one pricing blank lines more heavily
   than the legacy proxy puts it **long**.
-- **Stated range: roughly −17 % to +10 %**, point estimate +0.4 %. The ±0.5 %
+- **The CLI has moved since the anchor was taken**: the pilot ran on Claude
+  Code **2.1.278**, the campaign will run on **2.1.302**. Both anchors
+  (12,549 / 25,315) include the CLI's own overhead (~11.6k tokens of system
+  prompt and tool definitions), which may differ between versions. The
+  **block** estimate is a difference taken within one version, so the
+  overhead cancels there; the **absolute** 25,315 does not carry over. Any
+  check against an absolute count must use counts taken **under the same CLI
+  version** (see the calibration step below). If the tokenizer itself changed
+  with the model serving, the 12,766 anchor moves too, and only a fresh count
+  can tell.
+- **Stated range: roughly −17 % to +10 %**, point estimate +0.4 %, plus an
+  unquantified CLI-version term on any absolute comparison. The ±0.5 %
   target is therefore **not demonstrated**, and
   `test_armx_tokens_within_half_a_percent_of_armb` currently passes on the
   **estimate** — it switches to the measured number once
@@ -100,7 +111,11 @@ Only a Claude count can close this. In order of preference:
    count. Its transcript goes to `demo/transcripts/calibration/`, it **never**
    yields a `k` file, and it is **excluded from every denominator in advance**
    (write that into `PREREG-v2.md` before the call). ~$1.5 (a full controller
-   is generated and discarded).
+   is generated and discarded). ⚠️ **Under CLI 2.1.302 the pilot's 25,315 is
+   not a valid target**: compare against an armB (or arm0 + 12,766) count
+   taken under the **same** version, i.e. one armB calibration call as well
+   (~$3 total), or compare armX − arm0 against armB − arm0 if arm0 is cheaper
+   to re-measure. Record the CLI version beside every count.
 3. If the measured count is outside ±0.5 %: re-cut using the measured
    Claude/proxy ratio on Feng (now a **second anchor**, which also identifies
    the whitespace cost), update `cut_lines` and the hashes here, and verify
@@ -109,8 +124,10 @@ Only a Claude count can close this. In order of preference:
    the nearest paragraph is Barna's; record it either way.
 
 Then: record the count as `claude_input_tokens.armX_measured`, and, per R3,
-check the first real armX transcripts' input tokens against armB's 25,315 —
-stop and re-truncate if they deviate by more than 1 %.
+check the first real armX transcripts' input tokens against armB's count
+**from the same campaign and CLI version** (the fresh armB samples, not the
+pilot's 25,315 from 2.1.278) — stop and re-truncate if they deviate by more
+than 1 %.
 
 ## Reproduce
 

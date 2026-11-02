@@ -37,7 +37,10 @@
     ],
     "armX_measured": null,
     "method": "offline proxy transfer, see MANIFEST.md; NOT a Claude count",
-    "tolerance": 0.005
+    "tolerance": 0.005,
+    "anchor_cli_version": "2.1.278 (pilot transcripts)",
+    "campaign_cli_version": "2.1.302",
+    "cli_version_note": "arm0/armB anchors include CLI overhead (~11.6k tokens) that may differ by CLI version; the block difference cancels it, absolute counts do not. Compare armX only against counts taken under the same CLI version."
   },
   "keyword_scan": {
     "terms": [

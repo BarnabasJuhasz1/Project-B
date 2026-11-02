@@ -51,6 +51,9 @@ from demo.controls import build_feng2015 as feng                   # noqa: E402
 # pilot calls, from demo/transcripts/*.json `raw.usage`, recorded 2026-11-02.
 CLAUDE_ARM0 = 12549        # k4 12550, k6 12549, k7 12548
 CLAUDE_ARMB = 25315        # k0-k5 25316, k6-k7 25315
+# ⚠️ Both taken under Claude Code 2.1.278. The campaign runs 2.1.302, whose
+# overhead may differ: dB (a within-version difference) cancels it, the
+# absolute 25,315 does not. See MANIFEST.md.
 TOLERANCE = 0.005          # plan §2.2: +-0.5 % of armB's token count
 
 # ---- below this line is code
