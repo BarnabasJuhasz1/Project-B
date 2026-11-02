@@ -67,7 +67,9 @@ EXPERIMENTS = {
           "out": REPO / "demo" / "out" / "expD" / "physics.csv"},
 }
 REQUIRED_PROFILE = "performance"
-EPISODE_TIMEOUT = 3600        # s; Exp 3 uses 1800, D runs ~2x slower
+EPISODE_TIMEOUT = 1200        # s. Was 3600 for the first A and D passes; a normal
+                              # episode takes 60-330 s wall even at 2 CPUs, so 1200 s
+                              # only ever fires on a hung simulator
 # The same rule exp3_report.py marks budgets with.
 BUDGET_RE = re.compile(r"time\.(perf_counter|time|monotonic)\s*\(")
 FIELDS = ["order", "experiment", "arm", "k", "rep", "seed", "dx", "dy", "dyaw",
@@ -237,13 +239,26 @@ def main(argv=None):
     ap.add_argument("experiment", choices=sorted(EXPERIMENTS))
     ap.add_argument("--out", default=None)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--retry-failed", action="store_true",
+                    help="rerun episodes with no result (the SIMULATOR failed, not the controller); the failed rows are kept in physics_simfail.csv")
     a = ap.parse_args(argv)
     e = EXPERIMENTS[a.experiment]
     out = pathlib.Path(a.out or e["out"]).resolve()
     tag = f"[exp{a.experiment}]"
 
     order = job_order(a.experiment)
-    done = {(r["arm"], r["k"], r["rep"]): r for r in read_rows(out)}
+    rows0 = read_rows(out)
+    failed = [r for r in rows0 if r["legs"] in ("", None)]
+    if a.retry_failed and failed and not a.dry_run:
+        keep = out.parent / "physics_simfail.csv"
+        write_rows(keep, read_rows(keep) + failed)
+        rows0 = [r for r in rows0 if r not in failed]
+        write_rows(out, rows0)
+        print(f"{tag} retrying {len(failed)} simulator failures; kept in "
+              f"{keep.name}", flush=True)
+    elif a.retry_failed:
+        rows0 = [r for r in rows0 if r not in failed]
+    done = {(r["arm"], r["k"], r["rep"]): r for r in rows0}
     todo = [j for j in order if (j[0], j[1], str(j[3])) not in done]
     commit = prereg_commit(a.experiment)
     cpu, prof = cgroup_cpu_max(), power_profiles()

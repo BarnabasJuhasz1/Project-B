@@ -52,3 +52,7 @@ A non-significant Fisher test is not evidence of equality; with 8 per arm it has
 - One hand-authored world; the pilot controllers only; local Isaac Sim, `in_container: false`.
 - Isaac Sim is not bit-reproducible here for wall-clock-budgeted controllers (Exp 3 rep 0 matched the pilot in 11 of 17 controllers).
 - The open maze removes the replanning demand but also shortens legs 2 and 3, so it also gives more time slack.
+
+## Amendment 2026-11-02 (after the first pass, before any result was analysed)
+
+In the first pass of 48 episodes, 4 produced no result because the **simulator** failed, not the controller: armB k0 rep 0, armB k4 rep 1 and arm0 k5 rep 2 hung until the 3600 s runner timeout without writing a trace, and armB k5 rep 2 died at startup (23 s, an `omni.rtx` error). A controller with fewer than 3 reps has no majority-of-3 verdict, so these 4 episodes are **rerun once** (`demo/exp_ad.py A --retry-failed`), with the failed rows kept in `demo/out/expA/physics_simfail.csv` and reported. The runner timeout drops from 3600 s to 1200 s, which is about 4 times the longest normal episode. A rerun that also fails is counted as a failed episode (0 trips) for that rep. Nothing else changes. The analysis had not been run when this was written.
