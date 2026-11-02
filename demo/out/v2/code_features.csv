@@ -1,0 +1,17 @@
+arm,k,file,sha256_16,total_lines,header_lines,loc,n_classes,n_functions,persistent_grid_attrs,logodds_vocab,uses_heapq,heap_ops,dstar_rhs,dstar_k_m,dstar_RAISE,dstar_LOWER,dstar_PROCESS_STATE,dstar_MODIFY_COST,dstar_dstar_name,dstar_vocab_total,full_reinit_sites,replan_vocab,time_budget_calls,candidate_grids,rollout_vt_products,rollout_integrations,path_follow_vocab,rollout_scoring
+arm0,0,k0.py,1611cb168ed46b19,658,24,537,1,22,Dw;blocked;log;mult;mult2;pen_extra,0,0,0,0,0,0,0,0,0,0,0,1,0,2,0,0,0,1,0
+arm0,1,k1.py,be0105d6d9478909,770,25,607,1,25,logodds;penalty,10,0,0,0,0,0,0,0,0,0,0,1,0,0,2,4,0,3,1
+arm0,2,k2.py,994b2bd45d098912,815,28,636,1,24,log;pen,8,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,9,0
+arm0,3,k3.py,cfd732383d7223e8,651,32,530,1,18,L;pen,1,0,0,0,0,0,0,0,0,0,0,1,0,0,1,3,0,10,1
+arm0,4,k4.py,ada97fa0953eeca4,760,40,614,1,21,lo;pen,2,0,0,0,0,0,0,0,0,0,0,2,0,0,1,4,2,7,1
+arm0,5,k5.py,d55a6bf04aa8fd84,740,31,576,1,24,lo;pen,2,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0
+arm0,6,k6.py,422a564474a0c246,851,36,699,1,26,log;pen,4,0,0,0,0,0,0,0,0,0,0,2,0,3,1,7,0,2,1
+arm0,7,k7.py,4a656df88b4a6896,758,32,606,1,23,blockpen;cost1;costd;hard;lfield;logodds;trail,16,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,6,0
+armB,0,k0.py,dc3622b547c3568e,869,42,721,2,31,cost;lo;occ;pen,4,1,6,0,3,1,1,1,2,5,13,0,0,2,0,0,0,2,0
+armB,1,k1.py,51b58b5eb74b4dd5,781,49,623,3,33,,5,1,4,0,0,2,1,3,3,3,12,0,0,2,1,0,0,7,0
+armB,2,k2.py,d8f855696060c384,922,51,715,2,26,cost2d;frust;lo;occ,5,1,4,0,0,2,1,4,4,7,18,0,0,2,0,0,0,4,0
+armB,3,k3.py,0bf3f73571fcd251,659,37,514,1,21,_bpad;_pad;cost;lethal_prev;logodds;scar,11,0,0,0,0,1,1,0,0,3,5,2,0,0,0,0,0,6,0
+armB,4,k4.py,c0422969be1bba1f,568,50,424,1,18,_pad;cost;logodds;seen;visit,10,0,0,0,0,0,0,0,2,0,2,1,0,3,0,0,0,7,0
+armB,5,k5.py,54a3a4f116d013d7,599,53,446,1,14,_along;_best;_perp;_rpad;_tmp;log;occ;occ_prev;penalty;visited,1,0,0,0,0,1,1,0,0,0,2,2,0,4,0,0,0,0,0
+armB,6,k6.py,69411dd5e493f373,636,48,467,1,19,C;_nbb;h;lo;pen;seen,1,0,0,0,0,0,0,2,2,0,4,2,0,2,0,0,0,8,0
+armB,7,k7.py,70ca68a952daff95,888,54,730,2,27,cost_np,0,1,8,0,3,2,1,4,4,3,17,0,0,2,0,0,0,10,0
