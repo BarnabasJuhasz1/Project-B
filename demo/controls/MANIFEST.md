@@ -25,11 +25,11 @@ paper pulls the model off course" (plan R8). Say so wherever it is reported.
 | why that command | it reproduces `demo/paper.txt` **byte for byte** from `demo/paper.pdf` (41,121 bytes, SHA-256 `1294dc34…`, checked 2026-11-02). Plain `pdftotext` and `-raw` do not |
 | cleaning | `.strip()` only — what `render.paper_text()` does to `paper.txt` |
 | full extraction | 71,524 chars, 1,740 lines, SHA-256 `49239138…b3bfa7` |
-| **cut** | **first 813 lines**, a paragraph boundary, ending "…for the lumped mean value of the NIM's TPW reference cells." (§2, mid-way through the apparatus description) |
-| truncated text | 32,600 chars, SHA-256 `e666212f…4c85437a`. No "[truncated]" marker: the block's text must stay identical across arms |
-| prompt hashes (`sha256[:16]`) | arm0 `c6a5b5e6eac0def5` · armB `4045efb3e514b981` (both **unchanged**, pinned by a test) · armX `2c56254bc6d40d86` |
-| prompt chars | arm0 3,687 · armB 45,222 · armX 36,966 |
-| keyword scan (`\bterm`, case-insensitive) | path, plan, graph, robot, search, heuristic, obstacle, map, navigat, lidar: **0 of each** in armX's text (D\*'s `paper.txt`: 73, 33, 5, 66, 8, 4, 32, 34, 5, 0) |
+| **cut** | **first 979 lines** (re-cut 2026-11-02 from the calibration; was 813), a paragraph boundary, ending "…decreasing gas pressures." (§2–3, the apparatus and first measurements) |
+| truncated text | 38,609 chars, SHA-256 `7d80ae1f…` (full hash in `manifest.json`; the 813-line cut, `e666212f…`, is kept in `cut_history`). No "[truncated]" marker: the block's text must stay identical across arms |
+| prompt hashes (`sha256[:16]`) | arm0 `c6a5b5e6eac0def5` · armB `4045efb3e514b981` (both **unchanged**, pinned by a test) · armX **`a848cebd7806d2cc`** (the 813-line prompt, calibrated and replaced, was `2c56254bc6d40d86`) |
+| prompt chars | arm0 3,687 · armB 45,222 · armX 42,975 |
+| keyword scan (`\bterm`, case-insensitive) | path, plan, graph, robot, search, heuristic, obstacle, map, navigat, lidar: **0 of each except one `path`** in armX's text ("…through a separate and symmetric path", a gas line) (D\*'s `paper.txt`: 73, 33, 5, 66, 8, 4, 32, 34, 5, 0) |
 
 ⚠️ **The text is not committed** (licence unclear, plan R10). It is regenerated
 by `python demo/controls/build_feng2015.py`, which refuses to write anything
@@ -41,7 +41,61 @@ double-spaced, so its layout text is blank-line-heavy; D\*'s is two-column and
 D\*'s characters are excess whitespace, 10.5 % of Feng's). Feng is not
 scrambled to match.
 
-## The token match — an OFFLINE ESTIMATE, not a count
+## The calibration (2026-11-02) and the one re-cut
+
+Approved by Barna ("yes to 1-4"). Two calls through `calibrate.py`, CLI
+**2.1.302**, the exact prompts and the flags `generate.py` uses. ⚠️ **Not
+samples**: transcripts in `demo/transcripts/calibration/`, no `k` file, in no
+denominator, decided before the calls.
+
+| call | prompt | turns | turn-1 input tokens | all turns | cost |
+|---|---|---|---|---|---|
+| armB | `4045efb3e514b981` | 1 | **26,464** | 26,464 | $1.80 |
+| armX, cut 813 | `2c56254bc6d40d86` | 4 (Bash, Write, Bash) | **28,265** (2 + 20,197 created + 8,066 cached) | 218,664 | $2.01 |
+
+Turn-1 counts come from the per-request usage in the CLI's own session logs;
+`--output-format json` sums every turn.
+
+⚠️ **The raw difference (+1,801, +6.8 %) is NOT the prompt difference.** The
+armX session loaded the account's **claude.ai MCP connectors** (Claude Docs,
+Gmail, …) and the armB session did not: 7,504 extra characters of CLI
+overhead (MCP tool names, MCP server instructions, three tool definitions) in
+armX's first turn only. Everything else in the two requests is identical. That
+overhead is estimated at **~3,300–3,500 Claude tokens** (proxy count × the
+Claude/proxy ratio fitted on the armB call's own non-paper text, 1.44–1.51,
+which matches the paper block's 1.47–1.48). Corrected, **the 813-line cut was
+about −6 % (−5.8 % to −6.3 %) short of armB**, outside ±0.5 %.
+
+**Re-cut once, to 979 lines** (`recut_from_calibration.py`): the measured armX
+block is the second anchor, on Feng's own text, and the cut moves to the
+paragraph boundary nearest zero.
+
+| cut | kind | armX vs armB, legacy | Qwen | mean |
+|---|---|---|---|---|
+| 928 | paragraph | −1.75 % | −1.11 % | −1.43 % |
+| 973 | sentence | −0.19 % | +0.82 % | +0.31 % |
+| **979** | **paragraph** | **−0.01 %** | **+0.99 %** | **+0.49 %** |
+| 1001 | paragraph | +1.28 % | +2.49 % | +1.88 % |
+
+**Estimate for 979: +0.5 %, about 26,594 tokens against armB's 26,464, with
+proxy spread −0.0 % to +1.0 %.** The 979-line prompt has **not been
+measured**, so ±0.5 % is estimated, not demonstrated. The uncertainty is now
+about ±1 %, down from −17 %…+10 %, and it comes mainly from the overhead
+correction, which a proxy has to estimate. Under the MANIFEST's rule the
+paragraph boundary wins, because one lands inside the tolerance. The sentence
+cut at 973 is better centred (+0.31 %) and is the alternative if Barna
+prefers it.
+
+⚠️ **The connector race is a hazard for the campaign.** Pilot sessions loaded
+no MCP connectors (checked: 0 of 16 session logs). Under 2.1.302 one of two
+calibration calls did, which gives that call ~3.4k extra tokens and **Gmail
+and Docs tools**, and it may differ by arm and by call. The R3 check (first
+armX transcripts vs armB) must therefore compare **turn-1** counts from the
+session logs, with the overhead inspected, and never the json totals.
+Whether to suppress the connectors (e.g. `--strict-mcp-config`), at the cost
+of a flag the pilot did not have, is a decision for Barna.
+
+## The original offline estimate (superseded by the calibration above)
 
 No token-counting key was available and no paid call was made, so **no Claude
 count of the armX prompt exists**. The estimate (`estimate_tokens.py`):
@@ -99,35 +153,16 @@ between two whitespace-merging tokenizers, not with Claude:
   **estimate** — it switches to the measured number once
   `claude_input_tokens.armX_measured` is filled in.
 
-## ⚠️ Needs Barna's approval: the calibration call (plan §2.2.4 fallback, R3)
+## What is left (not spent; needs approval)
 
-Only a Claude count can close this. In order of preference:
-
-1. **Token-counting endpoint** (`messages.count_tokens`, free, needs an API
-   key only Barna handles): count `render("armB")` and `render("armX")` as one
-   user message each. The difference is exactly the document difference.
-2. **One calibration call through the CLI**, with the **exact** armX prompt
-   and the **same flags** as `generate.py`. Its usage gives the exact input
-   count. Its transcript goes to `demo/transcripts/calibration/`, it **never**
-   yields a `k` file, and it is **excluded from every denominator in advance**
-   (write that into `PREREG-v2.md` before the call). ~$1.5 (a full controller
-   is generated and discarded). ⚠️ **Under CLI 2.1.302 the pilot's 25,315 is
-   not a valid target**: compare against an armB (or arm0 + 12,766) count
-   taken under the **same** version, i.e. one armB calibration call as well
-   (~$3 total), or compare armX − arm0 against armB − arm0 if arm0 is cheaper
-   to re-measure. Record the CLI version beside every count.
-3. If the measured count is outside ±0.5 %: re-cut using the measured
-   Claude/proxy ratio on Feng (now a **second anchor**, which also identifies
-   the whitespace cost), update `cut_lines` and the hashes here, and verify
-   with one more count. If no paragraph boundary lands inside ±0.5 %, the
-   choice between a **sentence** boundary (`.`-terminated line) and accepting
-   the nearest paragraph is Barna's; record it either way.
-
-Then: record the count as `claude_input_tokens.armX_measured`, and, per R3,
-check the first real armX transcripts' input tokens against armB's count
-**from the same campaign and CLI version** (the fresh armB samples, not the
-pilot's 25,315 from 2.1.278) — stop and re-truncate if they deviate by more
-than 1 %.
+- **Verify cut 979 with one more count** (one armX call, ~$2, or the free
+  `count_tokens` endpoint with Barna's key). Only that turns the +0.5 %
+  estimate into a measurement. Record it as `claude_input_tokens.armX_measured`,
+  with the turn-1 count and the MCP overhead checked, as above.
+- Per R3, check the first real armX transcripts' **turn-1** input tokens
+  against the **fresh armB samples from the same campaign and CLI version**,
+  not the pilot's 25,315 from 2.1.278 and not the json totals. Stop and
+  re-truncate if they deviate by more than 1 %.
 
 ## Reproduce
 
@@ -145,4 +180,10 @@ PYTHONNOUSERSITE=1 ~/miniforge3/bin/python demo/controls/estimate_tokens.py \
     --tokenizer qwen2.5=<Qwen2.5-7B-Instruct tokenizer.json> \
     --tokenizer gpt2=<openai/whisper-tiny tokenizer.json> \
     --vote claude-legacy,qwen2.5
+
+# The calibration (PAID, approved once, 2026-11-02) and the re-cut (free)
+$P demo/controls/calibrate.py --arm armB --arm armX --dry-run
+PYTHONNOUSERSITE=1 ~/miniforge3/bin/python demo/controls/recut_from_calibration.py \
+    --tokenizer claude-legacy=<claude tokenizer.json> \
+    --tokenizer qwen2.5=<Qwen2.5-7B-Instruct tokenizer.json>
 ```

@@ -12,34 +12,37 @@
   "full_extraction_chars": 71524,
   "full_extraction_lines": 1740,
   "full_extraction_sha256": "492391387cd2f5c4ea565e869abba03ccd7df45a61ed1becdb08e71968b3bfa7",
-  "cut_lines": 813,
+  "cut_lines": 979,
   "cut_rule": "first cut_lines lines of the stripped extraction, then .strip(); the cut is a paragraph boundary (build_feng2015.paragraph_ends)",
-  "cut_after_text": "NIM’s TPW reference cells.",
-  "truncated_chars": 32600,
-  "truncated_sha256": "e666212f768fd6364d475924e6cbbff37909c58f10b2587df1d60fde4c85437a",
+  "cut_after_text": "decreasing gas pressures.",
+  "truncated_chars": 38609,
+  "truncated_sha256": "7d80ae1fd515035cb11c62d5ab2b9c3319330599575e63666aee31460b2c45cb",
   "prompt_sha256_16": {
     "arm0": "c6a5b5e6eac0def5",
     "armB": "4045efb3e514b981",
-    "armX": "2c56254bc6d40d86"
+    "armX": "a848cebd7806d2cc"
   },
   "prompt_chars": {
     "arm0": 3687,
     "armB": 45222,
-    "armX": 36966
+    "armX": 42975
   },
   "claude_input_tokens": {
-    "arm0": 12549,
-    "armB": 25315,
-    "armX_estimate": 25415,
-    "armX_estimate_proxy_range": [
-      25351,
-      25480
-    ],
+    "pilot_cli_2.1.278": {
+      "arm0": 12549,
+      "armB": 25315
+    },
+    "armB": 26464,
+    "armB_cli_version": "2.1.302",
+    "armX_estimate": 26594,
+    "armX_estimate_rel": 0.0049,
+    "armX_estimate_rel_by_proxy": {
+      "claude-legacy": -0.0001,
+      "qwen2.5": 0.0099
+    },
     "armX_measured": null,
-    "method": "offline proxy transfer, see MANIFEST.md; NOT a Claude count",
+    "method": "cut 979 is NOT measured. Estimate = calibration at cut 813 (overhead-corrected) + Claude-per-proxy-token on Feng, see recut_from_calibration.py and MANIFEST.md",
     "tolerance": 0.005,
-    "anchor_cli_version": "2.1.278 (pilot transcripts)",
-    "campaign_cli_version": "2.1.302",
     "cli_version_note": "arm0/armB anchors include CLI overhead (~11.6k tokens) that may differ by CLI version; the block difference cancels it, absolute counts do not. Compare armX only against counts taken under the same CLI version."
   },
   "keyword_scan": {
@@ -56,7 +59,7 @@
       "lidar"
     ],
     "feng_truncated": [
-      0,
+      1,
       0,
       0,
       0,
@@ -80,5 +83,90 @@
       0
     ],
     "rule": "case-insensitive, word-initial regex \\bterm"
-  }
+  },
+  "calibration": {
+    "date": "2026-11-02",
+    "approved": "Barna, 'yes to 1-4'",
+    "status": "NOT SAMPLES. Excluded from every denominator before the calls were made; transcripts in demo/transcripts/calibration/, no arms/*/k*.py written",
+    "script": "demo/controls/calibrate.py --arm armB --arm armX (ClaudeCliBackend(timeout=1800), the flags generate.py uses)",
+    "cli_version": "2.1.302 (Claude Code)",
+    "model": "claude-opus-5",
+    "calls": {
+      "armB": {
+        "prompt_sha256_16": "4045efb3e514b981",
+        "turns": 1,
+        "input_tokens_turn1": 26464,
+        "input_tokens_all_turns": 26464,
+        "cost_usd": 1.803455,
+        "elapsed_s": 759.0,
+        "transcript": "demo/transcripts/calibration/calibration__armB__4045efb3e514b981.json"
+      },
+      "armX": {
+        "prompt_sha256_16": "2c56254bc6d40d86",
+        "cut_lines": 813,
+        "turns": 4,
+        "tools_used": [
+          "Bash",
+          "Write",
+          "Bash"
+        ],
+        "input_tokens_turn1": 28265,
+        "turn1_breakdown": {
+          "input": 2,
+          "cache_creation": 20197,
+          "cache_read": 8066
+        },
+        "input_tokens_all_turns": 218664,
+        "cost_usd": 2.011639,
+        "elapsed_s": 690.2,
+        "transcript": "demo/transcripts/calibration/calibration__armX__2c56254bc6d40d86.json"
+      }
+    },
+    "total_cost_usd": 3.815094,
+    "turn1_source": "per-request usage in the CLI session logs (~/.claude/projects/-tmp-gen-clean-*/<session_id>.jsonl); the --output-format json usage sums all turns",
+    "measured_turn1_input_tokens": {
+      "armB": 26464,
+      "armX_cut813": 28265
+    },
+    "cut_lines_measured": 813,
+    "claude_block_tokens_armB": 12766,
+    "extra_overhead_in_armX_call": {
+      "what": "the armX session loaded the account's claude.ai MCP connectors (Claude Docs, Gmail, ...) and the armB session did not: +5,574 chars in the environment block (MCP tool names, MCP server instructions) and 3 MCP tool definitions (1,930 chars). System prompt and tool-schema shape hash identical otherwise.",
+      "chars": 7504,
+      "proxy_tokens": {
+        "claude-legacy": 2407,
+        "qwen2.5": 2198
+      },
+      "r": {
+        "claude-legacy": 1.444,
+        "qwen2.5": 1.512
+      },
+      "r_source": "Claude/proxy fitted on the armB call's own non-paper message text (reminders + environment block + task): (26464 - 8066 cached prefix - 12766 block) / proxy count; upper bound, message framing is folded in. Paper block gives 1.473 / 1.480.",
+      "estimated_claude_tokens": {
+        "claude-legacy": 3476,
+        "qwen2.5": 3323
+      }
+    },
+    "armX_minus_armB_at_cut813": {
+      "raw": 1801,
+      "corrected": {
+        "claude-legacy": -1675,
+        "qwen2.5": -1522
+      },
+      "corrected_rel": {
+        "claude-legacy": -0.0633,
+        "qwen2.5": -0.0575
+      }
+    },
+    "verdict": "cut 813 is NOT within +-0.5 % (about -6 % after removing the extra overhead; -1.9 % to -6.6 % for r in [1.0, 1.48]). Re-cut once, to 979 (recut_from_calibration.py). No second calibration call made."
+  },
+  "cut_history": [
+    {
+      "cut_lines": 813,
+      "chars": 32600,
+      "sha256": "e666212f768fd6364d475924e6cbbff37909c58f10b2587df1d60fde4c85437a",
+      "prompt_sha256_16": "2c56254bc6d40d86",
+      "why_replaced": "calibrated about -6 % short of armB (2026-11-02)"
+    }
+  ]
 }
