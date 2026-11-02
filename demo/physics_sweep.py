@@ -70,10 +70,24 @@ FIELDS = ["order", "arm", "k", "rep", "seed", "dx", "dy", "dyaw",
           "step_ms_med", "step_ms_p95", "step_ms_max",
           "track_v_med", "track_v_p95", "track_wz_med",
           "load1_before", "load1_mean", "load1_max",
-          "controller_sha", "trace", "note"]
+          "controller_sha", "power_profile", "trace", "note"]
 PILOT_REFERENCE = REPO / "demo" / "out" / "physics.csv"
 DEFAULT_OUT = REPO / "demo" / "out" / "v2" / "physics.csv"
 BASE = REPO / "generate" / "base" / "base_controller.py"
+PLATFORM_PROFILE = pathlib.Path("/sys/firmware/acpi/platform_profile")
+
+
+def power_profile():
+    """The ACPI platform profile, or "" where the machine has none.
+
+    ⚠️ Logged per episode because it moved under the sweep once: on 2026-11-02
+    the laptop rebooted into `low-power` and episodes ran ~2x slower, which
+    starves the wall-clock-budgeted controllers (plan R5). A file read, ~free.
+    """
+    try:
+        return PLATFORM_PROFILE.read_text().strip()
+    except OSError:
+        return ""
 
 
 def discover(arms, ks=None, base=True):
@@ -235,6 +249,10 @@ def main(argv=None):
     ap.add_argument("--reference", default=str(PILOT_REFERENCE))
     ap.add_argument("--retry-failed", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--require-profile", default=None,
+                    help="e.g. performance: refuse to start, and pause at the "
+                         "next episode boundary, if the platform profile is "
+                         "anything else")
     ap.add_argument("--compare-only", action="store_true")
     a = ap.parse_args(argv)
 
@@ -279,6 +297,12 @@ def main(argv=None):
     for i, (arm, k, path, rep) in enumerate(order):
         if (arm, k, str(rep)) in done:
             continue
+        before = power_profile()
+        if a.require_profile and before != a.require_profile:
+            print(f"[phys] PAUSED before #{i}: platform profile is {before!r}, "
+                  f"--require-profile {a.require_profile!r}. Resumable.",
+                  flush=True)
+            break
         seed, dx, dy, dyaw = exp3.rep_condition(rep)
         trace = trace_dir / trace_name(arm, k, rep)
         print(f"[phys] #{i:3} {arm:7} {k:10} rep {rep} "
@@ -288,6 +312,8 @@ def main(argv=None):
                **run_one(path, rep, trace)}
         row["trace"] = (str(trace.relative_to(out_path.parent))
                         if trace.exists() else "")
+        after = power_profile()
+        row["power_profile"] = before if after == before else f"{before}->{after}"
         rows = [r for r in rows
                 if (r["arm"], r["k"], str(r["rep"])) != (arm, k, str(rep))]
         rows.append(row)

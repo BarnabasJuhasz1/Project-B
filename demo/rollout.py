@@ -137,7 +137,7 @@ def load_controller(path):
 
 
 def rollout(controller, seed=0, dt=CONTROL_DT, record=False, time_limit=None,
-            start_offset=(0.0, 0.0, 0.0)):
+            start_offset=(0.0, 0.0, 0.0), noise=None):
     """Drive one patrol episode. Returns a result dict (+ a trace if asked).
 
     ⚠️ `time_limit` is the budget for the WHOLE EPISODE, not per leg. The
@@ -148,7 +148,13 @@ def rollout(controller, seed=0, dt=CONTROL_DT, record=False, time_limit=None,
 
     `start_offset` = (dx, dy, dyaw) is added to HOME and the spawn yaw 0.6 --
     Exp 3's perturbation (demo/exp3.py), mirrored here so the kinematic and
-    physics reps start from the same pose. The default is the original."""
+    physics reps start from the same pose. The default is the original.
+
+    `noise`, if given, is an object with `sample() -> (dvx, dvy, dwz)` called
+    once per step and ADDED to the Twist that is integrated -- never to what
+    the controller is told it commanded, and never to its observation. Exp E
+    (prereg/expE.md) uses it to inject the tracking error measured under
+    physics (`demo/tracking.py`). None, the default, is the original rollout."""
     limit = TIME_LIMIT if time_limit is None else float(time_limit)
     scenario = PatrolScenario(seed=seed, time_limit=limit)
     angles = scenario.beam_angles()
@@ -197,12 +203,16 @@ def rollout(controller, seed=0, dt=CONTROL_DT, record=False, time_limit=None,
             trace.append((t, x, y, yaw, leg, command.vx, command.vy, command.wz,
                           gap, int(touching)))
 
-        nx = x + (command.vx * math.cos(yaw) - command.vy * math.sin(yaw)) * dt
-        ny = y + (command.vx * math.sin(yaw) + command.vy * math.cos(yaw)) * dt
+        vx, vy, wz = command.vx, command.vy, command.wz
+        if noise is not None:
+            dvx, dvy, dwz = noise.sample()
+            vx, vy, wz = vx + dvx, vy + dvy, wz + dwz
+        nx = x + (vx * math.cos(yaw) - vy * math.sin(yaw)) * dt
+        ny = y + (vx * math.sin(yaw) + vy * math.cos(yaw)) * dt
         if float(clearance((nx, ny), world)) > ROBOT_RADIUS * BLOCK_MARGIN:
             path_length += math.hypot(nx - x, ny - y)
             x, y = nx, ny
-        yaw = (yaw + command.wz * dt + math.pi) % (2 * math.pi) - math.pi
+        yaw = (yaw + wz * dt + math.pi) % (2 * math.pi) - math.pi
 
         if math.hypot(x - target[0], y - target[1]) <= ARRIVE_RADIUS:
             leg_times.append(round(t - leg_start_t, 2))

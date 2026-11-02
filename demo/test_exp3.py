@@ -286,3 +286,15 @@ def test_kinematic_rollout_takes_the_same_offsets():
                         start_offset=(dx, dy, dyaw))
     t0 = c["trace"][0]
     assert t0[1:4] == (HOME[0] + dx, HOME[1] + dy, 0.6 + dyaw)
+
+
+def test_sweep_pauses_when_the_power_profile_is_wrong(tmp_path, capsys, monkeypatch):
+    """The 2026-11-02 reboot left the laptop in low-power and halved the speed
+    of every episode. --require-profile stops at an episode boundary instead."""
+    monkeypatch.setattr(physics_sweep, "power_profile", lambda: "low-power")
+    monkeypatch.setattr(physics_sweep, "run_one",
+                        lambda *a: pytest.fail("must not boot an episode"))
+    physics_sweep.main(["--out", str(tmp_path / "v2" / "physics.csv"),
+                        "--arms", "arm0", "--ks", "k0", "--no-base",
+                        "--only-rep", "0", "--require-profile", "performance"])
+    assert "PAUSED before #0" in capsys.readouterr().out
