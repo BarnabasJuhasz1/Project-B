@@ -1,8 +1,17 @@
 # Exp B results — hand-written D* Lite and A* baselines (2026-11-03)
 
 Pre-registration: `prereg/expB.md`, **commit `cec7f345e1dfeaf180f01418a67191a290d9e4bf`**
-(written in every row of `physics.csv`). Baselines unchanged since that commit,
-checked by the runner. Physics run 2026-11-03 01:30–01:47 CET, local machine,
+(written in every row of `physics.csv`), committed 2026-11-02 22:45 CET, before
+any physics episode. Baselines unchanged since that commit, checked by the
+runner.
+
+⚠️ **Rebase note.** That commit was made on the local branch `mindfire-expB` and
+the branch was then rebased onto origin/main to push, so on origin the same
+pre-registration is commit **`562ed2142ca29fed5edb5b1f13a9e5e3083e3448`**.
+`git diff cec7f34 562ed21 -- prereg/expB.md demo/baselines/` is empty. The
+content hashes do not depend on the rebase: `prereg/expB.md` sha256
+`6df312d10cc4daca01f80d3e1ff8386f7e7cb1e5545abac3dff09d8c9ef8be5d`,
+`dstar_lite.py` `32f9df5ca6e5569e…`, `astar_replan.py` `b8473c8374d4917e…`. Physics run 2026-11-03 01:30–01:47 CET, local machine,
 `in_container: false`, AC online, `powerprofilesctl get` = `performance` before
 and after every episode. Reproduce the tables: `python demo/baselines/run_expB.py report --v2 demo/out/v2/physics.csv`.
 
