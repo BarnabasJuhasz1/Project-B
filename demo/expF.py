@@ -272,7 +272,10 @@ def cmd_kinematic(a):
     jobs = order()
     done = {(r["arm"], r["k"], r["rep"]): r for r in read_rows(out)}
     if not a.dry_run:
-        manifest("kinematic")
+        m = manifest("kinematic")
+        if not m["prereg_commit"]:
+            raise SystemExit("[expF-kin] prereg/expF.md is not committed; "
+                             "the 16 controllers run only after it is")
     rows = list(done.values())
     for i, (arm, k, path, rep) in enumerate(jobs):
         if (arm, k, str(rep)) in done:
@@ -280,12 +283,17 @@ def cmd_kinematic(a):
         if a.dry_run:
             print(f"  {i:3} {arm} {k} rep {rep}")
             continue
+        prof = power_profile()
+        if prof != REQUIRED_PROFILE:
+            print(f"[expF-kin] PAUSED before #{i}: power profile is {prof!r}. "
+                  f"Resumable.", flush=True)
+            raise SystemExit(3)
         seed, dx, dy, dyaw = exp3.rep_condition(rep)
         trace = out.parent / "traces-kinematic" / ps.trace_name(arm, k, rep)
         load = round(os.getloadavg()[0], 2)
         row = {"order": i, "sim": "kinematic", "maze": MAZE, "arm": arm, "k": k,
                "rep": rep, "seed": seed, "dx": dx, "dy": dy, "dyaw": dyaw,
-               "load1_before": load, "power_profile": power_profile(),
+               "load1_before": load, "power_profile": prof,
                **kinematic_episode(path, rep, trace)}
         row["trace"] = str(trace.relative_to(out.parent))
         rows.append(row)
