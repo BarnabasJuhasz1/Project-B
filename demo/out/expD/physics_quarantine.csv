@@ -1,0 +1,2 @@
+order,experiment,arm,k,rep,seed,dx,dy,dyaw,door_never_shuts,legs,total,success,leg_times,sim_seconds,wall_seconds,contacts,contact_steps,path_m,step_ms_med,step_ms_p95,step_ms_max,track_v_med,track_v_p95,track_wz_med,track_wz_p95,load1_before,load1_mean,load1_max,cpu_max,power_profile,clock_limited,controller_sha,prereg_commit,trace,note
+9,D,armB,k6,0,0,0.0,0.0,0.0,,,,,,,538.0,,,,,,,,,,,4.29,,,,performance,1,,4401a1a539ece1f1d2f1453c886f3eb920a9abe3,,CPU LIMIT NOT SEEN BY THE EPISODE: None

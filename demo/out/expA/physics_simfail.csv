@@ -1,0 +1,5 @@
+order,experiment,arm,k,rep,seed,dx,dy,dyaw,door_never_shuts,legs,total,success,leg_times,sim_seconds,wall_seconds,contacts,contact_steps,path_m,step_ms_med,step_ms_p95,step_ms_max,track_v_med,track_v_p95,track_wz_med,track_wz_p95,load1_before,load1_mean,load1_max,cpu_max,power_profile,clock_limited,controller_sha,prereg_commit,trace,note
+3,A,armB,k0,0,0,0.0,0.0,0.0,,,,,,,3600.1,,,,,,,,,,,7.44,,,,performance,1,,4401a1a539ece1f1d2f1453c886f3eb920a9abe3,,NO RESULT_JSON: TIMEOUT after 3600 s
+23,A,armB,k4,1,1,-0.088,0.077,0.023,,,,,,,3600.1,,,,,,,,,,,10.22,,,,performance,1,,4401a1a539ece1f1d2f1453c886f3eb920a9abe3,,NO RESULT_JSON: TIMEOUT after 3600 s
+36,A,armB,k5,2,2,0.038,-0.069,0.066,,,,,,,23.2,,,,,,,,,,,6.87,,,,performance,1,,4401a1a539ece1f1d2f1453c886f3eb920a9abe3,,"NO RESULT_JSON: 2026-11-02T20:06:39Z [14,304ms] [Warning] [omni.rtx] 2: AddressRange(0xffffffffffffffff - 0xffffffffffffffff) with name(dummy to ignore) | 2026-11-02T20:06:39Z [14,465ms] [Warning] [omni.rtx] polling "
+41,A,arm0,k5,2,2,0.038,-0.069,0.066,,,,,,,3600.1,,,,,,,,,,,9.19,,,,performance,0,,4401a1a539ece1f1d2f1453c886f3eb920a9abe3,,NO RESULT_JSON: TIMEOUT after 3600 s
