@@ -1,0 +1,18 @@
+{
+ "maze": "maze2",
+ "scene": "scenes/demo-maze2.usd",
+ "size_mb": 18.8,
+ "n_wall_blocks": 19,
+ "n_rects": 19,
+ "ok_walls_match_world": true,
+ "door_rect": [
+  8.7,
+  6.6,
+  10.3,
+  6.75
+ ],
+ "ok_door_matches": true,
+ "ok_home_marker": true,
+ "ok_goal_marker": true,
+ "all_ok": true
+}

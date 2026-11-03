@@ -433,3 +433,24 @@ Pre-registered in `prereg/expA.md` and `prereg/expD.md`, run by `demo/exp_ad.py`
 
 - **A, open maze** (`record_isaac.py --door-never-shuts`, Exp 3's 3 reps): arm0 **7/8**, armB **6/8** controllers succeed (majority of 3), Fisher p = 1.000. In the blocked maze (Exp 3) the same controllers score 4/8 and 2/8. Four armB controllers (k0, k1, k5, k7) solve the open maze 3/3 and fail the blocked one 3/3. Pre-registered reading: **armB's failures are tied to the blocked route.** armB k2 and k6 fail anyway (k6 stops on leg 1, before the door ever matters). Four episodes hit simulator start-up hangs or crashes and were rerun once (`physics_simfail.csv`).
 - **D, slow machine** (`systemd-run --user --scope -p CPUQuota=200%`, cgroup `cpu.max 200000 100000`, Exp 3 rep 0 condition): **0 of 16 controllers lost a trip** (arm0 7/8, armB 2/8, p = 0.041, the same as at normal speed). H-D is not supported. ⚠️ The cap made each episode about 2.4× slower in wall time, but each `step()` only about 1.1–1.2× slower (median step time); throttling lands mostly on the simulator's threads. So the clock budgets were barely squeezed, and the test is weak. Throttling the controller alone, not the whole process, is the stronger follow-up.
+
+## Exp F result (2026-11-03): the 16 controllers on a second maze
+
+Pre-registered in `prereg/expF.md` (commit d95d401, 57df798 after the rebase onto
+main, before any of the 16 ran on it). `demo/maze2.py` keeps the first maze's bounds, home, goal and spawn
+but changes the topology: two full-width dividers, one shared lower opening,
+the door on the home->goal line in the upper divider, the detour through a
+west opening. Short route 15.03 m, detour 4.36 m (first maze 15.03 / 4.33).
+Same reps, offsets, interleaved order and runner as Exp 3 (`--maze maze2`).
+Full write-up: `demo/out/expF/RESULTS.md`.
+
+| | arm0 | armB | Fisher p |
+|---|---|---|---|
+| **physics, ≥ 2 of 3 reps (primary)** | **6/8** | **5/8** | **1.000** |
+| physics, rep 0 only | 7/8 | 5/8 | 0.569 |
+| kinematic, ≥ 2 of 3 reps | 8/8 | 7/8 | 1.000 |
+
+**Not a replication.** On maze2 the arms are one controller apart under
+physics. armB k0, k2 and k7 fail every rep on the first maze and succeed every
+rep on maze2, so most of armB's first-maze failures belong to that geometry.
+n = 8; the null is not evidence of equality.

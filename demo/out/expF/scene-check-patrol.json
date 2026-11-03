@@ -1,0 +1,18 @@
+{
+ "maze": "patrol",
+ "scene": "scenes/demo-patrol.usd",
+ "size_mb": 18.8,
+ "n_wall_blocks": 23,
+ "n_rects": 23,
+ "ok_walls_match_world": true,
+ "door_rect": [
+  9.2,
+  6.75,
+  11.0,
+  6.9
+ ],
+ "ok_door_matches": true,
+ "ok_home_marker": true,
+ "ok_goal_marker": true,
+ "all_ok": true
+}

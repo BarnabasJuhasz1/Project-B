@@ -1,0 +1,3 @@
+order,sim,maze,arm,k,rep,seed,dx,dy,dyaw,legs,total,success,leg_times,sim_seconds,wall_seconds,contacts,path_m,step_ms_med,step_ms_p95,step_ms_max,track_v_med,track_v_p95,track_wz_med,load1_before,load1_mean,load1_max,controller_sha,power_profile,trace,note
+0,kinematic,maze2,(base),reference,0,0,0.0,0.0,0.0,2,4,False,"[26.52, 57.66]",179.98,18.3,0,87.3,1.3,1.7,4.87,0.0,0.0,0.0,,,,34b4298f137441f6,,,
+1,isaac,maze2,(base),reference,0,0,0.0,0.0,0.0,1,4,False,[29.28],180.0,334.0,0,41.44,1.76,10.69,25.14,0.0589,0.2728,0.1441,7.67,5.77,7.53,34b4298f137441f6,performance,traces-sanity/isaac__base__r0.csv.gz,

@@ -1,0 +1,55 @@
+{
+ "started_utc": "2026-11-03T02:14:46Z",
+ "argv": [
+  "demo/expF.py",
+  "kinematic"
+ ],
+ "maze": "maze2",
+ "git_head": "d95d401f5c352475e8db6236b1276cbad6ed33a6",
+ "git_branch": "mindfire-expF",
+ "git_dirty": false,
+ "prereg_commit": "d95d401f5c352475e8db6236b1276cbad6ed33a6",
+ "rep_conditions": {
+  "0": [
+   0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "1": [
+   1,
+   -0.088,
+   0.077,
+   0.023
+  ],
+  "2": [
+   2,
+   0.038,
+   -0.069,
+   0.066
+  ]
+ },
+ "order_seed": 3,
+ "success_rule": "legs >= 4",
+ "controllers": {
+  "arm0/k0": "1611cb168ed46b19",
+  "arm0/k1": "be0105d6d9478909",
+  "arm0/k2": "994b2bd45d098912",
+  "arm0/k3": "cfd732383d7223e8",
+  "arm0/k4": "ada97fa0953eeca4",
+  "arm0/k5": "d55a6bf04aa8fd84",
+  "arm0/k6": "422a564474a0c246",
+  "arm0/k7": "4a656df88b4a6896",
+  "armB/k0": "dc3622b547c3568e",
+  "armB/k1": "51b58b5eb74b4dd5",
+  "armB/k2": "d8f855696060c384",
+  "armB/k3": "0bf3f73571fcd251",
+  "armB/k4": "c0422969be1bba1f",
+  "armB/k5": "54a3a4f116d013d7",
+  "armB/k6": "69411dd5e493f373",
+  "armB/k7": "70ca68a952daff95"
+ },
+ "python": "3.12.13",
+ "host": "Chronos",
+ "in_container": false
+}
