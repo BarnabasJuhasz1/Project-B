@@ -4,8 +4,18 @@ Pre-registration: `prereg/expF.md`, **commit `d95d401f5c352475e8db6236b1276cbad6
 (also in `manifest-kinematic.json` and `manifest-physics.json`, field
 `prereg_commit`). Analysis: `python demo/expF.py report`, as committed.
 Local runs, `in_container: false`. Every physics episode started with
-`powerprofilesctl get` = `performance` and the AC adapter online; all 48
-rows log `performance` before and after. The test suite ran after the sweep, under the lock: 1,016 passed and 1 failed (`compose/tests/test_no_papers.py::test_no_card_vocabulary_reaches_the_rendered_node_block`, which fails the same way on origin/main).
+`powerprofilesctl get` = `performance`, and all 48 rows log `performance`
+before and after. ⚠️ **The AC adapter was checked only when the lock was
+acquired, not before each episode**: online at 03:07 (sanity + kinematic + the
+47-episode sweep, 03:07–05:45) and at 07:46 (the one retry, 07:46–07:48). The
+profile can read `performance` on battery. upower's charge history shows the
+battery full from 02:39 with nothing logged after it. But at ~07:58 the
+laptop was discharging (91 %) and that discharge was not in the history file
+either, so the file lags and cannot rule out a battery stretch during the
+sweep. The 03:07 and 07:46 checks are the only direct evidence. No episode's
+wall time looks throttled (retry 89 s). The retry could not change any verdict
+(arm0 k6 had already succeeded twice). The runner now checks AC before every
+episode. The test suite ran after the sweep, under the lock: 1,016 passed and 1 failed (`compose/tests/test_no_papers.py::test_no_card_vocabulary_reaches_the_rendered_node_block`, which fails the same way on origin/main).
 
 ## The maze
 

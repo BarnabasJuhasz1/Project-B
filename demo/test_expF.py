@@ -165,6 +165,7 @@ def test_physics_command_carries_the_maze_and_the_exp3_offsets():
 
 def test_sweep_pauses_when_the_power_profile_is_wrong(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(expF, "power_profile", lambda: "balanced")
+    monkeypatch.setattr(expF, "ac_online", lambda: True)
     monkeypatch.setattr(expF, "physics_episode",
                         lambda *a, **k: pytest.fail("must not boot an episode"))
     ok = expF.run_physics(list(enumerate(expF.order())), tmp_path / "p.csv", "isaac")
@@ -183,3 +184,14 @@ def test_report_fisher_matches_the_pilot_numbers():
     res, p, p0 = expF.arm_table(rows)
     assert (res["arm0"]["x"], res["armB"]["x"]) == (7, 2)
     assert round(p, 3) == 0.041 and round(p0, 3) == 0.041
+
+
+def test_sweep_pauses_on_battery_even_in_performance(tmp_path, monkeypatch, capsys):
+    """2026-11-03: on battery the profile still read `performance`."""
+    monkeypatch.setattr(expF, "power_profile", lambda: "performance")
+    monkeypatch.setattr(expF, "ac_online", lambda: False)
+    monkeypatch.setattr(expF, "physics_episode",
+                        lambda *a, **k: pytest.fail("must not boot an episode"))
+    ok = expF.run_physics(list(enumerate(expF.order())), tmp_path / "p.csv", "isaac")
+    assert ok is False
+    assert "AC OFFLINE" in capsys.readouterr().out

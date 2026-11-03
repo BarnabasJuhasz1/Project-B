@@ -88,6 +88,24 @@ def power_profile():
         return ""
 
 
+AC_ONLINE = pathlib.Path("/sys/class/power_supply/ADP1/online")
+
+
+def ac_online():
+    """True only if the AC adapter reads online. On battery the profile can
+    still say `performance` (seen 2026-11-03), so both are checked."""
+    try:
+        return AC_ONLINE.read_text().strip() == "1"
+    except OSError:
+        return False
+
+
+def power_ok():
+    """(ok, description) -- `performance` AND AC online, before every episode."""
+    prof, ac = power_profile(), ac_online()
+    return (prof == REQUIRED_PROFILE and ac), f"profile {prof!r}, AC {'online' if ac else 'OFFLINE'}"
+
+
 def sha16(path):
     return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()[:16]
 
@@ -283,10 +301,10 @@ def cmd_kinematic(a):
         if a.dry_run:
             print(f"  {i:3} {arm} {k} rep {rep}")
             continue
+        ok, why = power_ok()
         prof = power_profile()
-        if prof != REQUIRED_PROFILE:
-            print(f"[expF-kin] PAUSED before #{i}: power profile is {prof!r}. "
-                  f"Resumable.", flush=True)
+        if not ok:
+            print(f"[expF-kin] PAUSED before #{i}: {why}. Resumable.", flush=True)
             raise SystemExit(3)
         seed, dx, dy, dyaw = exp3.rep_condition(rep)
         trace = out.parent / "traces-kinematic" / ps.trace_name(arm, k, rep)
@@ -346,10 +364,11 @@ def run_physics(jobs, out, sim_label, dry_run=False):
                    if r["legs"] in ("", None)}
     rows = list(done.values())
     for i, (arm, k, path, rep) in todo:
+        ok, why = power_ok()
         prof = power_profile()
-        if prof != REQUIRED_PROFILE:
-            print(f"[expF-phys] PAUSED before #{i}: power profile is {prof!r}, "
-                  f"need {REQUIRED_PROFILE!r}. Resumable.", flush=True)
+        if not ok:
+            print(f"[expF-phys] PAUSED before #{i}: {why}, need "
+                  f"{REQUIRED_PROFILE!r} on AC. Resumable.", flush=True)
             return False
         seed, dx, dy, dyaw = exp3.rep_condition(rep)
         trace = out.parent / "traces" / ps.trace_name(arm, k, rep)
@@ -378,9 +397,9 @@ def run_physics(jobs, out, sim_label, dry_run=False):
 def cmd_physics(a):
     jobs = list(enumerate(order()))
     if not a.dry_run:
-        prof = power_profile()
-        if prof != REQUIRED_PROFILE:
-            raise SystemExit(f"[expF-phys] refusing to start: profile {prof!r}")
+        ok, why = power_ok()
+        if not ok:
+            raise SystemExit(f"[expF-phys] refusing to start: {why}")
         m = manifest("physics")
         if not m["prereg_commit"]:
             raise SystemExit("[expF-phys] prereg/expF.md is not committed; "
@@ -406,9 +425,10 @@ def cmd_sanity(a):
         print(f"[expF-sanity] kinematic base: legs {r['legs']}/4 "
               f"{r['leg_times']} contacts {r['contacts']}")
     if a.sim in ("isaac", "both"):
+        ok, why = power_ok()
         prof = power_profile()
-        if prof != REQUIRED_PROFILE:
-            raise SystemExit(f"[expF-sanity] profile {prof!r}, not running")
+        if not ok:
+            raise SystemExit(f"[expF-sanity] {why}, not running")
         trace = OUT / "traces-sanity" / "isaac__base__r0.csv.gz"
         res, stdout = physics_episode(base, 0, trace)
         (OUT / "sanity-isaac.log").write_text(stdout)
