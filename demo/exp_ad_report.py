@@ -15,6 +15,7 @@ Unit of analysis: the controller. Success = all four trips (exp3.is_success).
 """
 import argparse
 import json
+import os
 import pathlib
 import statistics
 import sys
@@ -288,8 +289,9 @@ def main(argv=None):
             md, _ = report_a(rows, rows3)
         else:
             md = report_d(rows, rows3, pilot, a.exp3, out)
-        md += (f"\nReference: Exp 3 = `{a.exp3}` ({len(rows3)} rows), pilot = "
-               f"`{a.pilot}`. UNDER PHYSICS, one hand-authored world, local "
+        rel = lambda x: os.path.relpath(x, REPO)
+        md += (f"\nReference: Exp 3 = `{rel(a.exp3)}` ({len(rows3)} rows), pilot = "
+               f"`{rel(a.pilot)}`. UNDER PHYSICS, one hand-authored world, local "
                f"Isaac Sim 6.0.1 (in_container false).\n")
         (out.parent / "SUMMARY.md").write_text(md)
         print(md)

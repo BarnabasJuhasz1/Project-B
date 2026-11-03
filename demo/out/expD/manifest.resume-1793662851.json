@@ -1,0 +1,112 @@
+{
+ "experiment": "D",
+ "started_utc": "2026-11-02T23:40:51Z",
+ "argv": [
+  "demo/exp_ad.py",
+  "D"
+ ],
+ "git_head": "d35bca3ac7c20330694c15a2e873a1c39991ca2b",
+ "git_branch": "mindfire-expAD",
+ "prereg": "prereg/expD.md",
+ "prereg_commit": "80d5b0c25b1b04e5dae0d4d86418723918d837fe",
+ "door_never_shuts": false,
+ "cpu_quota": "200%",
+ "cpu_max_required": "200000 100000",
+ "cpu_max_seen": "200000 100000",
+ "rep_conditions": {
+  "0": [
+   0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "order_seed": 42,
+ "success_rule": "legs >= 4",
+ "order": [
+  [
+   "armB",
+   "k2",
+   0
+  ],
+  [
+   "arm0",
+   "k3",
+   0
+  ],
+  [
+   "arm0",
+   "k4",
+   0
+  ],
+  [
+   "armB",
+   "k5",
+   0
+  ],
+  [
+   "armB",
+   "k7",
+   0
+  ],
+  [
+   "arm0",
+   "k6",
+   0
+  ],
+  [
+   "arm0",
+   "k7",
+   0
+  ],
+  [
+   "armB",
+   "k3",
+   0
+  ],
+  [
+   "arm0",
+   "k2",
+   0
+  ],
+  [
+   "armB",
+   "k6",
+   0
+  ],
+  [
+   "arm0",
+   "k5",
+   0
+  ],
+  [
+   "armB",
+   "k1",
+   0
+  ],
+  [
+   "armB",
+   "k4",
+   0
+  ],
+  [
+   "arm0",
+   "k0",
+   0
+  ],
+  [
+   "arm0",
+   "k1",
+   0
+  ],
+  [
+   "armB",
+   "k0",
+   0
+  ]
+ ],
+ "python": "3.12.13",
+ "host": "Chronos",
+ "nproc": 22,
+ "in_container": false
+}
