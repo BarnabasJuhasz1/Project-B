@@ -426,3 +426,10 @@ reps per controller, run alone under the Isaac lock.
 physics direction but does not reproduce it, and agrees with physics no
 better than noiseless kinematics (12 vs 13 of 16). This stationary noise model
 is coarse (prereg limitations), so the null does not rule out tracking.
+
+### Exp A and Exp D results (2026-11-03): `demo/out/expA/SUMMARY.md`, `demo/out/expD/SUMMARY.md`
+
+Pre-registered in `prereg/expA.md` and `prereg/expD.md`, run by `demo/exp_ad.py` and read by `demo/exp_ad_report.py`.
+
+- **A, open maze** (`record_isaac.py --door-never-shuts`, Exp 3's 3 reps): arm0 **7/8**, armB **6/8** controllers succeed (majority of 3), Fisher p = 1.000. In the blocked maze (Exp 3) the same controllers score 4/8 and 2/8. Four armB controllers (k0, k1, k5, k7) solve the open maze 3/3 and fail the blocked one 3/3. Pre-registered reading: **armB's failures are tied to the blocked route.** armB k2 and k6 fail anyway (k6 stops on leg 1, before the door ever matters). Four episodes hit simulator start-up hangs or crashes and were rerun once (`physics_simfail.csv`).
+- **D, slow machine** (`systemd-run --user --scope -p CPUQuota=200%`, cgroup `cpu.max 200000 100000`, Exp 3 rep 0 condition): **0 of 16 controllers lost a trip** (arm0 7/8, armB 2/8, p = 0.041, the same as at normal speed). H-D is not supported. ⚠️ The cap made each episode about 2.4× slower in wall time, but each `step()` only about 1.1–1.2× slower (median step time); throttling lands mostly on the simulator's threads. So the clock budgets were barely squeezed, and the test is weak. Throttling the controller alone, not the whole process, is the stronger follow-up.

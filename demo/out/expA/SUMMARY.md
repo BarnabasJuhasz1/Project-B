@@ -36,4 +36,15 @@ Pre-registration: `prereg/expA.md` @ `4401a1a539ece1f1d2f1453c886f3eb920a9abe3`.
 
 **Pre-registered reading (prereg §6):** armB succeed in the open maze: their failures are tied to the blocked route (replanning).
 
-Reference: Exp 3 = `../Repo/demo/out/v2/physics.csv` (51 rows), pilot = `/home/juhasz/Desktop/Vault/Life/Projects/MAIN/Project_B/wt-mindfire-expAD/demo/out/physics.csv`. UNDER PHYSICS, one hand-authored world, local Isaac Sim 6.0.1 (in_container false).
+Reference: Exp 3 = `demo/out/v2/physics.csv` (51 rows), pilot = `demo/out/physics.csv`. UNDER PHYSICS, one hand-authored world, local Isaac Sim 6.0.1 (in_container false).
+
+## Commits
+
+The `prereg_commit` column holds the hashes as run, on branch `mindfire-expAD` before it was rebased onto main. Those commits stay reachable through the tag **`mindfire-expAD-as-run`** (`c62d17e`). On main the same content is:
+
+| as run | on main | what |
+|---|---|---|
+| `4401a1a` | `c4237d7` | prereg/expA.md + prereg/expD.md, runner, analysis (before any episode) |
+| `42489f2` | `72ae396` | Exp A amendment: rerun 4 simulator failures once, timeout 1200 s |
+| `ea8d12b` | `8a3b590` | runner fix: a dead episode has no cpu_max |
+| `80d5b0c` | `90d51d2` | Exp D amendment: start-up hang of armB k6, rerun once |
