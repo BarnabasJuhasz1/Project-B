@@ -9,6 +9,9 @@ Pre-registered in `prereg/expB.md`.
     python demo/baselines/run_expB.py physics --dry-run
     flock /tmp/mindfire-isaac.lock python demo/baselines/run_expB.py physics
     python demo/baselines/run_expB.py report --v2 ../Repo/demo/out/v2/physics.csv
+    # Exp B2 (prereg/expB2.md): the same, with --variant b2
+    python demo/baselines/run_expB.py kinematic --variant b2
+    flock /tmp/mindfire-isaac.lock python demo/baselines/run_expB.py physics --variant b2
 
 ⚠️ **THE BASELINES ARE NOT AN ARM.** They live in demo/baselines/, never in
 demo/arms/, and nothing here writes to demo/out/v2/ or demo/out/physics.csv.
@@ -48,10 +51,17 @@ from demo import exp3
 
 # ---- below this line is data, not code.
 
-BASELINES = (("dstar_lite", HERE / "dstar_lite.py"),
-             ("astar_replan", HERE / "astar_replan.py"))
-PREREG = "prereg/expB.md"
-OUT = REPO / "demo" / "out" / "expB"
+# variant -> (baseline files, pre-registration, output directory). b1 is Exp B
+# exactly as it ran; b2 is the follow-up with the changed shared follower.
+VARIANTS = {
+    "b1": ((("dstar_lite", HERE / "dstar_lite.py"),
+            ("astar_replan", HERE / "astar_replan.py")),
+           "prereg/expB.md", REPO / "demo" / "out" / "expB"),
+    "b2": ((("dstar_lite", HERE / "b2" / "dstar_lite.py"),
+            ("astar_replan", HERE / "b2" / "astar_replan.py")),
+           "prereg/expB2.md", REPO / "demo" / "out" / "expB2"),
+}
+BASELINES, PREREG, OUT = VARIANTS["b1"]
 REQUIRED_PROFILE = "performance"
 PLAN_EVERY = 10          # must equal the shared block's PLAN_EVERY (tested)
 PHYS_FIELDS = ["order", "baseline", "rep", "seed", "dx", "dy", "dyaw",
@@ -65,7 +75,7 @@ PHYS_FIELDS = ["order", "baseline", "rep", "seed", "dx", "dy", "dyaw",
                "trace", "note"]
 KIN_FIELDS = ["baseline", "rep", "seed", "dx", "dy", "dyaw", "legs",
               "success", "leg_times", "duration", "collisions", "path_m",
-              "plans", "no_path", "errors", "tree_inits",
+              "plans", "no_path", "errors", "unsticks", "tree_inits",
               "plan_ms_med", "plan_ms_p95", "plan_ms_max",
               "expanded_med", "expanded_p95", "expanded_max"]
 
@@ -75,6 +85,20 @@ KIN_FIELDS = ["baseline", "rep", "seed", "dx", "dy", "dyaw", "legs",
 def git(*args):
     return subprocess.run(["git", *args], cwd=str(REPO), text=True,
                           capture_output=True).stdout.strip()
+
+
+def ac_online():
+    """True when any mains adapter reports online. Added for Exp B2: the laptop
+    was found on battery between the two runs, and must not run Isaac then."""
+    import glob
+    for d in glob.glob("/sys/class/power_supply/*"):
+        try:
+            kind = open(os.path.join(d, "type")).read().strip()
+            if kind == "Mains" and open(os.path.join(d, "online")).read().strip() == "1":
+                return True
+        except OSError:
+            continue
+    return False
 
 
 def power_profile():
@@ -162,6 +186,7 @@ def kinematic(a):
                 "duration": r["duration"], "collisions": r["collisions"],
                 "path_m": r["path_length"], "plans": st["plans"],
                 "no_path": st["no_path"], "errors": st["errors"],
+                "unsticks": st.get("unsticks", ""),
                 "tree_inits": json.dumps(inits) if inits[0] is not None else "",
                 "plan_ms_med": rnd(statistics.median(st["plan_ms"])),
                 "plan_ms_p95": rnd(q(st["plan_ms"], 0.95)),
@@ -218,6 +243,10 @@ def physics(a):
         if (name, str(rep)) in done:
             continue
         prof = power_profile()
+        if not ac_online():
+            print(f"[expB] PAUSED before #{i} ({name} rep {rep}): on battery "
+                  f"(no mains adapter online). Resumable.", flush=True)
+            return 3
         if prof != REQUIRED_PROFILE:
             print(f"[expB] PAUSED before #{i} ({name} rep {rep}): "
                   f"powerprofilesctl get = {prof!r}, need {REQUIRED_PROFILE!r}. "
@@ -299,11 +328,15 @@ def report(a):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=("kinematic", "physics", "report"))
-    ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--variant", choices=sorted(VARIANTS), default="b1")
+    ap.add_argument("--out", default=None)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--v2", default=None,
                     help="Exp 3's demo/out/v2/physics.csv, for the comparison")
     a = ap.parse_args(argv)
+    global BASELINES, PREREG
+    BASELINES, PREREG, out = VARIANTS[a.variant]
+    a.out = a.out or str(out)
     return {"kinematic": kinematic, "physics": physics, "report": report}[a.what](a) or 0
 
 
