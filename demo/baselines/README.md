@@ -59,3 +59,15 @@ carries over.
     python demo/baselines/run_expB.py kinematic
     flock /tmp/mindfire-isaac.lock python demo/baselines/run_expB.py physics
     python demo/baselines/run_expB.py report --v2 demo/out/v2/physics.csv
+
+## Exp B2 (`b2/`, `prereg/expB2.md`)
+
+The same two planners, byte for byte, with only the shared follower changed:
+hard turns on an arc at 0.4 m/s and at most 0.8 rad/s, and a watchdog that
+drives straight briefly when a commanded turn stalls. `b2/build.py` builds the
+B2 files from the ones above, and `b2/test_b2.py` pins that only the follower
+differs. Physics: **D\* Lite 3/3, A\* 3/3**, so a correct, purely incremental
+D\* Lite is not in itself fragile on this gait (`demo/out/expB2/RESULTS.md`).
+
+    python demo/baselines/run_expB.py kinematic --variant b2
+    flock /tmp/mindfire-isaac.lock python demo/baselines/run_expB.py physics --variant b2
