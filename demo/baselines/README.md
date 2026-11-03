@@ -53,7 +53,7 @@ carries over.
 
 ## Results
 
-See `demo/out/expB/RESULTS.md` (written after the physics run).
+`demo/out/expB/RESULTS.md`. Physics, 2026-11-03: **D\* Lite 0/3, A\* 0/3**, every episode lost to the same in-place-spin stall of the gait, so by the pre-registered both-fail row Exp B answers nothing about incremental replanning.
 
     python -m pytest demo/baselines/test_baselines.py -q
     python demo/baselines/run_expB.py kinematic
