@@ -75,6 +75,22 @@ PILOT_REFERENCE = REPO / "demo" / "out" / "physics.csv"
 DEFAULT_OUT = REPO / "demo" / "out" / "v2" / "physics.csv"
 BASE = REPO / "generate" / "base" / "base_controller.py"
 PLATFORM_PROFILE = pathlib.Path("/sys/firmware/acpi/platform_profile")
+POWER_SUPPLY = pathlib.Path("/sys/class/power_supply")
+
+
+def on_ac():
+    """True if any Mains supply reports online; None where there is none.
+
+    ⚠️ Added 2026-11-03: the profile can read `performance` while the laptop
+    runs on battery (seen twice on 2026-11-02/03), so the profile alone does
+    not guarantee a fast machine.
+    """
+    mains = [d for d in POWER_SUPPLY.glob("*")
+             if (d / "type").is_file() and (d / "type").read_text().strip() == "Mains"]
+    if not mains:
+        return None
+    return any((d / "online").read_text().strip() == "1" for d in mains
+               if (d / "online").is_file())
 
 
 def power_profile():
@@ -253,6 +269,9 @@ def main(argv=None):
                     help="e.g. performance: refuse to start, and pause at the "
                          "next episode boundary, if the platform profile is "
                          "anything else")
+    ap.add_argument("--require-ac", action="store_true",
+                    help="refuse to start, and pause at the next episode "
+                         "boundary, if no mains supply is online")
     ap.add_argument("--compare-only", action="store_true")
     a = ap.parse_args(argv)
 
@@ -302,6 +321,10 @@ def main(argv=None):
             print(f"[phys] PAUSED before #{i}: platform profile is {before!r}, "
                   f"--require-profile {a.require_profile!r}. Resumable.",
                   flush=True)
+            break
+        if a.require_ac and on_ac() is False:
+            print(f"[phys] PAUSED before #{i}: on battery (no mains supply "
+                  f"online), --require-ac. Resumable.", flush=True)
             break
         seed, dx, dy, dyaw = exp3.rep_condition(rep)
         trace = trace_dir / trace_name(arm, k, rep)

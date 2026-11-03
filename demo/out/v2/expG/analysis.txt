@@ -1,0 +1,31 @@
+[expG] armX controllers on disk: 8; physics rep-0 episodes: 8
+
+PRIMARY (physics, rep 0 = the pilot's condition, success = 4/4 trips)
+  arm0   7/8  Wilson95 [0.53, 0.98]
+  armB   2/8  Wilson95 [0.07, 0.59]
+  armX   0/8  Wilson95 [0.00, 0.32]
+  X0: armX 0/8 vs arm0 7/8: diff -0.875 Newcombe95 [-0.98, -0.40]  Fisher p = 0.0014
+  XB: armX 0/8 vs armB 2/8: diff -0.250 Newcombe95 [-0.59, +0.12]  Fisher p = 0.4667
+  X0: Holm p = 0.0028  REJECTED
+  XB: Holm p = 0.4667  not rejected
+  READING (prereg/expG.md): L: a long off-topic document is enough
+
+SECONDARY -- EXPLORATORY
+  majority-of-3, arm0   4/8  Wilson95 [0.22, 0.78]
+  majority-of-3, armB   2/8  Wilson95 [0.07, 0.59]
+  majority-of-3, armX   1/8  Wilson95 [0.02, 0.47]
+  maj X vs arm0: armX 1/8 vs arm0 4/8: diff -0.375 Newcombe95 [-0.68, +0.07]  Fisher p = 0.2821
+  maj X vs armB: armX 1/8 vs armB 2/8: diff -0.125 Newcombe95 [-0.48, +0.26]  Fisher p = 1.0000
+  mean trips rep 0: armX 1.38 vs arm0 3.75  MWU p = 0.0013
+  mean trips rep 0: armX 1.38 vs armB 2.38  MWU p = 0.1145
+  kinematic (seed 0), armX   1/8  Wilson95 [0.02, 0.47]
+  kin X vs arm0: armX 1/8 vs arm0 5/8: diff -0.500 Newcombe95 [-0.76, -0.03]  Fisher p = 0.1189
+  kin X vs armB: armX 1/8 vs armB 6/8: diff -0.625 Newcombe95 [-0.83, -0.14]  Fisher p = 0.0406
+
+  per-episode means (armX physics):
+    contacts      mean     2.333  median     0.000  (n=24)
+    path_m        mean    44.348  median    34.360  (n=24)
+    track_v_med   mean     0.070  median     0.069  (n=24)
+    track_wz_med  mean     0.400  median     0.125  (n=24)
+    step_ms_med   mean     1.225  median     1.105  (n=24)
+    step_ms_p95   mean     4.466  median     4.145  (n=24)

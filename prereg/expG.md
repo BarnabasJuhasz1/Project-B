@@ -157,3 +157,65 @@ Exp G occupies armX **k0–k7**, the same indices the pilot occupies for
 arm0/armB. If the confirmatory campaign runs later, `analyse.FRESH_START["armX"]`
 must become **8**, as it is for arm0 and armB. Otherwise these 8 would be
 counted as fresh confirmatory samples.
+
+---
+
+## Outcome (appended 2026-11-03; nothing above was edited)
+
+**Generation (2026-11-02):** 8/8 calls produced a controller. Total **$11.92**
+($1.22–1.99 per call), under the $16 cap. First-turn input tokens were
+26,869–26,872 (+1.5 % vs armB, inside the ±3 % gate), and no call loaded MCP.
+R4: k3 ran 4 turns with tools (Bash ×2, Write) in its scratch directory; the
+other 7 were single-turn. Details: `demo/controls/manifest.json` → `expG`.
+
+**Physics (2026-11-03):** 24 episodes, `demo/out/v2/expG/physics.csv`.
+Every episode ran on AC with profile `performance`; `--require-ac` was added
+to `physics_sweep.py` after the laptop went to battery twice while the profile
+still read `performance`. Load average during the episodes was 6–8.6, mostly
+Isaac itself. Analysis output: `demo/out/v2/expG/analysis.txt`
+(`demo/expG_analyse.py --require-complete`, unchanged since the pre-registration
+commit).
+
+### Primary (rep 0 = the pilot's condition, all four trips)
+
+| arm | success | Wilson 95 % |
+|---|---|---|
+| arm0 (pilot) | 7/8 | [0.53, 0.98] |
+| armB (pilot) | 2/8 | [0.07, 0.59] |
+| **armX** | **0/8** | [0.00, 0.32] |
+
+- **X0**, armX vs arm0: diff −0.875, Newcombe [−0.98, −0.40], Fisher p = 0.0014, **Holm p = 0.0028, REJECTED**
+- **XB**, armX vs armB: diff −0.250, Newcombe [−0.59, +0.12], Fisher p = 0.467, Holm p = 0.467, not rejected
+
+**Pre-registered reading: L.** A long off-topic document is enough to produce
+the physics drop, so **the content claim is withdrawn**. armX is at least as
+bad as armB. It is **not** evidence that armX equals armB: the interval on the
+difference runs from −0.59 to +0.12.
+
+### Secondary (exploratory)
+
+- Trips per controller at rep 0: armX k0–k7 = 1, 2, 2, 0, 2, 0, 3, 1. Mean
+  1.38, against arm0 3.75 (MWU p = 0.0013) and armB 2.38 (MWU p = 0.11).
+  The door shuts after the first two trips (`LEG_BLOCKED`). **4 of 8 armX
+  controllers fail before it does** (k0, k3, k5, k7: under 2 trips, on the
+  open route); 3 stop exactly where the door blocks the short route, which is
+  the pilot's armB failure mode. So part of armX's failure is broader than
+  armB's.
+- Majority of 3 reps: armX 1/8 (k6 only, 4/4 in reps 1–2), arm0 4/8, armB
+  2/8 (Exp 3 rows). Fisher armX vs arm0 p = 0.28, vs armB p = 1.0. ⚠️ Under
+  Exp 3's three reps, arm0 itself falls from 7/8 to 4/8, so the pilot's arm0
+  comparator is optimistic.
+- Kinematic (seed 0, same `run.py` run): armX 1/8, arm0 5/8 (p = 0.12),
+  armB 6/8 (p = 0.041). The kinematic simulator also separates armX, unlike
+  arm0 vs armB.
+- armX per episode: contacts mean 2.3 (median 0), path 44 m (median 34 m),
+  controller step time median 1.1 ms (p95 4.1 ms). These controllers are not
+  starved by a planning budget.
+
+### Caveats
+
+The comparators are the unregistered pilot. armX was generated on CLI 2.1.302
+with `--strict-mcp-config` and the pilot on 2.1.278 without it, so an apparatus
+effect cannot be excluded. That needs fresh arm0 samples under the same CLI,
+which is the confirmatory campaign. One world, local laptop, not in the
+container. n = 8.

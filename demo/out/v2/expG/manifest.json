@@ -1,0 +1,167 @@
+{
+ "started_utc": "2026-11-02T22:37:36Z",
+ "argv": [
+  "demo/physics_sweep.py",
+  "--arms",
+  "armX",
+  "--no-base",
+  "--reps",
+  "3",
+  "--require-profile",
+  "performance",
+  "--out",
+  "demo/out/v2/expG/physics.csv"
+ ],
+ "git_head": "8be3a9635273fe3c01dacebd89a51854354afdb5",
+ "git_branch": "main",
+ "git_dirty": true,
+ "rep_conditions": {
+  "0": [
+   0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "1": [
+   1,
+   -0.088,
+   0.077,
+   0.023
+  ],
+  "2": [
+   2,
+   0.038,
+   -0.069,
+   0.066
+  ]
+ },
+ "perturb_seed": 3003,
+ "order_seed": 3,
+ "success_rule": "legs >= 4",
+ "order": [
+  [
+   "armX",
+   "k0",
+   0
+  ],
+  [
+   "armX",
+   "k5",
+   0
+  ],
+  [
+   "armX",
+   "k7",
+   0
+  ],
+  [
+   "armX",
+   "k2",
+   0
+  ],
+  [
+   "armX",
+   "k1",
+   0
+  ],
+  [
+   "armX",
+   "k6",
+   0
+  ],
+  [
+   "armX",
+   "k4",
+   0
+  ],
+  [
+   "armX",
+   "k3",
+   0
+  ],
+  [
+   "armX",
+   "k6",
+   1
+  ],
+  [
+   "armX",
+   "k0",
+   1
+  ],
+  [
+   "armX",
+   "k2",
+   1
+  ],
+  [
+   "armX",
+   "k4",
+   1
+  ],
+  [
+   "armX",
+   "k1",
+   1
+  ],
+  [
+   "armX",
+   "k5",
+   1
+  ],
+  [
+   "armX",
+   "k3",
+   1
+  ],
+  [
+   "armX",
+   "k7",
+   1
+  ],
+  [
+   "armX",
+   "k1",
+   2
+  ],
+  [
+   "armX",
+   "k7",
+   2
+  ],
+  [
+   "armX",
+   "k5",
+   2
+  ],
+  [
+   "armX",
+   "k4",
+   2
+  ],
+  [
+   "armX",
+   "k3",
+   2
+  ],
+  [
+   "armX",
+   "k2",
+   2
+  ],
+  [
+   "armX",
+   "k6",
+   2
+  ],
+  [
+   "armX",
+   "k0",
+   2
+  ]
+ ],
+ "python": "3.12.13",
+ "host": "Chronos",
+ "nproc": 22,
+ "in_container": false
+}

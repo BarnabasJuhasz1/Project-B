@@ -1,0 +1,83 @@
+[phys] 24 episodes planned, 0 already in physics.csv, 24 to run
+[phys] PAUSED before #0: platform profile is 'balanced', --require-profile 'performance'. Resumable.
+
+========================================================================
+arm        episodes  ep success  ctrls  maj-of-reps  all agree
+------------------------------------------------------------------------
+========================================================================
+success = legs >= 4. maj-of-reps is the plan's primary outcome only once every
+controller has all its reps. UNDER PHYSICS, one hand-authored world, in_container false
+unless run in nvcr.io/nvidia/isaac-sim:6.0.1.
+-> /home/juhasz/Desktop/Vault/Life/Projects/MAIN/Project_B/Repo/demo/out/v2/expG/physics.csv
+[expG] resume queued 2026-11-03T00:30:30Z, AC online, profile performance
+[expG] queued sweep withdrawn 2026-11-03T00:57:09Z: AC offline (ADP1=0, Discharging), never started
+[expG] re-queued 2026-11-03T00:59:43Z, AC online, profile performance, --require-ac --require-profile performance
+[phys] 24 episodes planned, 0 already in physics.csv, 24 to run
+[phys] #  0 armX    k0         rep 0 (load 4.52) running...
+[phys] #  0 armX    k0         rep 0 legs 1/4  times [35.06]  (247.9s wall, load 8.29) 
+[phys] #  1 armX    k5         rep 0 (load 7.82) running...
+[phys] #  1 armX    k5         rep 0 legs 0/4  times []  (252.5s wall, load 6.61) 
+[phys] #  2 armX    k7         rep 0 (load 5.22) running...
+[phys] #  2 armX    k7         rep 0 legs 1/4  times [166.26]  (217.7s wall, load 8.29) 
+[phys] #  3 armX    k2         rep 0 (load 6.79) running...
+[phys] #  3 armX    k2         rep 0 legs 2/4  times [30.64, 34.96]  (255.2s wall, load 6.99) 
+[phys] #  4 armX    k1         rep 0 (load 5.73) running...
+[phys] #  4 armX    k1         rep 0 legs 2/4  times [35.12, 21.74]  (247.5s wall, load 6.74) 
+[phys] #  5 armX    k6         rep 0 (load 6.92) running...
+[phys] #  5 armX    k6         rep 0 legs 3/4  times [22.62, 29.46, 95.22]  (246.4s wall, load 6.76) 
+[phys] #  6 armX    k4         rep 0 (load 5.54) running...
+[phys] #  6 armX    k4         rep 0 legs 2/4  times [24.2, 40.66]  (237.8s wall, load 6.85) 
+[phys] #  7 armX    k3         rep 0 (load 8.63) running...
+[phys] #  7 armX    k3         rep 0 legs 0/4  times []  (236.7s wall, load 8.43) 
+[phys] #  8 armX    k6         rep 1 (load 6.20) running...
+[phys] #  8 armX    k6         rep 1 legs 4/4  times [22.62, 28.34, 62.96, 42.62]  (225.6s wall, load 7.39) 
+[phys] #  9 armX    k0         rep 1 (load 7.19) running...
+[phys] #  9 armX    k0         rep 1 legs 1/4  times [48.94]  (251.8s wall, load 7.88) 
+[phys] # 10 armX    k2         rep 1 (load 7.34) running...
+[phys] # 10 armX    k2         rep 1 legs 2/4  times [30.3, 29.02]  (256.2s wall, load 8.15) 
+[phys] # 11 armX    k4         rep 1 (load 7.23) running...
+[phys] # 11 armX    k4         rep 1 legs 2/4  times [24.24, 29.0]  (207.8s wall, load 6.04) 
+[phys] # 12 armX    k1         rep 1 (load 6.86) running...
+[phys] # 12 armX    k1         rep 1 legs 1/4  times [161.08]  (257.6s wall, load 6.3) 
+[phys] # 13 armX    k5         rep 1 (load 6.65) running...
+[phys] # 13 armX    k5         rep 1 legs 0/4  times []  (253.4s wall, load 6.98) 
+[phys] # 14 armX    k3         rep 1 (load 7.74) running...
+[phys] # 14 armX    k3         rep 1 legs 0/4  times []  (231.6s wall, load 7.41) 
+[phys] # 15 armX    k7         rep 1 (load 7.76) running...
+[phys] # 15 armX    k7         rep 1 legs 0/4  times []  (217.1s wall, load 7.58) 
+[phys] # 16 armX    k1         rep 2 (load 6.63) running...
+[phys] # 16 armX    k1         rep 2 legs 2/4  times [23.14, 21.76]  (254.7s wall, load 7.47) 
+[phys] # 17 armX    k7         rep 2 (load 8.36) running...
+[phys] # 17 armX    k7         rep 2 legs 0/4  times []  (250.1s wall, load 8.08) 
+[phys] # 18 armX    k5         rep 2 (load 10.11) running...
+[phys] # 18 armX    k5         rep 2 legs 0/4  times []  (244.3s wall, load 7.93) 
+[phys] # 19 armX    k4         rep 2 (load 8.01) running...
+[phys] # 19 armX    k4         rep 2 legs 2/4  times [24.24, 40.06]  (206.7s wall, load 7.17) 
+[phys] # 20 armX    k3         rep 2 (load 7.99) running...
+[phys] # 20 armX    k3         rep 2 legs 0/4  times []  (246.8s wall, load 8.63) 
+[phys] # 21 armX    k2         rep 2 (load 11.37) running...
+[phys] # 21 armX    k2         rep 2 legs 2/4  times [27.84, 34.44]  (247.3s wall, load 6.7) 
+[phys] # 22 armX    k6         rep 2 (load 4.90) running...
+[phys] # 22 armX    k6         rep 2 legs 4/4  times [22.62, 24.64, 63.86, 37.48]  (173.7s wall, load 6.31) 
+[phys] # 23 armX    k0         rep 2 (load 7.90) running...
+[phys] # 23 armX    k0         rep 2 legs 1/4  times [48.84]  (206.1s wall, load 4.99) 
+
+========================================================================
+arm        episodes  ep success  ctrls  maj-of-reps  all agree
+------------------------------------------------------------------------
+armX             24        2/24      8          1/8        7/8
+========================================================================
+success = legs >= 4. maj-of-reps is the plan's primary outcome only once every
+controller has all its reps. UNDER PHYSICS, one hand-authored world, in_container false
+unless run in nvcr.io/nvidia/isaac-sim:6.0.1.
+
+rep 0 vs physics.csv: 0/8 MATCH
+  MISSING armX k0: no row in the reference
+  MISSING armX k5: no row in the reference
+  MISSING armX k7: no row in the reference
+  MISSING armX k2: no row in the reference
+  MISSING armX k1: no row in the reference
+  MISSING armX k6: no row in the reference
+  MISSING armX k4: no row in the reference
+  MISSING armX k3: no row in the reference
+-> /home/juhasz/Desktop/Vault/Life/Projects/MAIN/Project_B/Repo/demo/out/v2/expG/physics.csv
